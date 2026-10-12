@@ -2,12 +2,12 @@ import { BUILDINGS } from '../data/buildings';
 import type { Vec2 } from '../data/types';
 import { WAREHOUSE_TILE } from '../data/waypoints';
 import { isAdjacentToRoad } from './pathfinding';
-import type { GameState } from './state';
+import type { GameState, VillagerState } from './state';
 
 export type InspectInfo =
   | { kind: 'warehouse'; connected: boolean; stock: Partial<Record<string, number>> }
   | { kind: 'site'; name: string; delivered: string; assignedWorkerId: string | null }
-  | { kind: 'building'; name: string; connected: boolean; hasWorker: boolean }
+  | { kind: 'building'; name: string; connected: boolean; hasWorker: boolean; workerWaiting: boolean }
   | { kind: 'villager'; description: string };
 
 function atTile(tile: Vec2, target: Vec2): boolean {
@@ -20,10 +20,15 @@ const JOB_DESCRIPTIONS: Record<string, string> = {
   produce: 'pracuje',
 };
 
+function describeVillager(villager: VillagerState): string {
+  if (villager.motion === 'waiting') return 'czeka na drogę';
+  return JOB_DESCRIPTIONS[villager.job.kind] ?? villager.job.kind;
+}
+
 export function inspectTile(state: GameState, tile: Vec2): InspectInfo | null {
   const villager = state.villagers.find((v) => atTile(v.from, tile) && v.motion !== 'walking');
   if (villager) {
-    return { kind: 'villager', description: JOB_DESCRIPTIONS[villager.job.kind] ?? villager.job.kind };
+    return { kind: 'villager', description: describeVillager(villager) };
   }
 
   if (atTile(tile, WAREHOUSE_TILE)) {
@@ -32,11 +37,13 @@ export function inspectTile(state: GameState, tile: Vec2): InspectInfo | null {
 
   const building = state.buildings.find((b) => atTile(b.tile, tile));
   if (building) {
+    const worker = state.villagers.find((v) => v.id === building.workerId);
     return {
       kind: 'building',
       name: BUILDINGS[building.type].name,
       connected: isAdjacentToRoad(building.tile, state.roads),
       hasWorker: building.workerId !== null,
+      workerWaiting: worker?.motion === 'waiting',
     };
   }
 

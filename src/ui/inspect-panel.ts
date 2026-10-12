@@ -41,10 +41,14 @@ function describe(info: InspectInfo): string {
       return `${info.name} (plac budowy) — dostarczono ${info.delivered} — ${
         info.assignedWorkerId ? 'ktoś buduje' : 'czeka na robotnika'
       }`;
-    case 'building':
-      return `${info.name} — ${info.connected ? 'droga OK' : 'brak drogi'} — ${
-        info.hasWorker ? 'obsadzony' : 'bez pracownika'
-      }`;
+    case 'building': {
+      const workerStatus = !info.hasWorker
+        ? 'bez pracownika'
+        : info.workerWaiting
+          ? 'pracownik czeka na drogę do surowca'
+          : 'obsadzony';
+      return `${info.name} — ${info.connected ? 'droga OK' : 'brak drogi'} — ${workerStatus}`;
+    }
     case 'villager':
       return `LUDZIK — ${info.description}`;
   }
