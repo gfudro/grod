@@ -6,7 +6,7 @@ import type { GameState } from '../sim/state';
 
 const SITE_COLOR = 0x9b7a4a;
 const SITE_PROGRESS_COLOR = 0xd9b96a;
-const BUILDING_COLOR: Record<string, number> = {
+export const BUILDING_COLOR: Record<string, number> = {
   drwal: 0x5c4326,
   rybak: 0x3f5f6b,
   glinianka: 0x9b4a3f,

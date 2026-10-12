@@ -1,6 +1,7 @@
 import { createGameApp } from './render/app';
 import { createRoadsLayer } from './render/roads';
 import { createBuildingsLayer } from './render/buildings';
+import { createBuildGhost } from './render/build-ghost';
 import { createWarehouseMarker } from './render/markers';
 import { createVillagerSprite } from './render/villager';
 import { mountVersionLabel } from './ui/version';
@@ -37,6 +38,9 @@ async function start(): Promise<void> {
   const villagerSprites = state.villagers.map(() => createVillagerSprite());
   for (const sprite of villagerSprites) viewport.addChild(sprite.container);
 
+  const buildGhost = createBuildGhost();
+  viewport.addChild(buildGhost.container);
+
   function refreshWorldLayers(): void {
     roadsLayer.redraw(state.roads);
     buildingsLayer.redraw(state);
@@ -58,7 +62,7 @@ async function start(): Promise<void> {
   );
 
   roadDraw = createRoadDrawController(viewport, state, refreshWorldLayers);
-  buildPlace = createBuildPlacementController(viewport, state, refreshWorldLayers);
+  buildPlace = createBuildPlacementController(viewport, state, refreshWorldLayers, buildGhost.update);
 
   const hud = mountHud({
     roadDraw,

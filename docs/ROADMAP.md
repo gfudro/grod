@@ -33,6 +33,7 @@ Każdy etap kończy się wersją, którą Artur może otworzyć na iPadzie. Kole
 - [x] Ikona „brak drogi” nad niepodłączonym budynkiem (i magazynem)
 - [x] Bezczynny ludzik pokazuje nad głową ikonę tego, czego brakuje
 - [x] Stuknięcie w budynek lub ludzika otwiera panel z ikonami i liczbami (na razie tekstowy placeholder)
+- [x] Widmo (podgląd) budynku pod kursorem/palcem w trybie stawiania — biała ramka gdy można postawić, czerwona gdy nie
 
 **Gotowe, gdy:** Artur sam stawia drwala, łączy go drogą i patrzy, jak drewno trafia do magazynu.
 
