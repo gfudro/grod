@@ -4,12 +4,12 @@ Każdy etap kończy się wersją, którą Artur może otworzyć na iPadzie. Kole
 
 ## M0 · Szkielet na iPadzie
 
-- [ ] Projekt: Vite, TypeScript (strict), PixiJS, Vitest, skrypty `typecheck`, `test`, `build`
-- [ ] Publikacja na GitHub Pages przez GitHub Actions
-- [ ] PWA: manifest, ikona, service worker, uruchamianie z ekranu początkowego w poziomie
-- [ ] Mapa na siatce z zastępnikami: rzeka, las, łąka (jedna ręcznie zrobiona mapa)
-- [ ] Przesuwanie mapy palcem, przybliżanie szczypaniem
-- [ ] Numer wersji w rogu ekranu
+- [x] Projekt: Vite, TypeScript (strict), PixiJS, Vitest, skrypty `typecheck`, `test`, `build`
+- [x] Publikacja na GitHub Pages przez GitHub Actions
+- [x] PWA: manifest, ikona, service worker, uruchamianie z ekranu początkowego w poziomie
+- [x] Mapa na siatce z zastępnikami: rzeka, las, łąka (jedna ręcznie zrobiona mapa)
+- [x] Przesuwanie mapy palcem, przybliżanie szczypaniem
+- [x] Numer wersji w rogu ekranu
 
 **Gotowe, gdy:** Greg otwiera grę z ikony na iPadzie i przesuwa mapę palcem bez zacięć.
 
