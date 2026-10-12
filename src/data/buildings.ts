@@ -1,19 +1,24 @@
 import type { ResourceType } from './resources';
 
-export type BuildingType = 'drwal' | 'rybak' | 'glinianka';
+export type BuildingType = 'drwal' | 'rybak' | 'glinianka' | 'ziemianka';
 
 export type ResourceSearch = 'drzewo' | 'woda' | 'na-miejscu';
+
+export type BuildingKind = 'produkcja' | 'dom';
 
 export interface BuildingDef {
   id: BuildingType;
   name: string;
+  kind: BuildingKind;
   cost: Partial<Record<ResourceType, number>>;
   /** Ticks a builder hammers once all materials are on site. */
   buildTicks: number;
-  produces: ResourceType;
+
+  // --- kind: 'produkcja' only ---
+  produces?: ResourceType;
   /** Ticks to gather one unit at the resource tile. */
-  gatherTicks: number;
-  resourceSearch: ResourceSearch;
+  gatherTicks?: number;
+  resourceSearch?: ResourceSearch;
   /**
    * Max tiles (Manhattan, as the crow flies) from the building to its
    * resource. Placement is refused beyond this range, so a drwal can't
@@ -21,16 +26,23 @@ export interface BuildingDef {
    * gather 'na-miejscu' have no range — the resource is the site itself.
    */
   maxResourceRange?: number;
+
+  // --- kind: 'dom' only ---
+  /** Residents this house adds to the shared worker pool once filled. */
+  capacity?: number;
+  /** Fish a tragarz keeps topping the house up to. */
+  rybyTarget?: number;
 }
 
 /**
- * First-tier production buildings. Costs and timings are starting
- * placeholders for balancing after playtests (see GDD "Otwarte pytania").
+ * First-tier buildings. Costs and timings are starting placeholders for
+ * balancing after playtests (see GDD "Otwarte pytania").
  */
 export const BUILDINGS: Record<BuildingType, BuildingDef> = {
   drwal: {
     id: 'drwal',
     name: 'DRWAL',
+    kind: 'produkcja',
     cost: { drewno: 3 },
     buildTicks: 30,
     produces: 'drewno',
@@ -41,6 +53,7 @@ export const BUILDINGS: Record<BuildingType, BuildingDef> = {
   rybak: {
     id: 'rybak',
     name: 'RYBAK',
+    kind: 'produkcja',
     cost: { drewno: 3 },
     buildTicks: 30,
     produces: 'ryba',
@@ -51,20 +64,34 @@ export const BUILDINGS: Record<BuildingType, BuildingDef> = {
   glinianka: {
     id: 'glinianka',
     name: 'GLINIANKA',
+    kind: 'produkcja',
     cost: { drewno: 2 },
     buildTicks: 20,
     produces: 'glina',
     gatherTicks: 20,
     resourceSearch: 'na-miejscu',
   },
+  ziemianka: {
+    id: 'ziemianka',
+    name: 'ZIEMIANKA',
+    kind: 'dom',
+    cost: { drewno: 4 },
+    buildTicks: 40,
+    capacity: 3,
+    rybyTarget: 5,
+  },
 };
 
-export const BUILDING_ORDER: BuildingType[] = ['drwal', 'rybak', 'glinianka'];
+export const BUILDING_ORDER: BuildingType[] = ['drwal', 'rybak', 'glinianka', 'ziemianka'];
 
 /** Starting warehouse stock, enough for one or two starter buildings. */
 export const STARTING_WAREHOUSE_STOCK: Partial<Record<ResourceType, number>> = {
   drewno: 6,
 };
 
-/** Free workers available before houses (M3) exist to grow the pool. */
+/**
+ * A small bootstrap crew already at the village when the game starts —
+ * without them nobody could ever build the first house, since houses are
+ * the only other source of workers (settlers walk in to fill them).
+ */
 export const STARTING_WORKER_POOL = 3;

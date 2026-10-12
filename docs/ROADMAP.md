@@ -39,11 +39,11 @@ Każdy etap kończy się wersją, którą Artur może otworzyć na iPadzie. Kole
 
 ## M3 · Domy i osadnicy
 
-- [ ] Ziemianka jako dom: miejsca dla mieszkańców, mieszkańcy dołączają do puli „Wolni”
-- [ ] Osadnicy przychodzą z krawędzi mapy z tobołkami, gdy jest wolne miejsce i nie ma głodu
-- [ ] Każdy budynek zajmuje jednego pracownika z puli
-- [ ] Tragarze z magazynu roznoszą ryby do domów
-- [ ] Licznik potrzeby nad domem, np. ryby 3/5
+- [x] Ziemianka jako dom: miejsca dla mieszkańców, mieszkańcy dołączają do puli „Wolni”
+- [x] Osadnicy przychodzą z krawędzi mapy z tobołkami, gdy jest wolne miejsce i nie ma głodu
+- [x] Każdy budynek zajmuje jednego pracownika z puli
+- [x] Tragarze z magazynu roznoszą ryby do domów
+- [x] Licznik potrzeby nad domem, np. ryby 3/5
 
 **Gotowe, gdy:** gród rośnie sam, jeśli Artur dba o ryby, a widać skąd biorą się nowi ludzie.
 

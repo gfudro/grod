@@ -1,14 +1,17 @@
 import { BUILDINGS } from '../data/buildings';
+import { MAP_HEIGHT, MAP_WIDTH, TERRAIN } from '../data/map';
 import type { ResourceType } from '../data/resources';
 import type { Vec2 } from '../data/types';
 import { WAREHOUSE_TILE } from '../data/waypoints';
 import { findPath, isAdjacentToRoad } from './pathfinding';
-import { findResourceTile } from './resource-tiles';
+import { findResourceTile, manhattan } from './resource-tiles';
 import {
   addToWarehouse,
   nextEntityId,
+  takeFromWarehouse,
   type ConstructionSite,
   type GameState,
+  type House,
   type VillagerJob,
   type VillagerState,
 } from './state';
@@ -16,10 +19,16 @@ import {
 /** Ticks to cross one tile: 1 tile per simulated second at the base 10 ticks/second rate. */
 export const TICKS_PER_TILE = 10;
 
+/** How often (in ticks) the village checks whether a settler should walk in. */
+export const SETTLER_CHECK_INTERVAL = 50;
+
 export function tick(state: GameState): void {
   state.tick += 1;
   for (const villager of state.villagers) {
     advanceVillager(state, villager);
+  }
+  if (state.tick % SETTLER_CHECK_INTERVAL === 0) {
+    maybeSpawnSettler(state);
   }
 }
 
@@ -56,6 +65,12 @@ function runJob(state: GameState, villager: VillagerState): void {
     case 'produce':
       runProduce(state, villager);
       return;
+    case 'deliver':
+      runDeliver(state, villager);
+      return;
+    case 'arriving':
+      runArriving(state, villager);
+      return;
   }
 }
 
@@ -85,6 +100,21 @@ function tryAssignWork(state: GameState, villager: VillagerState): boolean {
   if (building) {
     building.workerId = villager.id;
     villager.job = { kind: 'produce', buildingId: building.id, stage: 'toResource' };
+    return true;
+  }
+
+  const house = state.houses.find((h) => {
+    if (!isAdjacentToRoad(h.tile, state.roads)) return false;
+    // Count fish already claimed by other tragarze so we never assign more
+    // deliveries than the house actually needs (the surplus would just be
+    // wasted once ryby hits rybyTarget).
+    const committed = state.villagers.filter(
+      (v) => v.job.kind === 'deliver' && v.job.houseId === h.id,
+    ).length;
+    return h.ryby + committed < h.rybyTarget;
+  });
+  if (house) {
+    villager.job = { kind: 'deliver', houseId: house.id, stage: 'toWarehouse' };
     return true;
   }
 
@@ -163,7 +193,7 @@ function runProduce(state: GameState, villager: VillagerState): void {
     }
     if (atTile(villager.from, building.resourceTile)) {
       job.stage = 'gathering';
-      villager.workTicksRemaining = def.gatherTicks;
+      villager.workTicksRemaining = def.gatherTicks!;
       villager.motion = 'idle';
       return;
     }
@@ -179,7 +209,7 @@ function runProduce(state: GameState, villager: VillagerState): void {
     villager.motion = 'idle';
     villager.workTicksRemaining -= 1;
     if (villager.workTicksRemaining <= 0) {
-      villager.carrying = def.produces;
+      villager.carrying = def.produces!;
       job.stage = 'toWarehouse';
     }
     return;
@@ -198,16 +228,147 @@ function runProduce(state: GameState, villager: VillagerState): void {
   beginWalk(state, villager, WAREHOUSE_TILE);
 }
 
+function runDeliver(state: GameState, villager: VillagerState): void {
+  const job = villager.job as Extract<VillagerJob, { kind: 'deliver' }>;
+  const house = state.houses.find((h) => h.id === job.houseId);
+  if (!house) {
+    villager.job = { kind: 'idle' };
+    return;
+  }
+
+  if (job.stage === 'toWarehouse') {
+    if (!atTile(villager.from, WAREHOUSE_TILE)) {
+      beginWalk(state, villager, WAREHOUSE_TILE);
+      return;
+    }
+    // Other tragarze already carrying fish toward this house also count —
+    // otherwise several workers could each grab "the last unit" at once
+    // and overshoot rybyTarget, wasting the surplus taken from the warehouse.
+    const othersCommitted = state.villagers.filter(
+      (v) => v !== villager && v.job.kind === 'deliver' && v.job.houseId === house.id,
+    ).length;
+    if (house.ryby + othersCommitted >= house.rybyTarget || !takeFromWarehouse(state, 'ryba', 1)) {
+      // need already met (or about to be, by someone else), or the
+      // warehouse is out of fish — free the worker either way.
+      villager.job = { kind: 'idle' };
+      villager.motion = 'idle';
+      return;
+    }
+    villager.carrying = 'ryba';
+    job.stage = 'toHouse';
+    beginWalk(state, villager, house.tile);
+    return;
+  }
+
+  // job.stage === 'toHouse'
+  if (!atTile(villager.from, house.tile)) {
+    if (!isAdjacentToRoad(house.tile, state.roads)) {
+      villager.motion = 'waiting'; // house lost its road connection
+      return;
+    }
+    beginWalk(state, villager, house.tile);
+    return;
+  }
+  house.ryby = Math.min(house.rybyTarget, house.ryby + 1);
+  villager.carrying = null;
+  villager.motion = 'idle';
+  if (house.ryby >= house.rybyTarget) {
+    villager.job = { kind: 'idle' };
+  } else {
+    job.stage = 'toWarehouse';
+  }
+}
+
+function runArriving(state: GameState, villager: VillagerState): void {
+  const job = villager.job as Extract<VillagerJob, { kind: 'arriving' }>;
+  const house = state.houses.find((h) => h.id === job.houseId);
+  if (!house || house.residents >= house.capacity) {
+    // Slot filled by someone else (or the house is gone) — join as idle.
+    villager.job = { kind: 'idle' };
+    villager.motion = 'idle';
+    return;
+  }
+  if (atTile(villager.from, house.tile)) {
+    house.residents += 1;
+    villager.job = { kind: 'idle' };
+    villager.motion = 'idle';
+    return;
+  }
+  beginWalk(state, villager, house.tile);
+}
+
 function completeConstruction(state: GameState, site: ConstructionSite): void {
   const def = BUILDINGS[site.type];
-  state.buildings.push({
-    id: nextEntityId(state, 'budynek'),
-    type: site.type,
-    tile: site.tile,
-    resourceTile: findResourceTile(site.tile, def.resourceSearch),
-    workerId: null,
-  });
+  if (def.kind === 'dom') {
+    const house: House = {
+      id: nextEntityId(state, 'dom'),
+      tile: site.tile,
+      residents: 0,
+      capacity: def.capacity!,
+      ryby: 0,
+      rybyTarget: def.rybyTarget!,
+    };
+    state.houses.push(house);
+  } else {
+    state.buildings.push({
+      id: nextEntityId(state, 'budynek'),
+      type: site.type,
+      tile: site.tile,
+      resourceTile: findResourceTile(site.tile, def.resourceSearch!),
+      workerId: null,
+    });
+  }
   state.sites = state.sites.filter((s) => s.id !== site.id);
+}
+
+/** True when an occupied house has no fish at all — blocks new settlers. */
+function hasHunger(state: GameState): boolean {
+  return state.houses.some((h) => h.residents > 0 && h.ryby === 0);
+}
+
+function findReachableEdgeTile(state: GameState, target: Vec2): Vec2 | null {
+  const candidates: Vec2[] = [];
+  for (let x = 0; x < MAP_WIDTH; x++) {
+    if (TERRAIN[0][x] === 'trawa') candidates.push({ x, y: 0 });
+    if (TERRAIN[MAP_HEIGHT - 1][x] === 'trawa') candidates.push({ x, y: MAP_HEIGHT - 1 });
+  }
+  for (let y = 0; y < MAP_HEIGHT; y++) {
+    if (TERRAIN[y][0] === 'trawa') candidates.push({ x: 0, y });
+    if (TERRAIN[y][MAP_WIDTH - 1] === 'trawa') candidates.push({ x: MAP_WIDTH - 1, y });
+  }
+  candidates.sort((a, b) => manhattan(a, target) - manhattan(b, target));
+
+  for (const candidate of candidates) {
+    if (findPath(state.roads, candidate, target)) return candidate;
+  }
+  return null;
+}
+
+function maybeSpawnSettler(state: GameState): void {
+  const house = state.houses.find((h) => {
+    const enRoute = state.villagers.filter(
+      (v) => v.job.kind === 'arriving' && v.job.houseId === h.id,
+    ).length;
+    return h.residents + enRoute < h.capacity;
+  });
+  if (!house) return;
+  if (hasHunger(state)) return;
+
+  const spawnTile = findReachableEdgeTile(state, house.tile);
+  if (!spawnTile) return; // no road reaches the map edge yet
+
+  state.villagers.push({
+    id: nextEntityId(state, 'osadnik'),
+    from: spawnTile,
+    to: { ...spawnTile },
+    segmentTicks: 0,
+    path: [],
+    motion: 'idle',
+    facing: 1,
+    job: { kind: 'arriving', houseId: house.id },
+    carrying: null,
+    workTicksRemaining: 0,
+  });
 }
 
 function nextNeededResource(

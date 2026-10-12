@@ -47,6 +47,17 @@ export function createVillagerSprite(): VillagerSprite {
   waitingIcon.visible = false;
   container.addChild(waitingIcon);
 
+  // A settler's "tobołek" — the bundle on their back, visible the whole
+  // walk from the map edge, so Artur can see where new people come from.
+  const bundle = new Graphics()
+    .circle(0, 0, 7)
+    .fill(0x8a5a2b)
+    .circle(0, 0, 7)
+    .stroke({ color: 0x4a2f12, width: 2 });
+  bundle.position.set(-TILE_SIZE * 0.14, -2); // slung on the back
+  bundle.visible = false;
+  body.addChild(bundle);
+
   function update(villager: VillagerState, tickAlpha: number): void {
     const fromPx = tileTopLeftPixels(villager.from);
     const half = TILE_SIZE / 2;
@@ -73,6 +84,8 @@ export function createVillagerSprite(): VillagerSprite {
     } else {
       carryingIcon.visible = false;
     }
+
+    bundle.visible = villager.job.kind === 'arriving';
   }
 
   return { container, update };

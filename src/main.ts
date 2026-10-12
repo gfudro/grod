@@ -38,6 +38,15 @@ async function start(): Promise<void> {
   const villagerSprites = state.villagers.map(() => createVillagerSprite());
   for (const sprite of villagerSprites) viewport.addChild(sprite.container);
 
+  /** New settlers join state.villagers at runtime — keep sprites in sync. */
+  function syncVillagerSprites(): void {
+    while (villagerSprites.length < state.villagers.length) {
+      const sprite = createVillagerSprite();
+      viewport.addChild(sprite.container);
+      villagerSprites.push(sprite);
+    }
+  }
+
   const buildGhost = createBuildGhost();
   viewport.addChild(buildGhost.container);
 
@@ -87,6 +96,7 @@ async function start(): Promise<void> {
         accumulatorMs -= tickMs;
         ticked = true;
       }
+      if (ticked) syncVillagerSprites();
       const alpha = accumulatorMs / tickMs;
       for (let i = 0; i < state.villagers.length; i++) {
         villagerSprites[i].update(state.villagers[i], alpha);

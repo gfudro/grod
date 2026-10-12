@@ -8,6 +8,15 @@ Decyzje z M2 (budowanie i pierwsze łańcuchy):
 - **Pula wolnych pracowników przed chatami (M3):** gra startuje z 3 wolnymi ludzikami stojącymi przy magazynie, żeby dało się budować i testować łańcuchy produkcji, zanim pojawią się domy i osadnicy. M3 zastąpi ten sztywny start prawdziwym przyrostem mieszkańców.
 - **Koszt budynku jest pobierany z magazynu od razu przy stawianiu placu budowy**, nie stopniowo przy każdym kursie robotnika. Kursy robotnika tylko symulują czas i widoczność transportu.
 - **Startowy zapas:** 6 drewna w magazynie, żeby dało się postawić pierwsze 1-2 budynki bez czekania na nic.
+
+Decyzje z M3 (domy i osadnicy):
+
+- **Pula startowa (3 ludziki) zostaje na stałe** jako załoga, która istnieje, zanim powstanie pierwsza ziemianka — inaczej nic nie dałoby się zbudować (ten sam paradoks jajka i kury, o którym mówi GDD). Ziemianka dokłada do puli kolejnych mieszkańców, nie zastępuje startowej załogi.
+- **Ziemianka kosztuje 4 drewna**, daje 3 miejsca dla mieszkańców, cel „ryby" to 5.
+- **Osadnik = zwykły ludzik z zadaniem „arriving".** Pojawia się od razu na kafelku brzegu mapy (musi być tam droga) i idzie do domu tą samą maszyną stanów co każdy inny ludzik — prościej niż osobny system.
+- **Punkt wejścia na mapę:** gra szuka najbliższego (po linii prostej) kafelka brzegu mapy, z którego istnieje droga do domu; jeśli żaden nie jest połączony, osadnik po prostu nie przychodzi. Zachęca to do doprowadzenia drogi do brzegu mapy.
+- **Głód:** gród ma głód, gdy jakikolwiek zamieszkały dom ma zero ryb. Blokuje to nowych osadników, ale nie zawraca tych już w drodze.
+- **Limit zarezerwowanych zasobów:** przy przydzielaniu tragarza i osadnika liczę też tych już w drodze (nie tylko już dostarczone/zamieszkałe), żeby dom nigdy nie dostał więcej ryb niż potrzebuje ani więcej mieszkańców niż ma miejsc. Bez tego nadmiarowa ryba po prostu znikała z magazynu bez śladu — złapane w testach przed wydaniem.
 - **Zasięg surowca przy stawianiu budynku:** drwal i rybak da się postawić tylko w promieniu 6 kafelków (w linii kratki, nie po drodze) od najbliższego drzewa/wody. Bez tego dało się postawić drwala daleko od lasu i tak samo nosił drewno — ograniczenie robi z lokalizacji budynku prawdziwą decyzję.
 
 ## Wizja i filary

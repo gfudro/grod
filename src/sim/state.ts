@@ -12,7 +12,9 @@ export type VillagerMotion = 'idle' | 'walking' | 'waiting';
 export type VillagerJob =
   | { kind: 'idle' }
   | { kind: 'build'; siteId: string; stage: 'toWarehouse' | 'toSite' | 'hammering' }
-  | { kind: 'produce'; buildingId: string; stage: 'toResource' | 'gathering' | 'toWarehouse' };
+  | { kind: 'produce'; buildingId: string; stage: 'toResource' | 'gathering' | 'toWarehouse' }
+  | { kind: 'deliver'; houseId: string; stage: 'toWarehouse' | 'toHouse' }
+  | { kind: 'arriving'; houseId: string };
 
 export interface VillagerState {
   id: string;
@@ -45,6 +47,16 @@ export interface Building {
   workerId: string | null;
 }
 
+export interface House {
+  id: string;
+  tile: Vec2;
+  /** Residents this house has contributed to the shared worker pool so far. */
+  residents: number;
+  capacity: number;
+  ryby: number;
+  rybyTarget: number;
+}
+
 export interface GameState {
   tick: number;
   rng: RngState;
@@ -54,6 +66,7 @@ export interface GameState {
   villagers: VillagerState[];
   sites: ConstructionSite[];
   buildings: Building[];
+  houses: House[];
   nextEntityId: number;
 }
 
@@ -104,6 +117,7 @@ export function createInitialState(seed = 1): GameState {
     villagers: [],
     sites: [],
     buildings: [],
+    houses: [],
     nextEntityId: 1,
   };
   for (let i = 0; i < STARTING_WORKER_POOL; i++) {

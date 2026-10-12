@@ -49,6 +49,8 @@ function describe(info: InspectInfo): string {
           : 'obsadzony';
       return `${info.name} — ${info.connected ? 'droga OK' : 'brak drogi'} — ${workerStatus}`;
     }
+    case 'house':
+      return `ZIEMIANKA — ${info.connected ? 'droga OK' : 'brak drogi'} — mieszkańcy ${info.residents}/${info.capacity} — ryby ${info.ryby}/${info.rybyTarget}`;
     case 'villager':
       return `LUDZIK — ${info.description}`;
   }

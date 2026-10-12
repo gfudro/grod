@@ -10,6 +10,7 @@ export const BUILDING_COLOR: Record<string, number> = {
   drwal: 0x5c4326,
   rybak: 0x3f5f6b,
   glinianka: 0x9b4a3f,
+  ziemianka: 0x8a6a42,
 };
 const NO_ROAD_COLOR = 0xcc4433;
 
@@ -74,14 +75,47 @@ export function createBuildingsLayer(): BuildingsLayer {
       labels.addChild(label);
 
       if (!isAdjacentToRoad(building.tile, state.roads)) {
-        graphics
-          .circle(px + TILE_SIZE / 2, py + inset - 4, 8)
-          .fill(NO_ROAD_COLOR)
-          .circle(px + TILE_SIZE / 2, py + inset - 4, 8)
-          .stroke({ color: 0x5a1a12, width: 2 });
+        drawNoRoadIcon(graphics, px, py, inset);
+      }
+    }
+
+    for (const house of state.houses) {
+      const { px, py } = tileTopLeft(house.tile.x, house.tile.y);
+      graphics
+        .rect(px + inset, py + inset, size, size)
+        .fill(BUILDING_COLOR.ziemianka)
+        .rect(px + inset, py + inset, size, size)
+        .stroke({ color: 0x241a0d, width: 3 });
+
+      const label = new Text({
+        text: BUILDINGS.ziemianka.name[0],
+        style: { fill: 0xf4e9d8, fontSize: 24, fontWeight: 'bold', fontFamily: 'sans-serif' },
+      });
+      label.anchor.set(0.5);
+      label.position.set(px + TILE_SIZE / 2, py + TILE_SIZE / 2);
+      labels.addChild(label);
+
+      const need = new Text({
+        text: `${house.ryby}/${house.rybyTarget}`,
+        style: { fill: 0x5f8fae, fontSize: 14, fontWeight: 'bold', fontFamily: 'sans-serif' },
+      });
+      need.anchor.set(0.5, 0);
+      need.position.set(px + TILE_SIZE / 2, py + inset + size + 2);
+      labels.addChild(need);
+
+      if (!isAdjacentToRoad(house.tile, state.roads)) {
+        drawNoRoadIcon(graphics, px, py, inset);
       }
     }
   }
 
   return { container, redraw };
+}
+
+function drawNoRoadIcon(graphics: Graphics, px: number, py: number, inset: number): void {
+  graphics
+    .circle(px + TILE_SIZE / 2, py + inset - 4, 8)
+    .fill(NO_ROAD_COLOR)
+    .circle(px + TILE_SIZE / 2, py + inset - 4, 8)
+    .stroke({ color: 0x5a1a12, width: 2 });
 }

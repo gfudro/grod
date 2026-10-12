@@ -8,6 +8,7 @@ export type InspectInfo =
   | { kind: 'warehouse'; connected: boolean; stock: Partial<Record<string, number>> }
   | { kind: 'site'; name: string; delivered: string; assignedWorkerId: string | null }
   | { kind: 'building'; name: string; connected: boolean; hasWorker: boolean; workerWaiting: boolean }
+  | { kind: 'house'; connected: boolean; residents: number; capacity: number; ryby: number; rybyTarget: number }
   | { kind: 'villager'; description: string };
 
 function atTile(tile: Vec2, target: Vec2): boolean {
@@ -18,6 +19,8 @@ const JOB_DESCRIPTIONS: Record<string, string> = {
   idle: 'wolny',
   build: 'buduje',
   produce: 'pracuje',
+  deliver: 'nosi ryby',
+  arriving: 'osadnik w drodze',
 };
 
 function describeVillager(villager: VillagerState): string {
@@ -44,6 +47,18 @@ export function inspectTile(state: GameState, tile: Vec2): InspectInfo | null {
       connected: isAdjacentToRoad(building.tile, state.roads),
       hasWorker: building.workerId !== null,
       workerWaiting: worker?.motion === 'waiting',
+    };
+  }
+
+  const house = state.houses.find((h) => atTile(h.tile, tile));
+  if (house) {
+    return {
+      kind: 'house',
+      connected: isAdjacentToRoad(house.tile, state.roads),
+      residents: house.residents,
+      capacity: house.capacity,
+      ryby: house.ryby,
+      rybyTarget: house.rybyTarget,
     };
   }
 

@@ -21,11 +21,14 @@ export function canPlaceBuildingAt(state: GameState, type: BuildingType, tile: V
   if (state.roads.has(tileKey(tile))) return false;
   if (state.sites.some((site) => site.tile.x === tile.x && site.tile.y === tile.y)) return false;
   if (state.buildings.some((building) => building.tile.x === tile.x && building.tile.y === tile.y)) return false;
+  if (state.houses.some((house) => house.tile.x === tile.x && house.tile.y === tile.y)) return false;
 
   const def = BUILDINGS[type];
-  if (def.maxResourceRange !== undefined) {
+  if (def.resourceSearch) {
     const resourceTile = findResourceTile(tile, def.resourceSearch);
-    if (!resourceTile || manhattan(tile, resourceTile) > def.maxResourceRange) return false;
+    if (!resourceTile || (def.maxResourceRange !== undefined && manhattan(tile, resourceTile) > def.maxResourceRange)) {
+      return false;
+    }
   }
 
   return true;
