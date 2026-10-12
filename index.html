@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="pl">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover"
+    />
+    <meta name="theme-color" content="#6fa83f" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="Gród" />
+    <link rel="apple-touch-icon" href="/icons/icon.png" />
+    <title>Gród</title>
+    <style>
+      html,
+      body {
+        margin: 0;
+        height: 100%;
+        overflow: hidden;
+        background: #2b2016;
+        -webkit-user-select: none;
+        user-select: none;
+      }
+      #app {
+        width: 100%;
+        height: 100%;
+        touch-action: none;
+      }
+      #app canvas {
+        display: block;
+      }
+      #version-label {
+        position: fixed;
+        right: 6px;
+        bottom: 4px;
+        font-family: sans-serif;
+        font-size: 11px;
+        color: rgba(255, 255, 255, 0.55);
+        pointer-events: none;
+        z-index: 1000;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="app"></div>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>

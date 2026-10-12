@@ -1,0 +1,110 @@
+# Plan prac
+
+Każdy etap kończy się wersją, którą Artur może otworzyć na iPadzie. Kolejny etap zaczynamy dopiero, gdy poprzedni działa. Zadania z testów z Arturem dopisujemy do sekcji „Z testów” na dole.
+
+## M0 · Szkielet na iPadzie
+
+- [ ] Projekt: Vite, TypeScript (strict), PixiJS, Vitest, skrypty `typecheck`, `test`, `build`
+- [ ] Publikacja na GitHub Pages przez GitHub Actions
+- [ ] PWA: manifest, ikona, service worker, uruchamianie z ekranu początkowego w poziomie
+- [ ] Mapa na siatce z zastępnikami: rzeka, las, łąka (jedna ręcznie zrobiona mapa)
+- [ ] Przesuwanie mapy palcem, przybliżanie szczypaniem
+- [ ] Numer wersji w rogu ekranu
+
+**Gotowe, gdy:** Greg otwiera grę z ikony na iPadzie i przesuwa mapę palcem bez zacięć.
+
+## M1 · Drogi i pierwszy ludzik
+
+- [ ] Przycisk trybu dróg, rysowanie ścieżki palcem po kafelkach
+- [ ] Duży przycisk „cofnij”
+- [ ] Magazyn postawiony na starcie
+- [ ] Jeden ludzik chodzi po drogach (A*) między dwoma punktami, z animacją chodu
+- [ ] Pauza i prędkość x1, x2, x3
+- [ ] Rdzeń symulacji ze stałym krokiem i ziarnem losowości, pierwsze testy
+
+**Gotowe, gdy:** narysowana droga zmienia trasę ludzika i widać to na ekranie.
+
+## M2 · Budowanie i pierwsze łańcuchy
+
+- [ ] Pasek budynków z kosztem na przycisku, szary przycisk przy braku materiałów
+- [ ] Górny pasek: drewno, glina, ryby, „Wolni”
+- [ ] Plac budowy: wolni ludziki noszą materiały i budują, budynek rośnie
+- [ ] Drwal, rybak i glinianka: producent idzie po surowiec i odnosi go do magazynu
+- [ ] Ikona „brak drogi” nad niepodłączonym budynkiem
+- [ ] Bezczynny ludzik pokazuje nad głową ikonę tego, czego brakuje
+- [ ] Stuknięcie w budynek lub ludzika otwiera panel z ikonami i liczbami
+
+**Gotowe, gdy:** Artur sam stawia drwala, łączy go drogą i patrzy, jak drewno trafia do magazynu.
+
+## M3 · Domy i osadnicy
+
+- [ ] Ziemianka jako dom: miejsca dla mieszkańców, mieszkańcy dołączają do puli „Wolni”
+- [ ] Osadnicy przychodzą z krawędzi mapy z tobołkami, gdy jest wolne miejsce i nie ma głodu
+- [ ] Każdy budynek zajmuje jednego pracownika z puli
+- [ ] Tragarze z magazynu roznoszą ryby do domów
+- [ ] Licznik potrzeby nad domem, np. ryby 3/5
+
+**Gotowe, gdy:** gród rośnie sam, jeśli Artur dba o ryby, a widać skąd biorą się nowi ludzie.
+
+## M4 · Chata i drugi łańcuch
+
+- [ ] Pole prosa (kilka kafelków), rolnik, żarna, kasza
+- [ ] Przetwórca sam chodzi do magazynu po surowiec
+- [ ] Studnia z zasięgiem widocznym po stuknięciu
+- [ ] Awans ziemianka → chata, gdy są ryby, kasza i studnia w zasięgu; chata ma więcej mieszkańców
+- [ ] Brak cofania awansu: niespełniona potrzeba tylko zatrzymuje wzrost
+
+**Gotowe, gdy:** Artur doprowadza pierwszą ziemiankę do chaty bez podpowiedzi.
+
+## M5 · Pory roku
+
+- [ ] Cykl czterech pór roku, 3–4 minuty każda przy x1, ikona pory roku na pasku
+- [ ] Wiosna: siew; jesień: żniwa; pole widocznie rośnie w czterech stadiach
+- [ ] Zima: pole nie rodzi, domy zużywają drewno na opał, rybak łowi wolniej
+- [ ] Ostrzeżenie przed zimą (ikona i licznik dni), gdy zapasów jest za mało
+- [ ] Wygląd zimy nakładany kodem (kolory, śnieg)
+
+**Gotowe, gdy:** Artur rozumie, że latem trzeba odłożyć drewno i ryby na zimę.
+
+## M6 · Zapisy i kronika
+
+- [ ] Zapis w IndexedDB, autozapis co porę roku i przy wyjściu, `navigator.storage.persist()`
+- [ ] Eksport i import zapisu jako plik
+- [ ] `SAVE_VERSION = 1`, pierwszy przykładowy zapis w `tests/fixtures/saves/`, test wczytywania
+- [ ] Testowa migracja v1 → v2, żeby mechanizm był sprawdzony, zanim będzie potrzebny
+- [ ] Kronika: wpisy o ważnych chwilach (pierwsza chata, przetrwana zima, nowi osadnicy)
+- [ ] Ekran kroniki do czytania przez tatę
+- [ ] Nadawanie nazwy grodowi
+
+**Gotowe, gdy:** zapis z poprzedniej wersji gry wczytuje się w nowej, a kronika pokazuje historię grodu.
+
+## M7 · Samouczek pierwszej wiosny
+
+- [ ] Pierwsza wiosna prowadzi krok po kroku: ikona wskazuje, co postawić i gdzie
+- [ ] Budynki odblokowują się stopniowo
+- [ ] Pojedyncze słowa i nagrane komunikaty zamiast zdań
+
+**Gotowe, gdy:** Artur zaczyna nową grę i dochodzi do pierwszej chaty bez pomocy taty.
+
+## M8 · Grafiki i dźwięki
+
+- [ ] Skrypt przetwarzania grafik: usunięcie tła magenta, przycięcie, skalowanie
+- [ ] Podmiana zastępników na grafiki z `assets/raw/sprites/`
+- [ ] Skrypt przetwarzania nagrań: przycięcie ciszy, wyrównanie głośności
+- [ ] Odtwarzanie nagrań przy stuknięciach i wydarzeniach
+
+**Gotowe, gdy:** gra wygląda i brzmi jak gra, a brakujące pliki nadal działają jako zastępniki.
+
+## Po pierwszej wersji
+
+- [ ] Burza i pożar (pierwsze zagrożenie), kontyna Peruna, zgliszcza do odbudowy
+- [ ] Piętro 3: obora, serowarnia, plac wiecowy, zagroda
+- [ ] Piętro 4: owczarnia, tkalnia, kontyna, dwór
+- [ ] Kopiec: bagno z rudą, dymarka, kuźnia, łopaty, kamień
+- [ ] Drugi magazyn, droga z dyli, mosty
+- [ ] Legendy, powodzie, śnieżyce, myszy, wilki, święto Marzanny
+- [ ] Dawne grody jako kurhany na nowych mapach
+
+## Z testów
+
+Zadania z notatek w `docs/playtests/` trafiają tutaj, z datą testu.
