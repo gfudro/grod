@@ -8,6 +8,7 @@ Decyzje z M2 (budowanie i pierwsze łańcuchy):
 - **Pula wolnych pracowników przed chatami (M3):** gra startuje z 3 wolnymi ludzikami stojącymi przy magazynie, żeby dało się budować i testować łańcuchy produkcji, zanim pojawią się domy i osadnicy. M3 zastąpi ten sztywny start prawdziwym przyrostem mieszkańców.
 - **Koszt budynku jest pobierany z magazynu od razu przy stawianiu placu budowy**, nie stopniowo przy każdym kursie robotnika. Kursy robotnika tylko symulują czas i widoczność transportu.
 - **Startowy zapas:** 6 drewna w magazynie, żeby dało się postawić pierwsze 1-2 budynki bez czekania na nic.
+- **Zasięg surowca przy stawianiu budynku:** drwal i rybak da się postawić tylko w promieniu 6 kafelków (w linii kratki, nie po drodze) od najbliższego drzewa/wody. Bez tego dało się postawić drwala daleko od lasu i tak samo nosił drewno — ograniczenie robi z lokalizacji budynku prawdziwą decyzję.
 
 ## Wizja i filary
 

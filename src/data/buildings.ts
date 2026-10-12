@@ -14,6 +14,13 @@ export interface BuildingDef {
   /** Ticks to gather one unit at the resource tile. */
   gatherTicks: number;
   resourceSearch: ResourceSearch;
+  /**
+   * Max tiles (Manhattan, as the crow flies) from the building to its
+   * resource. Placement is refused beyond this range, so a drwal can't
+   * be dropped on the far side of the map from any tree. Buildings that
+   * gather 'na-miejscu' have no range — the resource is the site itself.
+   */
+  maxResourceRange?: number;
 }
 
 /**
@@ -29,6 +36,7 @@ export const BUILDINGS: Record<BuildingType, BuildingDef> = {
     produces: 'drewno',
     gatherTicks: 20,
     resourceSearch: 'drzewo',
+    maxResourceRange: 6,
   },
   rybak: {
     id: 'rybak',
@@ -38,6 +46,7 @@ export const BUILDINGS: Record<BuildingType, BuildingDef> = {
     produces: 'ryba',
     gatherTicks: 20,
     resourceSearch: 'woda',
+    maxResourceRange: 6,
   },
   glinianka: {
     id: 'glinianka',

@@ -2,7 +2,7 @@ import { FOREST, MAP_HEIGHT, MAP_WIDTH, TERRAIN } from '../data/map';
 import type { ResourceSearch } from '../data/buildings';
 import type { Vec2 } from '../data/types';
 
-function manhattan(a: Vec2, b: Vec2): number {
+export function manhattan(a: Vec2, b: Vec2): number {
   return Math.abs(a.x - b.x) + Math.abs(a.y - b.y);
 }
 

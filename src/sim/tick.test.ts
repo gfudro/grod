@@ -5,8 +5,14 @@ import { tryPlaceConstructionSite } from './placement';
 import { tileKey } from '../data/types';
 import { WAREHOUSE_TILE } from '../data/waypoints';
 
-const SITE_TILE = { x: 8, y: 7 }; // two tiles north of the warehouse
-const ROAD_TILE = { x: 8, y: 8 }; // connects warehouse <-> site tile
+// Four tiles north of the warehouse, close enough to a tree for a drwal
+// to be placeable there under the maxResourceRange limit.
+const SITE_TILE = { x: 8, y: 5 };
+const ROAD_TILES = [
+  { x: 8, y: 8 },
+  { x: 8, y: 7 },
+  { x: 8, y: 6 },
+]; // connects warehouse <-> site tile
 
 function runTicks(state: GameState, count: number): void {
   for (let i = 0; i < count; i++) tick(state);
@@ -15,7 +21,7 @@ function runTicks(state: GameState, count: number): void {
 describe('construction', () => {
   it('builds a drwal once a worker delivers all the materials, without double-spending the cost', () => {
     const state = createInitialState();
-    state.roads.add(tileKey(ROAD_TILE));
+    for (const r of ROAD_TILES) state.roads.add(tileKey(r));
     const startingWood = warehouseAmount(state, 'drewno');
 
     // Go through the real placement entry point (same one the input layer
@@ -35,7 +41,7 @@ describe('construction', () => {
 
   it('leaves the site unbuilt when there are no free workers', () => {
     const state = createInitialState();
-    state.roads.add(tileKey(ROAD_TILE));
+    for (const r of ROAD_TILES) state.roads.add(tileKey(r));
     state.villagers = []; // nobody available to pick up the job
 
     state.sites.push({
@@ -56,7 +62,7 @@ describe('construction', () => {
 describe('production', () => {
   it('assigns a worker to a road-connected building and delivers resources to the warehouse', () => {
     const state = createInitialState();
-    state.roads.add(tileKey(ROAD_TILE));
+    for (const r of ROAD_TILES) state.roads.add(tileKey(r));
     state.buildings.push({
       id: 'budynek-test',
       type: 'glinianka',
@@ -95,7 +101,7 @@ describe('determinism', () => {
   it('is deterministic for the same starting state and actions', () => {
     function setup(): GameState {
       const state = createInitialState(7);
-      state.roads.add(tileKey(ROAD_TILE));
+      for (const r of ROAD_TILES) state.roads.add(tileKey(r));
       state.buildings.push({
         id: 'budynek-test',
         type: 'glinianka',
