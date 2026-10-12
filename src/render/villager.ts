@@ -1,5 +1,6 @@
 import { Container, Graphics } from 'pixi.js';
 import { TILE_SIZE } from '../data/tiles';
+import { RESOURCE_COLOR } from '../data/resources';
 import type { Vec2 } from '../data/types';
 import { TICKS_PER_TILE } from '../sim/tick';
 import type { VillagerState } from '../sim/state';
@@ -29,6 +30,15 @@ export function createVillagerSprite(): VillagerSprite {
   body.addChild(bodyShape);
   container.addChild(body);
 
+  const carryingIcon = new Graphics()
+    .rect(-7, -7, 14, 14)
+    .fill(0xffffff)
+    .rect(-7, -7, 14, 14)
+    .stroke({ color: 0x33281a, width: 2 });
+  carryingIcon.position.set(0, -TILE_SIZE * 0.32);
+  carryingIcon.visible = false;
+  container.addChild(carryingIcon);
+
   const waitingIcon = new Graphics()
     .circle(0, -TILE_SIZE * 0.4, 8)
     .fill(WAITING_ICON_COLOR)
@@ -55,6 +65,13 @@ export function createVillagerSprite(): VillagerSprite {
       container.position.set(fromPx.x + half, fromPx.y + half);
       body.position.y = 0;
       waitingIcon.visible = villager.motion === 'waiting';
+    }
+
+    if (villager.carrying) {
+      carryingIcon.visible = true;
+      carryingIcon.tint = RESOURCE_COLOR[villager.carrying];
+    } else {
+      carryingIcon.visible = false;
     }
   }
 

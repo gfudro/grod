@@ -1,61 +1,136 @@
 import { describe, expect, it } from 'vitest';
-import { createInitialState } from './state';
+import { createInitialState, warehouseAmount, type GameState } from './state';
 import { tick } from './tick';
+import { tryPlaceConstructionSite } from './placement';
 import { tileKey } from '../data/types';
-import { WAREHOUSE_TILE, SECOND_WAYPOINT } from '../data/waypoints';
+import { WAREHOUSE_TILE } from '../data/waypoints';
 
-/** An L-shaped road connecting the warehouse to the second waypoint, all on 'trawa'. */
-function connectEndpointsWithRoad(roads: Set<string>): void {
-  for (let x = SECOND_WAYPOINT.x; x <= WAREHOUSE_TILE.x; x++) {
-    roads.add(tileKey({ x, y: WAREHOUSE_TILE.y }));
-  }
-  for (let y = WAREHOUSE_TILE.y; y <= SECOND_WAYPOINT.y; y++) {
-    roads.add(tileKey({ x: SECOND_WAYPOINT.x, y }));
-  }
+const SITE_TILE = { x: 8, y: 7 }; // two tiles north of the warehouse
+const ROAD_TILE = { x: 8, y: 8 }; // connects warehouse <-> site tile
+
+function runTicks(state: GameState, count: number): void {
+  for (let i = 0; i < count; i++) tick(state);
 }
 
-describe('tick', () => {
-  it('leaves the villager waiting when no road connects the two points', () => {
+describe('construction', () => {
+  it('builds a drwal once a worker delivers all the materials, without double-spending the cost', () => {
     const state = createInitialState();
-    for (let i = 0; i < 50; i++) tick(state);
-    expect(state.villager.motion).toBe('waiting');
-    expect(state.villager.from).toEqual(WAREHOUSE_TILE);
+    state.roads.add(tileKey(ROAD_TILE));
+    const startingWood = warehouseAmount(state, 'drewno');
+
+    // Go through the real placement entry point (same one the input layer
+    // uses) so the upfront cost deduction is actually exercised here.
+    const placed = tryPlaceConstructionSite(state, 'drwal', SITE_TILE);
+    expect(placed).toBe(true);
+    expect(warehouseAmount(state, 'drewno')).toBe(startingWood - 3); // paid upfront
+
+    runTicks(state, 300);
+
+    expect(state.sites).toHaveLength(0);
+    expect(state.buildings).toHaveLength(1);
+    expect(state.buildings[0]).toMatchObject({ type: 'drwal', tile: SITE_TILE });
+    // Delivery only carries the already-paid materials; no second deduction.
+    expect(warehouseAmount(state, 'drewno')).toBe(startingWood - 3);
   });
 
-  it('walks the villager to the second waypoint once a road connects them', () => {
+  it('leaves the site unbuilt when there are no free workers', () => {
     const state = createInitialState();
-    connectEndpointsWithRoad(state.roads);
+    state.roads.add(tileKey(ROAD_TILE));
+    state.villagers = []; // nobody available to pick up the job
 
-    // 7-tile L-shaped route * 10 ticks/tile = exactly 70 ticks to arrive;
-    // the villager heads straight back out, so check right at arrival.
-    for (let i = 0; i < 70; i++) tick(state);
+    state.sites.push({
+      id: 'plac-test',
+      type: 'drwal',
+      tile: SITE_TILE,
+      delivered: {},
+      assignedWorkerId: null,
+    });
 
-    expect(state.villager.from).toEqual(SECOND_WAYPOINT);
-    expect(state.villager.targetIndex).toBe(0); // now heading back to the warehouse
+    runTicks(state, 50);
+
+    expect(state.sites).toHaveLength(1);
+    expect(state.sites[0].assignedWorkerId).toBeNull();
+  });
+});
+
+describe('production', () => {
+  it('assigns a worker to a road-connected building and delivers resources to the warehouse', () => {
+    const state = createInitialState();
+    state.roads.add(tileKey(ROAD_TILE));
+    state.buildings.push({
+      id: 'budynek-test',
+      type: 'glinianka',
+      tile: SITE_TILE,
+      resourceTile: { ...SITE_TILE }, // glinianka gathers on its own tile
+      workerId: null,
+    });
+
+    runTicks(state, 120);
+
+    const building = state.buildings[0];
+    expect(building.workerId).not.toBeNull();
+    expect(warehouseAmount(state, 'glina')).toBeGreaterThanOrEqual(1);
   });
 
-  it('shuttles back to the warehouse on the return leg', () => {
+  it('never assigns a worker to a building with no road touching it', () => {
     const state = createInitialState();
-    connectEndpointsWithRoad(state.roads);
+    // no roads at all
+    state.buildings.push({
+      id: 'budynek-test',
+      type: 'glinianka',
+      tile: SITE_TILE,
+      resourceTile: { ...SITE_TILE },
+      workerId: null,
+    });
 
-    for (let i = 0; i < 140; i++) tick(state);
+    runTicks(state, 100);
 
-    expect(state.villager.from).toEqual(WAREHOUSE_TILE);
-    expect(state.villager.targetIndex).toBe(1);
+    expect(state.buildings[0].workerId).toBeNull();
+    expect(warehouseAmount(state, 'glina')).toBe(0);
+    expect(state.villagers.every((v) => v.job.kind === 'idle')).toBe(true);
   });
+});
 
-  it('is deterministic for the same starting state', () => {
-    const a = createInitialState(7);
-    const b = createInitialState(7);
-    connectEndpointsWithRoad(a.roads);
-    connectEndpointsWithRoad(b.roads);
+describe('determinism', () => {
+  it('is deterministic for the same starting state and actions', () => {
+    function setup(): GameState {
+      const state = createInitialState(7);
+      state.roads.add(tileKey(ROAD_TILE));
+      state.buildings.push({
+        id: 'budynek-test',
+        type: 'glinianka',
+        tile: SITE_TILE,
+        resourceTile: { ...SITE_TILE },
+        workerId: null,
+      });
+      return state;
+    }
+    const a = setup();
+    const b = setup();
 
-    for (let i = 0; i < 123; i++) {
+    for (let i = 0; i < 150; i++) {
       tick(a);
       tick(b);
     }
 
-    expect(a.villager).toEqual(b.villager);
+    expect(a.villagers).toEqual(b.villagers);
+    expect(a.warehouse).toEqual(b.warehouse);
     expect(a.tick).toBe(b.tick);
+  });
+});
+
+describe('idle workers', () => {
+  it('walk back to the warehouse when they have nothing to do', () => {
+    const state = createInitialState();
+    const villager = state.villagers[0];
+    villager.from = { x: 2, y: 2 };
+    villager.to = { x: 2, y: 2 };
+    // A simple L-shaped road corridor from (2,2) to the warehouse.
+    for (let y = 2; y <= 9; y++) state.roads.add(tileKey({ x: 2, y }));
+    for (let x = 2; x <= 8; x++) state.roads.add(tileKey({ x, y: 9 }));
+
+    runTicks(state, 200);
+
+    expect(villager.from).toEqual(WAREHOUSE_TILE);
   });
 });

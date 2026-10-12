@@ -1,34 +1,46 @@
-import type { SpeedMultiplier } from '../sim/state';
+import { BUILDINGS, BUILDING_ORDER, type BuildingType } from '../data/buildings';
+import { RESOURCE_COLOR } from '../data/resources';
+import type { BuildPlacementController } from '../input/build-place';
 import type { RoadDrawController } from '../input/road-draw';
+import { canAfford } from '../sim/placement';
+import type { GameState, SpeedMultiplier } from '../sim/state';
 import { STRINGS } from './strings';
 
 export interface HudCallbacks {
   roadDraw: RoadDrawController;
+  buildPlace: BuildPlacementController;
+  state: GameState;
   getSpeed: () => SpeedMultiplier;
   onSpeedChange: (speed: SpeedMultiplier) => void;
 }
 
 const HUD_STYLE = `
-#hud {
+#hud, #palette {
   position: fixed;
   left: 0;
   right: 0;
-  bottom: 0;
   display: flex;
   align-items: center;
-  justify-content: space-between;
   gap: 12px;
   padding: 10px 14px;
   box-sizing: border-box;
   font-family: sans-serif;
   pointer-events: none;
 }
-#hud .hud-group {
+#hud {
+  bottom: 0;
+  justify-content: space-between;
+}
+#palette {
+  bottom: 84px;
+  justify-content: center;
+}
+#hud .hud-group, #palette {
   display: flex;
   gap: 8px;
   pointer-events: auto;
 }
-#hud button {
+#hud button, #palette button {
   min-width: 64px;
   min-height: 64px;
   border-radius: 12px;
@@ -40,7 +52,26 @@ const HUD_STYLE = `
   font-family: sans-serif;
   touch-action: manipulation;
 }
-#hud button.active {
+#palette button {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  gap: 4px;
+  min-width: 72px;
+}
+#palette button .cost {
+  display: flex;
+  gap: 4px;
+}
+#palette button .cost span {
+  padding: 1px 5px;
+  border-radius: 6px;
+  color: #fff;
+  font-size: 12px;
+}
+#hud button.active, #palette button.active {
   background: #6fa83f;
   color: #fff;
   border-color: #2f5d1a;
@@ -50,7 +81,7 @@ const HUD_STYLE = `
   color: #fff;
   min-width: 80px;
 }
-#hud button:disabled {
+#hud button:disabled, #palette button:disabled {
   opacity: 0.4;
 }
 `;
@@ -61,11 +92,15 @@ function injectStyle(): void {
   document.head.appendChild(style);
 }
 
+function hexColor(color: number): string {
+  return `#${color.toString(16).padStart(6, '0')}`;
+}
+
 export interface Hud {
   refresh(): void;
 }
 
-export function mountHud({ roadDraw, getSpeed, onSpeedChange }: HudCallbacks): Hud {
+export function mountHud({ roadDraw, buildPlace, state, getSpeed, onSpeedChange }: HudCallbacks): Hud {
   injectStyle();
 
   const hud = document.createElement('div');
@@ -99,6 +134,33 @@ export function mountHud({ roadDraw, getSpeed, onSpeedChange }: HudCallbacks): H
   hud.append(leftGroup, centerGroup, rightGroup);
   document.body.appendChild(hud);
 
+  const palette = document.createElement('div');
+  palette.id = 'palette';
+  const buildingButtons = new Map<BuildingType, HTMLButtonElement>();
+  for (const type of BUILDING_ORDER) {
+    const def = BUILDINGS[type];
+    const button = document.createElement('button');
+    const name = document.createElement('div');
+    name.textContent = def.name;
+    const cost = document.createElement('div');
+    cost.className = 'cost';
+    for (const [resource, amount] of Object.entries(def.cost)) {
+      const span = document.createElement('span');
+      span.textContent = `${amount}`;
+      span.style.background = hexColor(RESOURCE_COLOR[resource as keyof typeof RESOURCE_COLOR]);
+      cost.appendChild(span);
+    }
+    button.append(name, cost);
+    button.addEventListener('click', () => {
+      buildPlace.setArmed(buildPlace.armedType() === type ? null : type);
+      roadDraw.setRoadMode(false);
+      refresh();
+    });
+    palette.appendChild(button);
+    buildingButtons.set(type, button);
+  }
+  document.body.appendChild(palette);
+
   function refresh(): void {
     roadButton.classList.toggle('active', roadDraw.isRoadMode());
     const speed = getSpeed();
@@ -107,10 +169,17 @@ export function mountHud({ roadDraw, getSpeed, onSpeedChange }: HudCallbacks): H
     speed2Button.classList.toggle('active', speed === 2);
     speed3Button.classList.toggle('active', speed === 3);
     undoButton.disabled = !roadDraw.canUndo();
+
+    const armed = buildPlace.armedType();
+    for (const [type, button] of buildingButtons) {
+      button.classList.toggle('active', armed === type);
+      button.disabled = !canAfford(state, type);
+    }
   }
 
   roadButton.addEventListener('click', () => {
     roadDraw.setRoadMode(!roadDraw.isRoadMode());
+    buildPlace.setArmed(null);
     refresh();
   });
   undoButton.addEventListener('click', () => {

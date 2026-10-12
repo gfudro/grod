@@ -3,4 +3,5 @@ export const STRINGS = {
   droga: 'DROGA',
   cofnij: 'COFNIJ',
   pauza: 'PAUZA',
+  wolni: 'WOLNI',
 } as const;

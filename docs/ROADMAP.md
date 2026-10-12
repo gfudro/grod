@@ -26,13 +26,13 @@ Każdy etap kończy się wersją, którą Artur może otworzyć na iPadzie. Kole
 
 ## M2 · Budowanie i pierwsze łańcuchy
 
-- [ ] Pasek budynków z kosztem na przycisku, szary przycisk przy braku materiałów
-- [ ] Górny pasek: drewno, glina, ryby, „Wolni”
-- [ ] Plac budowy: wolni ludziki noszą materiały i budują, budynek rośnie
-- [ ] Drwal, rybak i glinianka: producent idzie po surowiec i odnosi go do magazynu
-- [ ] Ikona „brak drogi” nad niepodłączonym budynkiem
-- [ ] Bezczynny ludzik pokazuje nad głową ikonę tego, czego brakuje
-- [ ] Stuknięcie w budynek lub ludzika otwiera panel z ikonami i liczbami
+- [x] Pasek budynków z kosztem na przycisku, szary przycisk przy braku materiałów
+- [x] Górny pasek: drewno, glina, ryby, „Wolni”
+- [x] Plac budowy: wolni ludziki noszą materiały i budują, budynek rośnie
+- [x] Drwal, rybak i glinianka: producent idzie po surowiec i odnosi go do magazynu
+- [x] Ikona „brak drogi” nad niepodłączonym budynkiem (i magazynem)
+- [x] Bezczynny ludzik pokazuje nad głową ikonę tego, czego brakuje
+- [x] Stuknięcie w budynek lub ludzika otwiera panel z ikonami i liczbami (na razie tekstowy placeholder)
 
 **Gotowe, gdy:** Artur sam stawia drwala, łączy go drogą i patrzy, jak drewno trafia do magazynu.
 

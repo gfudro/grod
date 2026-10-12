@@ -84,3 +84,8 @@ export function findPath(walkable: ReadonlySet<string>, start: Vec2, goal: Vec2)
 
   return null;
 }
+
+/** True when at least one of the tile's four neighbours is a drawn road. */
+export function isAdjacentToRoad(tile: Vec2, roads: ReadonlySet<string>): boolean {
+  return neighborsOf(tile).some((neighbor) => roads.has(tileKey(neighbor)));
+}
