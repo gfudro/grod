@@ -2,6 +2,7 @@ import { createGameApp } from './render/app';
 import { createRoadsLayer } from './render/roads';
 import { createBuildingsLayer } from './render/buildings';
 import { createBuildGhost } from './render/build-ghost';
+import { createTargetHighlight } from './render/target-highlight';
 import { createWarehouseMarker } from './render/markers';
 import { createVillagerSprite } from './render/villager';
 import { mountVersionLabel } from './ui/version';
@@ -50,6 +51,9 @@ async function start(): Promise<void> {
   const buildGhost = createBuildGhost();
   viewport.addChild(buildGhost.container);
 
+  const targetHighlight = createTargetHighlight();
+  viewport.addChild(targetHighlight.container);
+
   function refreshWorldLayers(): void {
     roadsLayer.redraw(state.roads);
     buildingsLayer.redraw(state);
@@ -67,7 +71,14 @@ async function start(): Promise<void> {
     viewport,
     state,
     () => roadDraw.isRoadMode() || buildPlace.armedType() !== null,
-    showInspect,
+    (info) => {
+      showInspect(info);
+      // Show exactly where a building/worker is trying to reach — answers
+      // "why is my drwal stuck?" without the player having to guess.
+      targetHighlight.update(
+        info?.kind === 'building' ? info.resourceTile : info?.kind === 'villager' ? info.targetTile : null,
+      );
+    },
   );
 
   roadDraw = createRoadDrawController(viewport, state, refreshWorldLayers);
