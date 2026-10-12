@@ -1,8 +1,14 @@
 import { Application } from 'pixi.js';
+import type { Viewport } from 'pixi-viewport';
 import { createMapViewport } from '../input/viewport';
 import { buildTerrainLayer, WORLD_PIXEL_HEIGHT, WORLD_PIXEL_WIDTH } from './terrain';
 
-export async function createGameApp(container: HTMLElement): Promise<Application> {
+export interface GameApp {
+  app: Application;
+  viewport: Viewport;
+}
+
+export async function createGameApp(container: HTMLElement): Promise<GameApp> {
   const app = new Application();
   await app.init({
     resizeTo: window,
@@ -19,5 +25,5 @@ export async function createGameApp(container: HTMLElement): Promise<Application
   viewport.addChild(buildTerrainLayer());
   viewport.moveCenter(WORLD_PIXEL_WIDTH / 2, WORLD_PIXEL_HEIGHT / 2);
 
-  return app;
+  return { app, viewport };
 }

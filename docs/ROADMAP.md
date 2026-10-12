@@ -15,12 +15,12 @@ Każdy etap kończy się wersją, którą Artur może otworzyć na iPadzie. Kole
 
 ## M1 · Drogi i pierwszy ludzik
 
-- [ ] Przycisk trybu dróg, rysowanie ścieżki palcem po kafelkach
-- [ ] Duży przycisk „cofnij”
-- [ ] Magazyn postawiony na starcie
-- [ ] Jeden ludzik chodzi po drogach (A*) między dwoma punktami, z animacją chodu
-- [ ] Pauza i prędkość x1, x2, x3
-- [ ] Rdzeń symulacji ze stałym krokiem i ziarnem losowości, pierwsze testy
+- [x] Przycisk trybu dróg, rysowanie ścieżki palcem po kafelkach
+- [x] Duży przycisk „cofnij”
+- [x] Magazyn postawiony na starcie
+- [x] Jeden ludzik chodzi po drogach (A*) między dwoma punktami, z animacją chodu
+- [x] Pauza i prędkość x1, x2, x3
+- [x] Rdzeń symulacji ze stałym krokiem i ziarnem losowości, pierwsze testy
 
 **Gotowe, gdy:** narysowana droga zmienia trasę ludzika i widać to na ekranie.
 

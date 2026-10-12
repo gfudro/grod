@@ -1,0 +1,62 @@
+import { Container, Graphics } from 'pixi.js';
+import { TILE_SIZE } from '../data/tiles';
+import type { Vec2 } from '../data/types';
+import { TICKS_PER_TILE } from '../sim/tick';
+import type { VillagerState } from '../sim/state';
+
+const BODY_COLOR = 0xd9a441;
+const WAITING_ICON_COLOR = 0xcc4433;
+const BOUNCE_HEIGHT = 5;
+
+export interface VillagerSprite {
+  container: Container;
+  update(villager: VillagerState, tickAlpha: number): void;
+}
+
+function tileTopLeftPixels(tile: Vec2): { x: number; y: number } {
+  return { x: tile.x * TILE_SIZE, y: tile.y * TILE_SIZE };
+}
+
+export function createVillagerSprite(): VillagerSprite {
+  const container = new Container();
+
+  const body = new Container();
+  const bodyShape = new Graphics()
+    .circle(0, 0, TILE_SIZE * 0.18)
+    .fill(BODY_COLOR)
+    .circle(0, 0, TILE_SIZE * 0.18)
+    .stroke({ color: 0x5c3a12, width: 2 });
+  body.addChild(bodyShape);
+  container.addChild(body);
+
+  const waitingIcon = new Graphics()
+    .circle(0, -TILE_SIZE * 0.4, 8)
+    .fill(WAITING_ICON_COLOR)
+    .circle(0, -TILE_SIZE * 0.4, 8)
+    .stroke({ color: 0x5a1a12, width: 2 });
+  waitingIcon.visible = false;
+  container.addChild(waitingIcon);
+
+  function update(villager: VillagerState, tickAlpha: number): void {
+    const fromPx = tileTopLeftPixels(villager.from);
+    const half = TILE_SIZE / 2;
+
+    if (villager.motion === 'walking') {
+      const toPx = tileTopLeftPixels(villager.to);
+      const progress = Math.min(1, (villager.segmentTicks + tickAlpha) / TICKS_PER_TILE);
+      container.position.set(
+        fromPx.x + half + (toPx.x - fromPx.x) * progress,
+        fromPx.y + half + (toPx.y - fromPx.y) * progress,
+      );
+      body.scale.x = villager.facing;
+      body.position.y = -Math.abs(Math.sin(progress * Math.PI * 3)) * BOUNCE_HEIGHT;
+      waitingIcon.visible = false;
+    } else {
+      container.position.set(fromPx.x + half, fromPx.y + half);
+      body.position.y = 0;
+      waitingIcon.visible = villager.motion === 'waiting';
+    }
+  }
+
+  return { container, update };
+}
