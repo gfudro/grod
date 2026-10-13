@@ -1,10 +1,23 @@
 import type { ResourceType } from './resources';
 
-export type BuildingType = 'drwal' | 'rybak' | 'glinianka' | 'ziemianka';
+export type BuildingType = 'drwal' | 'rybak' | 'glinianka' | 'pole' | 'zarna' | 'studnia' | 'ziemianka';
 
 export type ResourceSearch = 'drzewo' | 'woda' | 'na-miejscu';
 
-export type BuildingKind = 'produkcja' | 'dom';
+/**
+ * - produkcja: worker gathers a resource and carries it to the warehouse
+ * - pole: farmer sows and harvests the building's own field plots
+ * - przetworstwo: worker fetches an input from the warehouse, processes it
+ *   at the building and carries the output back
+ * - usluga: no worker; serves houses within range while road-connected
+ * - dom: a house (tier 0 of HOUSE_TIERS)
+ */
+export type BuildingKind = 'produkcja' | 'pole' | 'przetworstwo' | 'usluga' | 'dom';
+
+export interface Footprint {
+  w: number;
+  h: number;
+}
 
 export interface BuildingDef {
   id: BuildingType;
@@ -13,9 +26,13 @@ export interface BuildingDef {
   cost: Partial<Record<ResourceType, number>>;
   /** Ticks a builder hammers once all materials are on site. */
   buildTicks: number;
+  /** Tiles covered, anchored at the top-left tile. Defaults to 1×1. */
+  footprint?: Footprint;
+
+  // --- kind: 'produkcja', 'pole', 'przetworstwo' ---
+  produces?: ResourceType;
 
   // --- kind: 'produkcja' only ---
-  produces?: ResourceType;
   /** Ticks to gather one unit at the resource tile. */
   gatherTicks?: number;
   resourceSearch?: ResourceSearch;
@@ -27,16 +44,27 @@ export interface BuildingDef {
    */
   maxResourceRange?: number;
 
-  // --- kind: 'dom' only ---
-  /** Residents this house adds to the shared worker pool once filled. */
-  capacity?: number;
-  /** Fish a tragarz keeps topping the house up to. */
-  rybyTarget?: number;
+  // --- kind: 'pole' only ---
+  /** Ticks the farmer spends sowing one plot. */
+  sowTicks?: number;
+  /** Ticks a sown plot takes to ripen on its own. */
+  growTicks?: number;
+  /** Ticks the farmer spends harvesting one ripe plot (yields one unit). */
+  harvestTicks?: number;
+
+  // --- kind: 'przetworstwo' only ---
+  consumes?: ResourceType;
+  /** Ticks to turn one input unit into one output unit. */
+  processTicks?: number;
+
+  // --- kind: 'usluga' only ---
+  /** Houses within this many tiles (square around the building) are served. */
+  serviceRange?: number;
 }
 
 /**
- * First-tier buildings. Costs and timings are starting placeholders for
- * balancing after playtests (see GDD "Otwarte pytania").
+ * Costs and timings are starting placeholders for balancing after
+ * playtests (see GDD "Otwarte pytania").
  */
 export const BUILDINGS: Record<BuildingType, BuildingDef> = {
   drwal: {
@@ -71,18 +99,46 @@ export const BUILDINGS: Record<BuildingType, BuildingDef> = {
     gatherTicks: 20,
     resourceSearch: 'na-miejscu',
   },
+  pole: {
+    id: 'pole',
+    name: 'POLE',
+    kind: 'pole',
+    cost: { drewno: 2 },
+    buildTicks: 30,
+    footprint: { w: 2, h: 2 },
+    produces: 'proso',
+    sowTicks: 20,
+    growTicks: 300,
+    harvestTicks: 20,
+  },
+  zarna: {
+    id: 'zarna',
+    name: 'ŻARNA',
+    kind: 'przetworstwo',
+    cost: { drewno: 2, glina: 2 },
+    buildTicks: 30,
+    consumes: 'proso',
+    produces: 'kasza',
+    processTicks: 40,
+  },
+  studnia: {
+    id: 'studnia',
+    name: 'STUDNIA',
+    kind: 'usluga',
+    cost: { drewno: 1, glina: 2 },
+    buildTicks: 30,
+    serviceRange: 3,
+  },
   ziemianka: {
     id: 'ziemianka',
     name: 'ZIEMIANKA',
     kind: 'dom',
     cost: { drewno: 4 },
     buildTicks: 40,
-    capacity: 3,
-    rybyTarget: 5,
   },
 };
 
-export const BUILDING_ORDER: BuildingType[] = ['drwal', 'rybak', 'glinianka', 'ziemianka'];
+export const BUILDING_ORDER: BuildingType[] = ['drwal', 'rybak', 'glinianka', 'ziemianka', 'pole', 'zarna', 'studnia'];
 
 /** Starting warehouse stock, enough for one or two starter buildings. */
 export const STARTING_WAREHOUSE_STOCK: Partial<Record<ResourceType, number>> = {

@@ -3,6 +3,7 @@ import { createRoadsLayer } from './render/roads';
 import { createBuildingsLayer } from './render/buildings';
 import { createBuildGhost } from './render/build-ghost';
 import { createTargetHighlight } from './render/target-highlight';
+import { createRangeHighlight } from './render/range-highlight';
 import { createWarehouseMarker } from './render/markers';
 import { createVillagerSprite } from './render/villager';
 import { mountVersionLabel } from './ui/version';
@@ -31,6 +32,9 @@ async function start(): Promise<void> {
 
   const roadsLayer = createRoadsLayer();
   viewport.addChild(roadsLayer.container);
+
+  const rangeHighlight = createRangeHighlight();
+  viewport.addChild(rangeHighlight.container);
 
   const buildingsLayer = createBuildingsLayer();
   viewport.addChild(buildingsLayer.container);
@@ -76,6 +80,8 @@ async function start(): Promise<void> {
     targetHighlight.update(
       info?.kind === 'building' ? info.resourceTile : info?.kind === 'villager' ? info.targetTile : null,
     );
+    // Tapping a studnia (or a house it serves) shades the well's range.
+    rangeHighlight.update(info?.kind === 'building' || info?.kind === 'house' ? info.rangeTiles : null);
   }
 
   const showInspect = mountInspectPanel((buildingId, paused) => {
@@ -132,6 +138,16 @@ async function start(): Promise<void> {
   });
 
   mountVersionLabel();
+
+  // Dev-only handle for setting up test situations from the browser console.
+  if (import.meta.env.DEV) {
+    const advance = (ticks: number): void => {
+      for (let i = 0; i < ticks; i++) tick(state);
+      syncVillagerSprites();
+      refreshWorldLayers();
+    };
+    (window as unknown as { grod: unknown }).grod = { state, refresh: refreshWorldLayers, advance };
+  }
 }
 
 start();

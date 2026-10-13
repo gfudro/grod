@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { createInitialState, warehouseAmount, type GameState } from './state';
+import { createInitialState, houseGood, warehouseAmount, type GameState } from './state';
 import { tick, SETTLER_CHECK_INTERVAL } from './tick';
 import { tryPlaceConstructionSite } from './placement';
 import { tileKey } from '../data/types';
@@ -34,7 +34,7 @@ describe('ziemianka construction', () => {
     expect(state.sites).toHaveLength(0);
     expect(state.buildings).toHaveLength(0); // a house is not a producer
     expect(state.houses).toHaveLength(1);
-    expect(state.houses[0]).toMatchObject({ tile: HOUSE_TILE, residents: 0, capacity: 3, ryby: 0, rybyTarget: 5 });
+    expect(state.houses[0]).toMatchObject({ tile: HOUSE_TILE, tier: 0, residents: 0, goods: {}, upgrade: null });
   });
 });
 
@@ -98,7 +98,7 @@ describe('settlers', () => {
 
     runTicks(state, MAP_HEIGHT * 20); // long enough to settle completely
 
-    expect(state.houses[0].ryby).toBe(0);
+    expect(houseGood(state.houses[0], 'ryba')).toBe(0);
     expect(state.houses[0].residents).toBeGreaterThanOrEqual(1);
     expect(state.houses[0].residents).toBeLessThan(3); // hunger blocked the rest
   });
@@ -112,7 +112,7 @@ describe('tragarz delivery', () => {
 
     runTicks(state, 400);
 
-    expect(state.houses[0].ryby).toBe(5); // rybyTarget
+    expect(houseGood(state.houses[0], 'ryba')).toBe(5); // ziemianka fish target
     expect(warehouseAmount(state, 'ryba')).toBe(5); // 10 - 5 delivered
   });
 
@@ -123,17 +123,17 @@ describe('tragarz delivery', () => {
     state.houses.push({
       id: 'dom-test',
       tile: HOUSE_TILE,
+      tier: 0,
       residents: 1,
-      capacity: 3,
-      ryby: 0,
-      rybyTarget: 5,
+      goods: {},
+      upgrade: null,
     });
     state.warehouse.ryba = 10;
     // no roads at all
 
     runTicks(state, 200);
 
-    expect(state.houses[0].ryby).toBe(0);
+    expect(houseGood(state.houses[0], 'ryba')).toBe(0);
     expect(state.villagers.every((v) => v.job.kind === 'idle')).toBe(true);
   });
 });

@@ -2,7 +2,7 @@ import { BUILDINGS, type BuildingType } from '../data/buildings';
 import { FOREST, MAP_HEIGHT, MAP_WIDTH, TERRAIN } from '../data/map';
 import type { ResourceType } from '../data/resources';
 import { tileKey, type Vec2 } from '../data/types';
-import { WAREHOUSE_TILE } from '../data/waypoints';
+import { footprintTiles, occupiedTileKeys } from './footprint';
 import { findResourceTile, manhattan } from './resource-tiles';
 import { nextEntityId, takeFromWarehouse, warehouseAmount, type GameState } from './state';
 
@@ -14,14 +14,14 @@ export function canAfford(state: GameState, type: BuildingType): boolean {
 }
 
 export function canPlaceBuildingAt(state: GameState, type: BuildingType, tile: Vec2): boolean {
-  if (tile.x < 0 || tile.y < 0 || tile.x >= MAP_WIDTH || tile.y >= MAP_HEIGHT) return false;
-  if (TERRAIN[tile.y][tile.x] !== 'trawa') return false;
-  if (tile.x === WAREHOUSE_TILE.x && tile.y === WAREHOUSE_TILE.y) return false;
-  if (FOREST.some((tree) => tree.x === tile.x && tree.y === tile.y)) return false;
-  if (state.roads.has(tileKey(tile))) return false;
-  if (state.sites.some((site) => site.tile.x === tile.x && site.tile.y === tile.y)) return false;
-  if (state.buildings.some((building) => building.tile.x === tile.x && building.tile.y === tile.y)) return false;
-  if (state.houses.some((house) => house.tile.x === tile.x && house.tile.y === tile.y)) return false;
+  const occupied = occupiedTileKeys(state);
+  for (const t of footprintTiles(type, tile)) {
+    if (t.x < 0 || t.y < 0 || t.x >= MAP_WIDTH || t.y >= MAP_HEIGHT) return false;
+    if (TERRAIN[t.y][t.x] !== 'trawa') return false;
+    if (FOREST.some((tree) => tree.x === t.x && tree.y === t.y)) return false;
+    if (state.roads.has(tileKey(t))) return false;
+    if (occupied.has(tileKey(t))) return false;
+  }
 
   const def = BUILDINGS[type];
   if (def.resourceSearch) {

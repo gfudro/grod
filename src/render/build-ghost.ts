@@ -1,8 +1,10 @@
 import { Container, Graphics } from 'pixi.js';
-import type { BuildingType } from '../data/buildings';
+import { BUILDINGS, type BuildingType } from '../data/buildings';
 import { TILE_SIZE } from '../data/tiles';
 import type { Vec2 } from '../data/types';
+import { serviceRangeTiles } from '../sim/houses';
 import { BUILDING_COLOR } from './buildings';
+import { drawRangeTiles } from './range-highlight';
 
 // A saturated white reads clearly against grass/bank/water alike; the old
 // green border was nearly the same colour as the grass tiles it sat on.
@@ -29,18 +31,26 @@ export function createBuildGhost(): BuildGhost {
     }
     container.visible = true;
 
-    const size = TILE_SIZE * 0.8;
-    const inset = (TILE_SIZE - size) / 2;
+    const def = BUILDINGS[type];
+    const { w, h } = def.footprint ?? { w: 1, h: 1 };
+    const inset = TILE_SIZE * 0.1;
     const px = tile.x * TILE_SIZE;
     const py = tile.y * TILE_SIZE;
+    const width = w * TILE_SIZE - inset * 2;
+    const height = h * TILE_SIZE - inset * 2;
     const color = BUILDING_COLOR[type] ?? 0x555555;
 
     graphics.clear();
+    // Show a service building's range while placing it, so the player
+    // can see which houses it will reach before committing.
+    if (def.serviceRange !== undefined) {
+      drawRangeTiles(graphics, serviceRangeTiles(tile, def.serviceRange));
+    }
     graphics.alpha = GHOST_ALPHA;
     graphics
-      .rect(px + inset, py + inset, size, size)
+      .rect(px + inset, py + inset, width, height)
       .fill(color)
-      .rect(px + inset, py + inset, size, size)
+      .rect(px + inset, py + inset, width, height)
       .stroke({ color: valid ? VALID_BORDER : INVALID_BORDER, width: 4 });
   }
 

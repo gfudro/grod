@@ -39,11 +39,13 @@ export function createVillagerSprite(): VillagerSprite {
   carryingIcon.visible = false;
   container.addChild(carryingIcon);
 
+  // Drawn white so it can be tinted: red for "no road", or the colour of
+  // the missing good (e.g. proso for an idle żarna worker).
   const waitingIcon = new Graphics()
-    .circle(0, -TILE_SIZE * 0.4, 8)
-    .fill(WAITING_ICON_COLOR)
-    .circle(0, -TILE_SIZE * 0.4, 8)
-    .stroke({ color: 0x5a1a12, width: 2 });
+    .circle(0, -TILE_SIZE * 0.4, 9)
+    .fill(0xffffff)
+    .circle(0, -TILE_SIZE * 0.4, 9)
+    .stroke({ color: 0x33281a, width: 2 });
   waitingIcon.visible = false;
   container.addChild(waitingIcon);
 
@@ -76,6 +78,7 @@ export function createVillagerSprite(): VillagerSprite {
       container.position.set(fromPx.x + half, fromPx.y + half);
       body.position.y = 0;
       waitingIcon.visible = villager.motion === 'waiting';
+      waitingIcon.tint = villager.waitingFor ? RESOURCE_COLOR[villager.waitingFor] : WAITING_ICON_COLOR;
     }
 
     if (villager.carrying) {

@@ -1,15 +1,29 @@
-import { BUILDINGS } from '../data/buildings';
+import { BUILDINGS, type BuildingType } from '../data/buildings';
 import { MAP_HEIGHT, MAP_WIDTH, TERRAIN } from '../data/map';
-import type { ResourceType } from '../data/resources';
-import type { Vec2 } from '../data/types';
+import type { ResourceAmounts, ResourceType } from '../data/resources';
+import { tileKey, type Vec2 } from '../data/types';
 import { WAREHOUSE_TILE } from '../data/waypoints';
+import { footprintContains, footprintTiles, footprintTouchesRoad } from './footprint';
+import {
+  completeUpgrade,
+  houseCapacity,
+  houseGoodTarget,
+  houseTier,
+  houseWantedGoods,
+  startReadyUpgrades,
+} from './houses';
 import { findPath, isAdjacentToRoad } from './pathfinding';
 import { findResourceTile, manhattan } from './resource-tiles';
 import {
   addToWarehouse,
+  houseGood,
   nextEntityId,
   takeFromWarehouse,
+  warehouseAmount,
+  type BuildStage,
+  type Building,
   type ConstructionSite,
+  type FieldPlot,
   type GameState,
   type House,
   type VillagerJob,
@@ -24,6 +38,8 @@ export const SETTLER_CHECK_INTERVAL = 50;
 
 export function tick(state: GameState): void {
   state.tick += 1;
+  growFields(state);
+  startReadyUpgrades(state);
   for (const villager of state.villagers) {
     advanceVillager(state, villager);
   }
@@ -34,6 +50,7 @@ export function tick(state: GameState): void {
 
 function advanceVillager(state: GameState, villager: VillagerState): void {
   if (villager.motion !== 'walking') {
+    villager.waitingFor = null; // runJob sets it again if still held up
     runJob(state, villager);
   }
   if (villager.motion !== 'walking') return;
@@ -62,8 +79,17 @@ function runJob(state: GameState, villager: VillagerState): void {
     case 'build':
       runBuild(state, villager);
       return;
+    case 'upgrade':
+      runUpgrade(state, villager);
+      return;
     case 'produce':
       runProduce(state, villager);
+      return;
+    case 'farm':
+      runFarm(state, villager);
+      return;
+    case 'process':
+      runProcess(state, villager);
       return;
     case 'deliver':
       runDeliver(state, villager);
@@ -94,31 +120,70 @@ function tryAssignWork(state: GameState, villager: VillagerState): boolean {
     return true;
   }
 
+  const upgrading = state.houses.find((h) => h.upgrade && h.upgrade.assignedWorkerId === null);
+  if (upgrading) {
+    upgrading.upgrade!.assignedWorkerId = villager.id;
+    villager.job = { kind: 'upgrade', houseId: upgrading.id, stage: 'toWarehouse' };
+    return true;
+  }
+
   const building = state.buildings.find(
-    (b) => b.workerId === null && !b.paused && isAdjacentToRoad(b.tile, state.roads),
+    (b) =>
+      BUILDINGS[b.type].kind !== 'usluga' &&
+      b.workerId === null &&
+      !b.paused &&
+      footprintTouchesRoad(b.type, b.tile, state.roads),
   );
   if (building) {
     building.workerId = villager.id;
-    villager.job = { kind: 'produce', buildingId: building.id, stage: 'toResource' };
+    villager.job = jobForBuilding(building);
     return true;
   }
 
-  const house = state.houses.find((h) => {
-    if (!isAdjacentToRoad(h.tile, state.roads)) return false;
-    // Count fish already claimed by other tragarze so we never assign more
-    // deliveries than the house actually needs (the surplus would just be
-    // wasted once ryby hits rybyTarget).
-    const committed = state.villagers.filter(
-      (v) => v.job.kind === 'deliver' && v.job.houseId === h.id,
-    ).length;
-    return h.ryby + committed < h.rybyTarget;
-  });
-  if (house) {
-    villager.job = { kind: 'deliver', houseId: house.id, stage: 'toWarehouse' };
-    return true;
+  for (const house of state.houses) {
+    if (!isAdjacentToRoad(house.tile, state.roads)) continue;
+    for (const resource of houseWantedGoods(house)) {
+      if (warehouseAmount(state, resource) === 0) continue;
+      // Count goods already claimed by other tragarze so we never assign
+      // more deliveries than the house actually needs (the surplus would
+      // just be wasted once the counter hits its target).
+      const committed = committedDeliveries(state, house, resource, villager);
+      if (houseGood(house, resource) + committed < houseGoodTarget(house, resource)) {
+        villager.job = { kind: 'deliver', houseId: house.id, resource, stage: 'toWarehouse' };
+        return true;
+      }
+    }
   }
 
   return false;
+}
+
+function jobForBuilding(building: Building): VillagerJob {
+  switch (BUILDINGS[building.type].kind) {
+    case 'pole':
+      return { kind: 'farm', buildingId: building.id, stage: 'toField', plot: 0 };
+    case 'przetworstwo':
+      return { kind: 'process', buildingId: building.id, stage: 'toBuilding' };
+    default:
+      return { kind: 'produce', buildingId: building.id, stage: 'toResource' };
+  }
+}
+
+function committedDeliveries(state: GameState, house: House, resource: ResourceType, except: VillagerState): number {
+  return state.villagers.filter(
+    (v) => v !== except && v.job.kind === 'deliver' && v.job.houseId === house.id && v.job.resource === resource,
+  ).length;
+}
+
+/** What a builder needs to know about the thing they are building. */
+interface BuildTarget {
+  tile: Vec2;
+  /** Extra tiles a builder may step on to reach `tile` (the site's own footprint). */
+  walkable: string[];
+  cost: ResourceAmounts;
+  buildTicks: number;
+  delivered: ResourceAmounts;
+  complete(): void;
 }
 
 function runBuild(state: GameState, villager: VillagerState): void {
@@ -129,38 +194,73 @@ function runBuild(state: GameState, villager: VillagerState): void {
     return;
   }
   const def = BUILDINGS[site.type];
+  runConstruction(state, villager, job, {
+    tile: site.tile,
+    walkable: footprintTiles(site.type, site.tile).map(tileKey),
+    cost: def.cost,
+    buildTicks: def.buildTicks,
+    delivered: site.delivered,
+    complete: () => completeConstruction(state, site),
+  });
+}
 
+function runUpgrade(state: GameState, villager: VillagerState): void {
+  const job = villager.job as Extract<VillagerJob, { kind: 'upgrade' }>;
+  const house = state.houses.find((h) => h.id === job.houseId);
+  const upgradeDef = house ? houseTier(house).upgrade : undefined;
+  if (!house || !house.upgrade || !upgradeDef) {
+    villager.job = { kind: 'idle' };
+    return;
+  }
+  runConstruction(state, villager, job, {
+    tile: house.tile,
+    walkable: [],
+    cost: upgradeDef.cost,
+    buildTicks: upgradeDef.buildTicks,
+    delivered: house.upgrade.delivered,
+    complete: () => completeUpgrade(house),
+  });
+}
+
+/** Shared by new sites and house upgrades: carry paid-for materials over, then hammer. */
+function runConstruction(
+  state: GameState,
+  villager: VillagerState,
+  job: { stage: BuildStage },
+  target: BuildTarget,
+): void {
   if (job.stage === 'toWarehouse') {
     if (!atTile(villager.from, WAREHOUSE_TILE)) {
       beginWalk(state, villager, WAREHOUSE_TILE);
       return;
     }
-    // The site's materials were already paid for out of the warehouse when
-    // it was placed (see sim/placement.ts) — this leg just carries them
-    // from warehouse to site, it does not deduct stock again.
-    const needed = nextNeededResource(def.cost, site.delivered);
+    // The materials were already paid for out of the warehouse when the
+    // site/upgrade started (see sim/placement.ts, sim/houses.ts) — this
+    // leg just carries them over, it does not deduct stock again.
+    const needed = nextNeededResource(target.cost, target.delivered);
     if (!needed) {
+      job.stage = 'toSite';
       villager.motion = 'idle';
       return;
     }
     villager.carrying = needed;
     job.stage = 'toSite';
-    beginWalk(state, villager, site.tile);
+    beginWalk(state, villager, target.tile, target.walkable);
     return;
   }
 
   if (job.stage === 'toSite') {
-    if (!atTile(villager.from, site.tile)) {
-      beginWalk(state, villager, site.tile);
+    if (!atTile(villager.from, target.tile)) {
+      beginWalk(state, villager, target.tile, target.walkable);
       return;
     }
     if (villager.carrying) {
-      site.delivered[villager.carrying] = (site.delivered[villager.carrying] ?? 0) + 1;
+      target.delivered[villager.carrying] = (target.delivered[villager.carrying] ?? 0) + 1;
       villager.carrying = null;
     }
-    if (isFullyDelivered(def.cost, site.delivered)) {
+    if (isFullyDelivered(target.cost, target.delivered)) {
       job.stage = 'hammering';
-      villager.workTicksRemaining = def.buildTicks;
+      villager.workTicksRemaining = target.buildTicks;
     } else {
       job.stage = 'toWarehouse';
     }
@@ -172,7 +272,7 @@ function runBuild(state: GameState, villager: VillagerState): void {
   villager.motion = 'idle';
   villager.workTicksRemaining -= 1;
   if (villager.workTicksRemaining <= 0) {
-    completeConstruction(state, site);
+    target.complete();
     villager.job = { kind: 'idle' };
   }
 }
@@ -216,12 +316,161 @@ function runProduce(state: GameState, villager: VillagerState): void {
   }
 
   // job.stage === 'toWarehouse'
+  carryToWarehouse(state, villager, () => {
+    job.stage = 'toResource';
+  });
+}
+
+/**
+ * Farmer: harvest any ripe plot, otherwise sow any bare one, otherwise
+ * stand on the field while the millet grows on its own.
+ */
+function runFarm(state: GameState, villager: VillagerState): void {
+  const job = villager.job as Extract<VillagerJob, { kind: 'farm' }>;
+  const building = state.buildings.find((b) => b.id === job.buildingId);
+  if (!building || !building.plots) {
+    villager.job = { kind: 'idle' };
+    return;
+  }
+  const def = BUILDINGS[building.type];
+  const tiles = footprintTiles(building.type, building.tile);
+  const fieldKeys = tiles.map(tileKey);
+
+  if (job.stage === 'toField') {
+    if (!footprintTouchesRoad(building.type, building.tile, state.roads)) {
+      villager.motion = 'waiting'; // field lost its road connection
+      return;
+    }
+    const plot = pickPlot(building.plots);
+    const target = tiles[plot ?? 0];
+    if (!atTile(villager.from, target)) {
+      beginWalk(state, villager, target, fieldKeys);
+      return;
+    }
+    villager.motion = 'idle';
+    if (plot === null) return; // everything sown and still growing
+    job.plot = plot;
+    if (building.plots[plot].stage === 'dojrzale') {
+      job.stage = 'harvesting';
+      villager.workTicksRemaining = def.harvestTicks!;
+    } else {
+      job.stage = 'sowing';
+      villager.workTicksRemaining = def.sowTicks!;
+    }
+    return;
+  }
+
+  if (job.stage === 'sowing' || job.stage === 'harvesting') {
+    villager.motion = 'idle';
+    villager.workTicksRemaining -= 1;
+    if (villager.workTicksRemaining > 0) return;
+    const plot = building.plots[job.plot];
+    if (job.stage === 'sowing') {
+      plot.stage = 'kielki';
+      plot.growTicksRemaining = def.growTicks!;
+      job.stage = 'toField';
+    } else {
+      plot.stage = 'sciete';
+      villager.carrying = def.produces!;
+      job.stage = 'toWarehouse';
+    }
+    return;
+  }
+
+  // job.stage === 'toWarehouse'
+  carryToWarehouse(state, villager, () => {
+    job.stage = 'toField';
+  });
+}
+
+function pickPlot(plots: FieldPlot[]): number | null {
+  const ripe = plots.findIndex((p) => p.stage === 'dojrzale');
+  if (ripe >= 0) return ripe;
+  const bare = plots.findIndex((p) => p.stage === 'zaorane' || p.stage === 'sciete');
+  return bare >= 0 ? bare : null;
+}
+
+function growFields(state: GameState): void {
+  for (const building of state.buildings) {
+    for (const plot of building.plots ?? []) {
+      if (plot.stage !== 'kielki') continue;
+      plot.growTicksRemaining -= 1;
+      if (plot.growTicksRemaining <= 0) plot.stage = 'dojrzale';
+    }
+  }
+}
+
+/**
+ * Processor (żarna): walks to the warehouse for one input, works it at
+ * the building, carries the output back. With no input in stock they
+ * stand in front of the building showing what is missing.
+ */
+function runProcess(state: GameState, villager: VillagerState): void {
+  const job = villager.job as Extract<VillagerJob, { kind: 'process' }>;
+  const building = state.buildings.find((b) => b.id === job.buildingId);
+  if (!building) {
+    villager.job = { kind: 'idle' };
+    return;
+  }
+  const def = BUILDINGS[building.type];
+  const input = def.consumes!;
+
+  if (job.stage === 'toBuilding') {
+    if (!footprintTouchesRoad(building.type, building.tile, state.roads)) {
+      villager.motion = 'waiting'; // building lost its road connection
+      return;
+    }
+    if (!atTile(villager.from, building.tile)) {
+      beginWalk(state, villager, building.tile);
+      return;
+    }
+    if (villager.carrying === input) {
+      job.stage = 'working';
+      villager.workTicksRemaining = def.processTicks!;
+      villager.motion = 'idle';
+      return;
+    }
+    if (warehouseAmount(state, input) > 0) {
+      job.stage = 'toWarehouse';
+      beginWalk(state, villager, WAREHOUSE_TILE);
+      return;
+    }
+    villager.motion = 'waiting';
+    villager.waitingFor = input;
+    return;
+  }
+
+  if (job.stage === 'working') {
+    villager.motion = 'idle';
+    villager.workTicksRemaining -= 1;
+    if (villager.workTicksRemaining <= 0) {
+      villager.carrying = def.produces!;
+      job.stage = 'toWarehouse';
+    }
+    return;
+  }
+
+  // job.stage === 'toWarehouse': drop off any output, pick up the next input.
+  if (!atTile(villager.from, WAREHOUSE_TILE)) {
+    beginWalk(state, villager, WAREHOUSE_TILE);
+    return;
+  }
+  if (villager.carrying) {
+    addToWarehouse(state, villager.carrying, 1);
+    villager.carrying = null;
+  }
+  if (takeFromWarehouse(state, input, 1)) villager.carrying = input;
+  job.stage = 'toBuilding';
+  villager.motion = 'idle';
+}
+
+function carryToWarehouse(state: GameState, villager: VillagerState, onDropped: () => void): void {
   if (atTile(villager.from, WAREHOUSE_TILE)) {
     if (villager.carrying) {
       addToWarehouse(state, villager.carrying, 1);
       villager.carrying = null;
     }
-    job.stage = 'toResource';
+    onDropped();
     villager.motion = 'idle';
     return;
   }
@@ -235,26 +484,25 @@ function runDeliver(state: GameState, villager: VillagerState): void {
     villager.job = { kind: 'idle' };
     return;
   }
+  const target = houseGoodTarget(house, job.resource);
 
   if (job.stage === 'toWarehouse') {
     if (!atTile(villager.from, WAREHOUSE_TILE)) {
       beginWalk(state, villager, WAREHOUSE_TILE);
       return;
     }
-    // Other tragarze already carrying fish toward this house also count —
-    // otherwise several workers could each grab "the last unit" at once
-    // and overshoot rybyTarget, wasting the surplus taken from the warehouse.
-    const othersCommitted = state.villagers.filter(
-      (v) => v !== villager && v.job.kind === 'deliver' && v.job.houseId === house.id,
-    ).length;
-    if (house.ryby + othersCommitted >= house.rybyTarget || !takeFromWarehouse(state, 'ryba', 1)) {
+    // Other tragarze already carrying this good toward this house also
+    // count — otherwise several workers could each grab "the last unit"
+    // at once and overshoot the target, wasting the surplus.
+    const othersCommitted = committedDeliveries(state, house, job.resource, villager);
+    if (houseGood(house, job.resource) + othersCommitted >= target || !takeFromWarehouse(state, job.resource, 1)) {
       // need already met (or about to be, by someone else), or the
-      // warehouse is out of fish — free the worker either way.
+      // warehouse is out of this good — free the worker either way.
       villager.job = { kind: 'idle' };
       villager.motion = 'idle';
       return;
     }
-    villager.carrying = 'ryba';
+    villager.carrying = job.resource;
     job.stage = 'toHouse';
     beginWalk(state, villager, house.tile);
     return;
@@ -269,10 +517,10 @@ function runDeliver(state: GameState, villager: VillagerState): void {
     beginWalk(state, villager, house.tile);
     return;
   }
-  house.ryby = Math.min(house.rybyTarget, house.ryby + 1);
+  house.goods[job.resource] = Math.min(target, houseGood(house, job.resource) + 1);
   villager.carrying = null;
   villager.motion = 'idle';
-  if (house.ryby >= house.rybyTarget) {
+  if (houseGood(house, job.resource) >= target) {
     villager.job = { kind: 'idle' };
   } else {
     job.stage = 'toWarehouse';
@@ -282,7 +530,7 @@ function runDeliver(state: GameState, villager: VillagerState): void {
 function runArriving(state: GameState, villager: VillagerState): void {
   const job = villager.job as Extract<VillagerJob, { kind: 'arriving' }>;
   const house = state.houses.find((h) => h.id === job.houseId);
-  if (!house || house.residents >= house.capacity) {
+  if (!house || house.residents >= houseCapacity(house)) {
     // Slot filled by someone else (or the house is gone) — join as idle.
     villager.job = { kind: 'idle' };
     villager.motion = 'idle';
@@ -300,31 +548,39 @@ function runArriving(state: GameState, villager: VillagerState): void {
 function completeConstruction(state: GameState, site: ConstructionSite): void {
   const def = BUILDINGS[site.type];
   if (def.kind === 'dom') {
-    const house: House = {
+    state.houses.push({
       id: nextEntityId(state, 'dom'),
       tile: site.tile,
+      tier: 0,
       residents: 0,
-      capacity: def.capacity!,
-      ryby: 0,
-      rybyTarget: def.rybyTarget!,
-    };
-    state.houses.push(house);
-  } else {
-    state.buildings.push({
-      id: nextEntityId(state, 'budynek'),
-      type: site.type,
-      tile: site.tile,
-      resourceTile: findResourceTile(site.tile, def.resourceSearch!),
-      workerId: null,
-      paused: false,
+      goods: {},
+      upgrade: null,
     });
+  } else {
+    state.buildings.push(createBuilding(state, site.type, site.tile));
   }
   state.sites = state.sites.filter((s) => s.id !== site.id);
 }
 
+function createBuilding(state: GameState, type: BuildingType, tile: Vec2): Building {
+  const def = BUILDINGS[type];
+  const building: Building = {
+    id: nextEntityId(state, 'budynek'),
+    type,
+    tile,
+    resourceTile: def.resourceSearch ? findResourceTile(tile, def.resourceSearch) : null,
+    workerId: null,
+    paused: false,
+  };
+  if (def.kind === 'pole') {
+    building.plots = footprintTiles(type, tile).map(() => ({ stage: 'zaorane', growTicksRemaining: 0 }));
+  }
+  return building;
+}
+
 /** True when an occupied house has no fish at all — blocks new settlers. */
 function hasHunger(state: GameState): boolean {
-  return state.houses.some((h) => h.residents > 0 && h.ryby === 0);
+  return state.houses.some((h) => h.residents > 0 && houseGood(h, 'ryba') === 0);
 }
 
 function findReachableEdgeTile(state: GameState, target: Vec2): Vec2 | null {
@@ -350,7 +606,7 @@ function maybeSpawnSettler(state: GameState): void {
     const enRoute = state.villagers.filter(
       (v) => v.job.kind === 'arriving' && v.job.houseId === h.id,
     ).length;
-    return h.residents + enRoute < h.capacity;
+    return h.residents + enRoute < houseCapacity(h);
   });
   if (!house) return;
   if (hasHunger(state)) return;
@@ -369,23 +625,18 @@ function maybeSpawnSettler(state: GameState): void {
     job: { kind: 'arriving', houseId: house.id },
     carrying: null,
     workTicksRemaining: 0,
+    waitingFor: null,
   });
 }
 
-function nextNeededResource(
-  cost: Partial<Record<ResourceType, number>>,
-  delivered: Partial<Record<ResourceType, number>>,
-): ResourceType | null {
+function nextNeededResource(cost: ResourceAmounts, delivered: ResourceAmounts): ResourceType | null {
   for (const [resource, amount] of Object.entries(cost) as [ResourceType, number][]) {
     if ((delivered[resource] ?? 0) < amount) return resource;
   }
   return null;
 }
 
-function isFullyDelivered(
-  cost: Partial<Record<ResourceType, number>>,
-  delivered: Partial<Record<ResourceType, number>>,
-): boolean {
+function isFullyDelivered(cost: ResourceAmounts, delivered: ResourceAmounts): boolean {
   return (Object.entries(cost) as [ResourceType, number][]).every(
     ([resource, amount]) => (delivered[resource] ?? 0) >= amount,
   );
@@ -395,12 +646,22 @@ function atTile(a: Vec2, b: Vec2): boolean {
   return a.x === b.x && a.y === b.y;
 }
 
-function beginWalk(state: GameState, villager: VillagerState, target: Vec2): void {
+/**
+ * Walk along roads to `target`. `extraWalkable` lets a villager also step
+ * on non-road tiles that belong to their target, e.g. the plots of a
+ * field or the footprint of a 2×2 site.
+ */
+function beginWalk(state: GameState, villager: VillagerState, target: Vec2, extraWalkable: string[] = []): void {
   if (atTile(villager.from, target)) {
     villager.motion = 'idle';
     return;
   }
-  const path = findPath(state.roads, villager.from, target);
+  // A villager standing inside a multi-tile footprint (a field plot, a
+  // 2×2 site) may need to cross its other tiles to get back to a road.
+  const leaving = footprintKeysAt(state, villager.from);
+  const extra = [...extraWalkable, ...leaving];
+  const walkable = extra.length > 0 ? new Set([...state.roads, ...extra]) : state.roads;
+  const path = findPath(walkable, villager.from, target);
   if (!path || path.length === 0) {
     villager.motion = 'waiting';
     return;
@@ -410,6 +671,14 @@ function beginWalk(state: GameState, villager: VillagerState, target: Vec2): voi
   villager.segmentTicks = 0;
   villager.motion = 'walking';
   updateFacing(villager);
+}
+
+function footprintKeysAt(state: GameState, tile: Vec2): string[] {
+  const owner =
+    state.buildings.find((b) => footprintContains(b.type, b.tile, tile)) ??
+    state.sites.find((s) => footprintContains(s.type, s.tile, tile));
+  if (!owner || (BUILDINGS[owner.type].footprint ?? null) === null) return [];
+  return footprintTiles(owner.type, owner.tile).map(tileKey);
 }
 
 function updateFacing(villager: VillagerState): void {

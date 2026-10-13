@@ -11,10 +11,15 @@ export type VillagerMotion = 'idle' | 'walking' | 'waiting';
 
 export type VillagerJob =
   | { kind: 'idle' }
-  | { kind: 'build'; siteId: string; stage: 'toWarehouse' | 'toSite' | 'hammering' }
+  | { kind: 'build'; siteId: string; stage: BuildStage }
+  | { kind: 'upgrade'; houseId: string; stage: BuildStage }
   | { kind: 'produce'; buildingId: string; stage: 'toResource' | 'gathering' | 'toWarehouse' }
-  | { kind: 'deliver'; houseId: string; stage: 'toWarehouse' | 'toHouse' }
+  | { kind: 'farm'; buildingId: string; stage: 'toField' | 'sowing' | 'harvesting' | 'toWarehouse'; plot: number }
+  | { kind: 'process'; buildingId: string; stage: 'toBuilding' | 'working' | 'toWarehouse' }
+  | { kind: 'deliver'; houseId: string; resource: ResourceType; stage: 'toWarehouse' | 'toHouse' }
   | { kind: 'arriving'; houseId: string };
+
+export type BuildStage = 'toWarehouse' | 'toSite' | 'hammering';
 
 export interface VillagerState {
   id: string;
@@ -26,8 +31,10 @@ export interface VillagerState {
   facing: 1 | -1;
   job: VillagerJob;
   carrying: ResourceType | null;
-  /** Counts down while gathering a resource or hammering a construction site. */
+  /** Counts down while gathering, sowing, harvesting, processing or hammering. */
   workTicksRemaining: number;
+  /** While waiting: the resource whose absence holds this villager up (null = no road). */
+  waitingFor: ResourceType | null;
 }
 
 export interface ConstructionSite {
@@ -47,16 +54,38 @@ export interface Building {
   workerId: string | null;
   /** Paused buildings never get a worker, and release theirs immediately. */
   paused: boolean;
+  /** Field plots, one per footprint tile in footprintTiles() order (pole only). */
+  plots?: FieldPlot[];
+}
+
+/**
+ * zaorane/sciete: waiting to be sown; kielki: growing on its own;
+ * dojrzale: ready for harvest.
+ */
+export type PlotStage = 'zaorane' | 'kielki' | 'dojrzale' | 'sciete';
+
+export interface FieldPlot {
+  stage: PlotStage;
+  /** Ticks left until a 'kielki' plot ripens. */
+  growTicksRemaining: number;
+}
+
+/** A house rebuilding into its next tier — works like a construction site. */
+export interface HouseUpgrade {
+  delivered: ResourceAmounts;
+  assignedWorkerId: string | null;
 }
 
 export interface House {
   id: string;
   tile: Vec2;
+  /** Index into HOUSE_TIERS: 0 = ziemianka, 1 = chata. Never goes down. */
+  tier: number;
   /** Residents this house has contributed to the shared worker pool so far. */
   residents: number;
-  capacity: number;
-  ryby: number;
-  rybyTarget: number;
+  /** Goods delivered so far; targets come from HOUSE_TIERS[tier].goods. */
+  goods: ResourceAmounts;
+  upgrade: HouseUpgrade | null;
 }
 
 export interface GameState {
@@ -87,6 +116,10 @@ export function takeFromWarehouse(state: GameState, resource: ResourceType, amou
   return true;
 }
 
+export function houseGood(house: House, resource: ResourceType): number {
+  return house.goods[resource] ?? 0;
+}
+
 export function nextEntityId(state: GameState, prefix: string): string {
   const id = `${prefix}-${state.nextEntityId}`;
   state.nextEntityId += 1;
@@ -106,6 +139,7 @@ function createIdleVillager(id: string): VillagerState {
     job: { kind: 'idle' },
     carrying: null,
     workTicksRemaining: 0,
+    waitingFor: null,
   };
 }
 

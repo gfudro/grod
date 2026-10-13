@@ -1,6 +1,6 @@
 import type { GameState } from '../sim/state';
 import { warehouseAmount } from '../sim/state';
-import { RESOURCE_COLOR } from '../data/resources';
+import { RESOURCE_COLOR, RESOURCE_ORDER } from '../data/resources';
 import { STRINGS } from './strings';
 
 const TOPBAR_STYLE = `
@@ -72,17 +72,15 @@ export function mountTopBar(): TopBar {
     return { el, value };
   }
 
-  const drewno = chip(RESOURCE_COLOR.drewno);
-  const glina = chip(RESOURCE_COLOR.glina);
-  const ryba = chip(RESOURCE_COLOR.ryba);
+  const resourceChips = RESOURCE_ORDER.map((resource) => ({ resource, ...chip(RESOURCE_COLOR[resource]) }));
   const wolni = chip(null);
 
   document.body.appendChild(topbar);
 
   function refresh(state: GameState): void {
-    drewno.value.textContent = String(warehouseAmount(state, 'drewno'));
-    glina.value.textContent = String(warehouseAmount(state, 'glina'));
-    ryba.value.textContent = String(warehouseAmount(state, 'ryba'));
+    for (const { resource, value } of resourceChips) {
+      value.textContent = String(warehouseAmount(state, resource));
+    }
     const freeCount = state.villagers.filter((v) => v.job.kind === 'idle').length;
     wolni.value.textContent = `${STRINGS.wolni}: ${freeCount}`;
   }

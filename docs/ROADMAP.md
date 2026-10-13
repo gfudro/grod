@@ -49,11 +49,11 @@ Każdy etap kończy się wersją, którą Artur może otworzyć na iPadzie. Kole
 
 ## M4 · Chata i drugi łańcuch
 
-- [ ] Pole prosa (kilka kafelków), rolnik, żarna, kasza
-- [ ] Przetwórca sam chodzi do magazynu po surowiec
-- [ ] Studnia z zasięgiem widocznym po stuknięciu
-- [ ] Awans ziemianka → chata, gdy są ryby, kasza i studnia w zasięgu; chata ma więcej mieszkańców
-- [ ] Brak cofania awansu: niespełniona potrzeba tylko zatrzymuje wzrost
+- [x] Pole prosa (kilka kafelków), rolnik, żarna, kasza
+- [x] Przetwórca sam chodzi do magazynu po surowiec
+- [x] Studnia z zasięgiem widocznym po stuknięciu
+- [x] Awans ziemianka → chata, gdy są ryby, kasza i studnia w zasięgu; chata ma więcej mieszkańców
+- [x] Brak cofania awansu: niespełniona potrzeba tylko zatrzymuje wzrost
 
 **Gotowe, gdy:** Artur doprowadza pierwszą ziemiankę do chaty bez podpowiedzi.
 

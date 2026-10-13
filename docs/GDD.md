@@ -21,6 +21,16 @@ Decyzje z M3 (domy i osadnicy):
 - **Zasięg surowca przy stawianiu budynku:** drwal i rybak da się postawić tylko w promieniu 6 kafelków (w linii kratki, nie po drodze) od najbliższego drzewa/wody. Bez tego dało się postawić drwala daleko od lasu i tak samo nosił drewno — ograniczenie robi z lokalizacji budynku prawdziwą decyzję.
 - **Wstrzymanie budynku.** Stuknięcie w budynek produkcyjny pokazuje przycisk WSTRZYMAJ/WZNÓW. Wstrzymanie natychmiast zwalnia przypisanego pracownika (budynek stoi, ale nic nie ginie — zgodnie z zasadą lekkiej kary) i blokuje mu przydzielanie nowych zadań, dopóki gracz nie wznowi. Potrzebne, gdy kolejność budowy sprawia, że zabrakło rąk do pracy na nowy plac budowy — gracz może ręcznie zwolnić kogoś z istniejącego budynku.
 
+Decyzje z M4 (chata i drugi łańcuch):
+
+- **Pole prosa zajmuje 2×2 kafelki** i nie ma osobnej chaty rolnika. Rolnik sieje każdy kafelek osobno, proso rośnie samo (zaorane → kiełki → dojrzałe), rolnik żnie dojrzały kafelek (ścięte) i niesie 1 proso do magazynu. W M4 pole rodzi przez cały rok; siew wiosną i żniwa jesienią dochodzą w M5. Przez pole nie da się poprowadzić drogi ani postawić na nim budynku.
+- **Żarna:** mielarz idzie do magazynu po 1 proso, miele je przy żarnach i odnosi 1 kaszę. Gdy w magazynie nie ma prosa, stoi przed żarnami z ikoną w kolorze prosa nad głową. Ikona „czeka” jest teraz zawsze w kolorze brakującego towaru, a czerwona oznacza brak drogi.
+- **Studnia nie zajmuje pracownika.** To usługa: działa, gdy stoi i dotyka drogi. Zasięg to kwadrat 7×7 (3 kafelki w każdą stronę), widoczny po stuknięciu w studnię lub w dom, który obsługuje, oraz już przy stawianiu studni.
+- **Ziemianka zbiera ryby (5) i kaszę (3).** Kasza to potrzeba następnego piętra, a licznik nad ziemianką pokazuje, czego trzeba, żeby urosła. Znaczek w rogu domu jest niebieski, gdy studnia jest w zasięgu.
+- **Awans ziemianka → chata:** gdy ryby i kasza są pełne, studnia jest w zasięgu, a dom dotyka drogi, z magazynu od razu schodzi koszt (3 drewna i 2 gliny, tak jak przy placu budowy). Wolny ludzik przenosi materiały i przebudowuje dom. Chata ma 5 miejsc i dach.
+- **Bez zużycia towarów w M4.** Liczniki nad domami nie spadają; zjadanie zapasów przychodzi razem z porami roku (M5). Awans nigdy się nie cofa.
+- **Pierwsze liczby (do balansu):** pole 2 drewna, sianie i żniwa po 2 s, wzrost 30 s; żarna 2 drewna i 2 gliny, mielenie 4 s; studnia 1 drewno i 2 gliny.
+
 ## Wizja i filary
 
 Gród to spokojna gra budowlana na iPada dla 6-letniego Artura: łańcuchy produkcji jak w Anno, przejrzystość jak w Warcraft 2, bez walki. Artur gra przy tacie, ale ma sobie radzić choć trochę samodzielnie.

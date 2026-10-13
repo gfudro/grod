@@ -61,17 +61,36 @@ function describe(info: InspectInfo): string {
         info.assignedWorkerId ? 'ktoś buduje' : 'czeka na robotnika'
       }`;
     case 'building': {
+      const road = info.connected ? 'droga OK' : 'brak drogi';
+      if (info.buildingKind === 'usluga') return `${info.name} — ${road}`;
       const workerStatus = info.paused
         ? 'wstrzymany'
         : !info.hasWorker
           ? 'bez pracownika'
-          : info.workerWaiting
-            ? 'pracownik czeka na drogę do surowca'
-            : 'obsadzony';
-      return `${info.name} — ${info.connected ? 'droga OK' : 'brak drogi'} — ${workerStatus}`;
+          : info.workerWaitingFor
+            ? `brak: ${info.workerWaitingFor}`
+            : info.workerWaiting
+              ? 'pracownik czeka na drogę'
+              : 'obsadzony';
+      const plots = info.plots ? ` — ${info.plots.join(', ')}` : '';
+      return `${info.name} — ${road} — ${workerStatus}${plots}`;
     }
-    case 'house':
-      return `ZIEMIANKA — ${info.connected ? 'droga OK' : 'brak drogi'} — mieszkańcy ${info.residents}/${info.capacity} — ryby ${info.ryby}/${info.rybyTarget}`;
+    case 'house': {
+      const goods = info.goods.map((g) => `${g.resource} ${g.have}/${g.target}`).join(', ');
+      let growth = '';
+      if (info.upgrading) {
+        growth = ` — buduje: ${info.nextName}`;
+      } else if (info.nextName) {
+        const r = info.readiness;
+        const missing = [
+          !r.goodsFull && 'towary',
+          !r.serviceInRange && 'studnia',
+          !r.canAffordCost && 'materiały',
+        ].filter(Boolean);
+        growth = ` — ${info.nextName}: ${missing.length > 0 ? `brak ${missing.join(', ')}` : 'zaraz'}`;
+      }
+      return `${info.name} — ${info.connected ? 'droga OK' : 'brak drogi'} — mieszkańcy ${info.residents}/${info.capacity} — ${goods}${growth}`;
+    }
     case 'villager':
       return `LUDZIK — ${info.description}`;
   }
@@ -99,7 +118,7 @@ export function mountInspectPanel(onTogglePause: TogglePauseCallback): (info: In
     }
     text.textContent = describe(info);
 
-    if (info.kind === 'building') {
+    if (info.kind === 'building' && info.buildingKind !== 'usluga') {
       pauseButton.style.display = '';
       pauseButton.textContent = info.paused ? 'WZNÓW' : 'WSTRZYMAJ';
       pauseButton.classList.toggle('active', info.paused);

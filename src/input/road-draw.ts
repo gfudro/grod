@@ -3,6 +3,7 @@ import type { Viewport } from 'pixi-viewport';
 import { MAP_HEIGHT, MAP_WIDTH, TERRAIN } from '../data/map';
 import { TILE_SIZE } from '../data/tiles';
 import { tileKey, type Vec2 } from '../data/types';
+import { occupiedTileKeys } from '../sim/footprint';
 import type { GameState } from '../sim/state';
 
 export interface RoadDrawController {
@@ -74,6 +75,7 @@ export function createRoadDrawController(
     if (!canBuildRoadOn(tile)) return;
     const key = tileKey(tile);
     if (state.roads.has(key)) return;
+    if (occupiedTileKeys(state).has(key)) return; // no roads through buildings or fields
     state.roads.add(key);
     currentStroke.push(key);
   }
