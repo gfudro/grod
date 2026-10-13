@@ -9,11 +9,13 @@ export type InspectInfo =
   | { kind: 'site'; name: string; delivered: string; assignedWorkerId: string | null }
   | {
       kind: 'building';
+      id: string;
       name: string;
       connected: boolean;
       hasWorker: boolean;
       workerWaiting: boolean;
       resourceTile: Vec2 | null;
+      paused: boolean;
     }
   | { kind: 'house'; connected: boolean; residents: number; capacity: number; ryby: number; rybyTarget: number }
   | { kind: 'villager'; description: string; targetTile: Vec2 | null };
@@ -82,11 +84,13 @@ export function inspectTile(state: GameState, tile: Vec2): InspectInfo | null {
     const worker = state.villagers.find((v) => v.id === building.workerId);
     return {
       kind: 'building',
+      id: building.id,
       name: BUILDINGS[building.type].name,
       connected: isAdjacentToRoad(building.tile, state.roads),
       hasWorker: building.workerId !== null,
       workerWaiting: worker?.motion === 'waiting',
       resourceTile: building.resourceTile,
+      paused: building.paused,
     };
   }
 

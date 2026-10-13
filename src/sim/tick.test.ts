@@ -69,6 +69,7 @@ describe('production', () => {
       tile: SITE_TILE,
       resourceTile: { ...SITE_TILE }, // glinianka gathers on its own tile
       workerId: null,
+      paused: false,
     });
 
     runTicks(state, 120);
@@ -87,6 +88,7 @@ describe('production', () => {
       tile: SITE_TILE,
       resourceTile: { ...SITE_TILE },
       workerId: null,
+      paused: false,
     });
 
     runTicks(state, 100);
@@ -108,6 +110,7 @@ describe('determinism', () => {
         tile: SITE_TILE,
         resourceTile: { ...SITE_TILE },
         workerId: null,
+      paused: false,
       });
       return state;
     }

@@ -95,7 +95,7 @@ function tryAssignWork(state: GameState, villager: VillagerState): boolean {
   }
 
   const building = state.buildings.find(
-    (b) => b.workerId === null && isAdjacentToRoad(b.tile, state.roads),
+    (b) => b.workerId === null && !b.paused && isAdjacentToRoad(b.tile, state.roads),
   );
   if (building) {
     building.workerId = villager.id;
@@ -316,6 +316,7 @@ function completeConstruction(state: GameState, site: ConstructionSite): void {
       tile: site.tile,
       resourceTile: findResourceTile(site.tile, def.resourceSearch!),
       workerId: null,
+      paused: false,
     });
   }
   state.sites = state.sites.filter((s) => s.id !== site.id);

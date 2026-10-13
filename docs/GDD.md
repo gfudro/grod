@@ -19,6 +19,7 @@ Decyzje z M3 (domy i osadnicy):
 - **Limit zarezerwowanych zasobów:** przy przydzielaniu tragarza i osadnika liczę też tych już w drodze (nie tylko już dostarczone/zamieszkałe), żeby dom nigdy nie dostał więcej ryb niż potrzebuje ani więcej mieszkańców niż ma miejsc. Bez tego nadmiarowa ryba po prostu znikała z magazynu bez śladu — złapane w testach przed wydaniem.
 - **Pierścień celu po stuknięciu.** Drwal/rybak liczy najbliższe drzewo/wodę osobno dla każdego budynku — dwa drwale blisko siebie często celują w RÓŻNE drzewa. Jeśli droga nie sięga do tego konkretnego drzewa, robotnik czeka w nieskończoność, a gracz nie miał jak się dowiedzieć, dokąd. Stuknięcie w budynek albo w zablokowanego robotnika pokazuje teraz żółty pierścień dokładnie na kafelku, do którego próbuje dojść.
 - **Zasięg surowca przy stawianiu budynku:** drwal i rybak da się postawić tylko w promieniu 6 kafelków (w linii kratki, nie po drodze) od najbliższego drzewa/wody. Bez tego dało się postawić drwala daleko od lasu i tak samo nosił drewno — ograniczenie robi z lokalizacji budynku prawdziwą decyzję.
+- **Wstrzymanie budynku.** Stuknięcie w budynek produkcyjny pokazuje przycisk WSTRZYMAJ/WZNÓW. Wstrzymanie natychmiast zwalnia przypisanego pracownika (budynek stoi, ale nic nie ginie — zgodnie z zasadą lekkiej kary) i blokuje mu przydzielanie nowych zadań, dopóki gracz nie wznowi. Potrzebne, gdy kolejność budowy sprawia, że zabrakło rąk do pracy na nowy plac budowy — gracz może ręcznie zwolnić kogoś z istniejącego budynku.
 
 ## Wizja i filary
 

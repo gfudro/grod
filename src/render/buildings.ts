@@ -13,6 +13,8 @@ export const BUILDING_COLOR: Record<string, number> = {
   ziemianka: 0x8a6a42,
 };
 const NO_ROAD_COLOR = 0xcc4433;
+const PAUSED_OVERLAY_COLOR = 0x2b2016;
+const PAUSED_ICON_COLOR = 0xf4e9d8;
 
 export interface BuildingsLayer {
   container: Container;
@@ -74,7 +76,9 @@ export function createBuildingsLayer(): BuildingsLayer {
       label.position.set(px + TILE_SIZE / 2, py + TILE_SIZE / 2);
       labels.addChild(label);
 
-      if (!isAdjacentToRoad(building.tile, state.roads)) {
+      if (building.paused) {
+        drawPausedOverlay(graphics, px, py, size, inset);
+      } else if (!isAdjacentToRoad(building.tile, state.roads)) {
         drawNoRoadIcon(graphics, px, py, inset);
       }
     }
@@ -118,4 +122,19 @@ function drawNoRoadIcon(graphics: Graphics, px: number, py: number, inset: numbe
     .fill(NO_ROAD_COLOR)
     .circle(px + TILE_SIZE / 2, py + inset - 4, 8)
     .stroke({ color: 0x5a1a12, width: 2 });
+}
+
+/** Dims a paused building and draws a two-bar pause icon over it. */
+function drawPausedOverlay(graphics: Graphics, px: number, py: number, size: number, inset: number): void {
+  graphics.rect(px + inset, py + inset, size, size).fill({ color: PAUSED_OVERLAY_COLOR, alpha: 0.55 });
+  const cx = px + TILE_SIZE / 2;
+  const cy = py + TILE_SIZE / 2;
+  const barWidth = 5;
+  const barHeight = 18;
+  const gap = 5;
+  graphics
+    .rect(cx - gap / 2 - barWidth, cy - barHeight / 2, barWidth, barHeight)
+    .fill(PAUSED_ICON_COLOR)
+    .rect(cx + gap / 2, cy - barHeight / 2, barWidth, barHeight)
+    .fill(PAUSED_ICON_COLOR);
 }

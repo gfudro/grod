@@ -45,6 +45,8 @@ export interface Building {
   /** Where the worker must go to gather the resource; null if none exists on the map. */
   resourceTile: Vec2 | null;
   workerId: string | null;
+  /** Paused buildings never get a worker, and release theirs immediately. */
+  paused: boolean;
 }
 
 export interface House {

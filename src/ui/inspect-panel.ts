@@ -14,12 +14,31 @@ const PANEL_STYLE = `
   font-size: 15px;
   font-weight: bold;
   display: none;
-  pointer-events: none;
+  align-items: center;
+  gap: 10px;
   text-align: center;
   white-space: nowrap;
 }
 #inspect-panel.visible {
-  display: block;
+  display: flex;
+}
+#inspect-panel button {
+  min-width: 64px;
+  min-height: 44px;
+  border-radius: 8px;
+  border: 2px solid rgba(0, 0, 0, 0.35);
+  background: #e8d9b8;
+  color: #2b2016;
+  font-size: 13px;
+  font-weight: bold;
+  font-family: sans-serif;
+  touch-action: manipulation;
+  flex-shrink: 0;
+}
+#inspect-panel button.active {
+  background: #6fa83f;
+  color: #fff;
+  border-color: #2f5d1a;
 }
 `;
 
@@ -42,11 +61,13 @@ function describe(info: InspectInfo): string {
         info.assignedWorkerId ? 'ktoś buduje' : 'czeka na robotnika'
       }`;
     case 'building': {
-      const workerStatus = !info.hasWorker
-        ? 'bez pracownika'
-        : info.workerWaiting
-          ? 'pracownik czeka na drogę do surowca'
-          : 'obsadzony';
+      const workerStatus = info.paused
+        ? 'wstrzymany'
+        : !info.hasWorker
+          ? 'bez pracownika'
+          : info.workerWaiting
+            ? 'pracownik czeka na drogę do surowca'
+            : 'obsadzony';
       return `${info.name} — ${info.connected ? 'droga OK' : 'brak drogi'} — ${workerStatus}`;
     }
     case 'house':
@@ -56,10 +77,19 @@ function describe(info: InspectInfo): string {
   }
 }
 
-export function mountInspectPanel(): (info: InspectInfo | null) => void {
+export type TogglePauseCallback = (buildingId: string, paused: boolean) => void;
+
+export function mountInspectPanel(onTogglePause: TogglePauseCallback): (info: InspectInfo | null) => void {
   injectStyle();
   const panel = document.createElement('div');
   panel.id = 'inspect-panel';
+
+  const text = document.createElement('span');
+  panel.appendChild(text);
+
+  const pauseButton = document.createElement('button');
+  panel.appendChild(pauseButton);
+
   document.body.appendChild(panel);
 
   return (info: InspectInfo | null) => {
@@ -67,7 +97,18 @@ export function mountInspectPanel(): (info: InspectInfo | null) => void {
       panel.classList.remove('visible');
       return;
     }
-    panel.textContent = describe(info);
+    text.textContent = describe(info);
+
+    if (info.kind === 'building') {
+      pauseButton.style.display = '';
+      pauseButton.textContent = info.paused ? 'WZNÓW' : 'WSTRZYMAJ';
+      pauseButton.classList.toggle('active', info.paused);
+      pauseButton.onclick = () => onTogglePause(info.id, !info.paused);
+    } else {
+      pauseButton.style.display = 'none';
+      pauseButton.onclick = null;
+    }
+
     panel.classList.add('visible');
   };
 }

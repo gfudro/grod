@@ -13,6 +13,8 @@ import { createRoadDrawController, type RoadDrawController } from './input/road-
 import { createBuildPlacementController, type BuildPlacementController } from './input/build-place';
 import { createInspectController } from './input/inspect';
 import { createInitialState, type SpeedMultiplier } from './sim/state';
+import { inspectTile } from './sim/inspect';
+import { setBuildingPaused } from './sim/building-control';
 import { tick } from './sim/tick';
 import { WAREHOUSE_TILE } from './data/waypoints';
 
@@ -66,19 +68,28 @@ async function start(): Promise<void> {
   // mode flags *before* those controllers consume and clear them.
   let roadDraw: RoadDrawController;
   let buildPlace: BuildPlacementController;
-  const showInspect = mountInspectPanel();
+
+  function handleInspectResult(info: ReturnType<typeof inspectTile>): void {
+    showInspect(info);
+    // Show exactly where a building/worker is trying to reach — answers
+    // "why is my drwal stuck?" without the player having to guess.
+    targetHighlight.update(
+      info?.kind === 'building' ? info.resourceTile : info?.kind === 'villager' ? info.targetTile : null,
+    );
+  }
+
+  const showInspect = mountInspectPanel((buildingId, paused) => {
+    setBuildingPaused(state, buildingId, paused);
+    refreshWorldLayers();
+    const building = state.buildings.find((b) => b.id === buildingId);
+    if (building) handleInspectResult(inspectTile(state, building.tile));
+  });
+
   createInspectController(
     viewport,
     state,
     () => roadDraw.isRoadMode() || buildPlace.armedType() !== null,
-    (info) => {
-      showInspect(info);
-      // Show exactly where a building/worker is trying to reach — answers
-      // "why is my drwal stuck?" without the player having to guess.
-      targetHighlight.update(
-        info?.kind === 'building' ? info.resourceTile : info?.kind === 'villager' ? info.targetTile : null,
-      );
-    },
+    handleInspectResult,
   );
 
   roadDraw = createRoadDrawController(viewport, state, refreshWorldLayers);
