@@ -4,7 +4,6 @@ import { tick } from '../sim/tick';
 import { tileKey } from '../data/types';
 import { loadSaveFile, SAVE_VERSION, toSaveFile } from './save-file';
 import { MIGRATIONS } from './migrations';
-import { tutorialDone, tutorialHint } from '../sim/tutorial';
 
 // Every file in tests/fixtures/saves/, picked up automatically: a new
 // fixture is tested the moment it is added.
@@ -89,30 +88,26 @@ describe('migrations', () => {
   });
 });
 
-describe('migrations v2 → v3', () => {
-  it('marks the tutorial done for games begun before it existed', () => {
-    const result = loadSaveFile(readFixture('v2-rok2-wiosna.json'));
-    if (!result.ok) throw new Error(result.reason);
-    expect(result.migratedFrom).toBe(2);
-    expect(tutorialDone(result.state)).toBe(true);
-    expect(tutorialHint(result.state)).toBeNull();
-  });
+describe('migrations v2 → v3 → v4 (tutorial added, then removed)', () => {
+  const asRaw = (data: unknown) => data as Parameters<(typeof MIGRATIONS)[number]>[0];
 
-  it('gives the tutorial to an old save where nothing has been built yet', () => {
+  it('v2 → v3 marks the tutorial done, unless nothing was built yet', () => {
+    const built = MIGRATIONS[2](asRaw(readFixture('v2-rok2-wiosna.json')));
+    expect(built.state.tutorialStep).toBe(7);
     const fresh = toSaveFile(createInitialState(), '0.7.3', new Date());
-    const v2 = { ...fresh, saveVersion: 2, state: { ...fresh.state } as Record<string, unknown> };
-    delete v2.state.tutorialStep;
-    const result = loadSaveFile(JSON.parse(JSON.stringify(v2)));
-    if (!result.ok) throw new Error(result.reason);
-    expect(result.state.tutorialStep).toBe(0);
+    const empty = MIGRATIONS[2](asRaw(JSON.parse(JSON.stringify({ ...fresh, saveVersion: 2 }))));
+    expect(empty.state.tutorialStep).toBe(0);
   });
 
-  it('a new game starts the tutorial, and a save mid-tutorial carries on where it was', () => {
-    expect(createInitialState().tutorialStep).toBe(0);
-    const result = loadSaveFile(readFixture('v3-rok1-wiosna-samouczek.json'));
+  it('v3 → v4 drops the tutorial step and keeps the game', () => {
+    const v3 = readFixture('v3-rok1-wiosna-samouczek.json') as { state: Record<string, unknown> };
+    expect(v3.state.tutorialStep).toBe(1);
+    const result = loadSaveFile(v3);
     if (!result.ok) throw new Error(result.reason);
-    expect(result.state.tutorialStep).toBe(1);
-    expect(tutorialHint(result.state)).toMatchObject({ kind: 'build', type: 'rybak' });
+    expect(result.migratedFrom).toBe(3);
+    expect('tutorialStep' in result.state).toBe(false);
+    expect(result.state.name).toBe('Wiślanie');
+    expect(result.state.buildings.map((b) => b.type)).toEqual(['drwal']);
   });
 });
 

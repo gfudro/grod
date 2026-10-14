@@ -5,6 +5,7 @@ import { TILE_SIZE } from '../data/tiles';
 import type { Vec2 } from '../data/types';
 import { canAfford, canPlaceBuildingAt, tryPlaceConstructionSite } from '../sim/placement';
 import type { GameState } from '../sim/state';
+import { setMapDragLock } from './drag-lock';
 
 export interface BuildPlacementController {
   armedType(): BuildingType | null;
@@ -45,12 +46,8 @@ export function createBuildPlacementController(
 
   function setArmed(type: BuildingType | null): void {
     armed = type;
-    if (armed) {
-      viewport.plugins.pause('drag');
-    } else {
-      viewport.plugins.resume('drag');
-      onHover(null, null, false);
-    }
+    setMapDragLock(viewport, 'build', armed !== null);
+    if (!armed) onHover(null, null, false);
   }
 
   viewport.on('pointermove', handlePointerMove);

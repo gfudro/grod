@@ -4,7 +4,6 @@ import type { BuildPlacementController } from '../input/build-place';
 import type { RoadDrawController } from '../input/road-draw';
 import { canAfford } from '../sim/placement';
 import { SPEEDS, type GameState, type SpeedMultiplier } from '../sim/state';
-import { unlockedBuildings, type TutorialHint } from '../sim/tutorial';
 import { STRINGS } from './strings';
 
 export interface HudCallbacks {
@@ -13,8 +12,6 @@ export interface HudCallbacks {
   state: GameState;
   getSpeed: () => SpeedMultiplier;
   onSpeedChange: (speed: SpeedMultiplier) => void;
-  /** The tutorial's current pointer; its button pulses. */
-  getHint: () => TutorialHint | null;
 }
 
 const HUD_STYLE = `
@@ -58,9 +55,6 @@ const HUD_STYLE = `
   gap: 4px;
   min-width: 72px;
 }
-#palette button[hidden] {
-  display: none;
-}
 #palette button .cost {
   display: flex;
   gap: 4px;
@@ -84,17 +78,6 @@ const HUD_STYLE = `
 #hud button:disabled, #palette button:disabled {
   opacity: 0.4;
 }
-#hud button.hint, #palette button.hint {
-  animation: hint-pulse 1.2s ease-in-out infinite;
-  border-color: #ffe14d;
-}
-#palette button.hint:disabled {
-  opacity: 0.7;
-}
-@keyframes hint-pulse {
-  0%, 100% { box-shadow: 0 0 0 0 rgba(255, 225, 77, 0.9); transform: scale(1); }
-  50% { box-shadow: 0 0 0 8px rgba(255, 225, 77, 0); transform: scale(1.08); }
-}
 `;
 
 function injectStyle(): void {
@@ -113,7 +96,7 @@ export interface Hud {
   extraSlot: HTMLElement;
 }
 
-export function mountHud({ roadDraw, buildPlace, state, getSpeed, onSpeedChange, getHint }: HudCallbacks): Hud {
+export function mountHud({ roadDraw, buildPlace, state, getSpeed, onSpeedChange }: HudCallbacks): Hud {
   injectStyle();
 
   const hud = document.createElement('div');
@@ -185,15 +168,9 @@ export function mountHud({ roadDraw, buildPlace, state, getSpeed, onSpeedChange,
     for (const b of speedButtons) b.button.classList.toggle('active', speed === b.speed);
     undoButton.disabled = !roadDraw.canUndo();
 
-    const hint = getHint();
-    roadButton.classList.toggle('hint', hint?.kind === 'road' && !roadDraw.isRoadMode());
-
     const armed = buildPlace.armedType();
-    const unlocked = unlockedBuildings(state);
     for (const [type, button] of buildingButtons) {
       button.classList.toggle('active', armed === type);
-      button.classList.toggle('hint', hint?.kind === 'build' && hint.type === type && armed !== type);
-      button.hidden = !unlocked.has(type);
       button.disabled = !canAfford(state, type);
     }
   }

@@ -90,13 +90,11 @@ Obserwacje po M4 (Greg, 2026-10-14: „jest ok”, zostają bez zmian):
 
 - [x] Licznik „LUDZIE” na górnym pasku: wszyscy mieszkańcy grodu (bez osadników jeszcze w drodze)
 
-## M7 · Samouczek pierwszej wiosny
+## M7 · Samouczek pierwszej wiosny — porzucony
 
-- [x] Pierwsza wiosna prowadzi krok po kroku: ikona wskazuje, co postawić i gdzie
-- [x] Budynki odblokowują się stopniowo
-- [x] Pojedyncze słowa i nagrane komunikaty zamiast zdań
+Zrobiony w 0.8.0 (podpowiedzi, stopniowe odblokowanie budynków), usunięty w 0.8.2: Greg woli sam tłumaczyć grę Arturowi (2026-10-14). Zapisy z samouczkiem wczytują się dalej (migracja v3 → v4).
 
-**Gotowe, gdy:** Artur zaczyna nową grę i dochodzi do pierwszej chaty bez pomocy taty.
+Przy okazji poprawione w 0.8.2: w trybie DROGA palec przesuwał mapę zamiast rysować drogę.
 
 ## M8 · Grafiki i dźwięki
 

@@ -1,6 +1,5 @@
 import type { GameState } from '../sim/state';
 import { currentYear } from '../sim/seasons';
-import { tutorialDone } from '../sim/tutorial';
 import { chronicleSentence, STRINGS } from './strings';
 
 export interface ChronicleScreenCallbacks {
@@ -10,8 +9,6 @@ export interface ChronicleScreenCallbacks {
   /** Resolves false when the file is not a save that can be loaded. */
   onImport: (file: File) => Promise<boolean>;
   onNewGame: () => void;
-  /** Ends the tutorial early (shown only while it runs). */
-  onSkipTutorial: () => void;
   /** Where the KRONIKA button goes (the bottom band, next to DROGA). */
   buttonSlot: HTMLElement;
   /** The game pauses while the chronicle is open. */
@@ -104,7 +101,6 @@ const STYLE = `
 }
 #chronicle button.close { background: #6fa83f; color: #fff; border-color: #2f5d1a; }
 #chronicle button.danger { background: #b5513f; color: #fff; }
-#chronicle button[hidden] { display: none; }
 #chronicle button.error { background: #cc4433; color: #fff; }
 `;
 
@@ -153,11 +149,10 @@ export function mountChronicleScreen(cb: ChronicleScreenCallbacks): ChronicleScr
   importButton.textContent = `📂 ${STRINGS.wczytaj}`;
   const newButton = document.createElement('button');
   newButton.textContent = `✨ ${STRINGS.nowa}`;
-  const skipButton = document.createElement('button');
   const closeButton = document.createElement('button');
   closeButton.className = 'close';
   closeButton.textContent = STRINGS.zamknij;
-  buttons.append(exportButton, importButton, newButton, skipButton, closeButton);
+  buttons.append(exportButton, importButton, newButton, closeButton);
 
   const fileInput = document.createElement('input');
   fileInput.type = 'file';
@@ -168,19 +163,11 @@ export function mountChronicleScreen(cb: ChronicleScreenCallbacks): ChronicleScr
   document.body.appendChild(overlay);
 
   let newGameArmed = false;
-  let skipArmed = false;
 
   function resetNewGameButton(): void {
     newGameArmed = false;
     newButton.classList.remove('danger');
     newButton.textContent = `✨ ${STRINGS.nowa}`;
-  }
-
-  function resetSkipButton(): void {
-    skipArmed = false;
-    skipButton.classList.remove('danger');
-    skipButton.textContent = `⏭ ${STRINGS.samouczek}`;
-    skipButton.hidden = tutorialDone(cb.getState());
   }
 
   function refresh(): void {
@@ -203,7 +190,6 @@ export function mountChronicleScreen(cb: ChronicleScreenCallbacks): ChronicleScr
     if (open) {
       nameInput.value = cb.getState().name;
       resetNewGameButton();
-      resetSkipButton();
       importButton.classList.remove('error');
       importButton.textContent = `📂 ${STRINGS.wczytaj}`;
       refresh();
@@ -250,18 +236,6 @@ export function mountChronicleScreen(cb: ChronicleScreenCallbacks): ChronicleScr
       return;
     }
     cb.onNewGame();
-  });
-
-  // Two taps as well, so Artur can't end his tutorial by accident.
-  skipButton.addEventListener('click', () => {
-    if (!skipArmed) {
-      skipArmed = true;
-      skipButton.classList.add('danger');
-      skipButton.textContent = STRINGS.naPewno;
-      return;
-    }
-    cb.onSkipTutorial();
-    resetSkipButton();
   });
 
   return { refresh };

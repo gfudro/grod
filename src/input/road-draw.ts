@@ -4,6 +4,7 @@ import { MAP_HEIGHT, MAP_WIDTH, TERRAIN } from '../data/map';
 import { TILE_SIZE } from '../data/tiles';
 import { tileKey, type Vec2 } from '../data/types';
 import { occupiedTileKeys } from '../sim/footprint';
+import { setMapDragLock } from './drag-lock';
 import type { GameState } from '../sim/state';
 
 export interface RoadDrawController {
@@ -119,10 +120,8 @@ export function createRoadDrawController(
   return {
     setRoadMode(enabled: boolean) {
       roadMode = enabled;
-      if (enabled) {
-        viewport.plugins.pause('drag');
-      } else {
-        viewport.plugins.resume('drag');
+      setMapDragLock(viewport, 'road', enabled);
+      if (!enabled) {
         drawing = false;
         lastTile = null;
       }

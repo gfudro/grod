@@ -169,7 +169,7 @@ Gra działa w przeglądarce na iPadzie, w poziomie, uruchamiana ikoną z ekranu 
 Tekst dla Artura:
 
 - W interfejsie są tylko pojedyncze słowa, wyraźną czcionką i zawsze z ikoną. Żadnych zdań.
-- Zdania (kronika, samouczek) czyta tata albo nagrany głos.
+- Zdania (kronika) czyta tata albo nagrany głos.
 - Do sprawdzenia z Arturem: podpisy wielkimi literami („DRWAL”) czy zwykłymi („Drwal”), oraz czcionka z dobrze czytelnymi polskimi znakami.
 
 ## Zapisy, wersje i Kronika grodu
@@ -196,17 +196,8 @@ Pierwsza wersja ma być grywalna, a nie kompletna: dwa piętra piramidy, drogi, 
 - Cztery pory roku: siew wiosną, żniwa jesienią, zimą opał i wolniejszy rybak
 - Podstawowa kronika, zapis z numerem wersji i zapis do pliku
 - Prędkość x1, x2, x3 i pauza
-- Pierwsza wiosna jako samouczek: ikona pokazuje, co postawić
+- ~~Pierwsza wiosna jako samouczek~~: usunięty w 0.8.2 (Greg, 2026-10-14: „ja mu to lepiej wytłumaczę”). Grę tłumaczy tata.
 
-### Samouczek pierwszej wiosny (0.8.0)
-
-- **Kolejność kroków:** drwal → rybak → ziemianka → pole → glinianka → żarna → studnia (tabela w `src/data/tutorial.ts`). Pole jest wcześnie, bo sieje się tylko wiosną.
-- **Podpowiedź to zawsze jedna rzecz naraz:** pulsuje przycisk, a na mapie podskakuje żółta strzałka nad ramką w proponowanym miejscu. Nagrany głos mówi komunikat z `docs/AUDIO.md`, gdy podpowiedź się zmienia.
-- **Najpierw drogi:** zanim samouczek pokaże kolejny budynek, każdy postawiony musi mieć drogę do magazynu, drwal i rybak także drogę do drzew i wody, a po pierwszej ziemiance musi być droga na skraj mapy (tamtędy przychodzą osadnicy). Wtedy pulsuje DROGA, a strzałka wskazuje, dokąd ją doprowadzić.
-- **Budynki odblokowują się stopniowo:** przycisk pojawia się, gdy przychodzi jego krok. Krok kończy się w chwili postawienia placu budowy. Po studni samouczek znika i widać wszystkie budynki.
-- **Stare zapisy** (sprzed 0.8.0) mają samouczek zaliczony, chyba że nic w nich jeszcze nie stoi.
-- **Pominięcie:** w kronice przycisk SAMOUCZEK (dwa stuknięcia, jak NOWA) kończy samouczek od razu, np. przy nowej grze taty. Widać go tylko, póki samouczek trwa.
-- **Pole poza wiosną:** jeśli pole stanie po wiośnie, czeka do następnej wiosny na siew (prawie rok gry, ok. 9 minut przy x1). Greg, 2026-10-14: zostaje tak.
 
 Pierwszy prototyp powstaje na prostych kształtach rysowanych kodem, żeby nie czekać na grafiki.
 

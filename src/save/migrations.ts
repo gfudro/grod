@@ -35,4 +35,9 @@ export const MIGRATIONS: Record<number, (save: RawSave) => RawSave> = {
       state: { ...save.state, tutorialStep: untouched ? 0 : 7 },
     };
   },
+  /** v4 (0.8.2): the tutorial is gone again (Greg explains the game to Artur himself). */
+  3: (save) => {
+    const { tutorialStep: _dropped, ...state } = save.state;
+    return { ...save, saveVersion: 4, state };
+  },
 };

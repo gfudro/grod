@@ -24,7 +24,6 @@ export const STRINGS = {
   wczytaj: 'WCZYTAJ',
   nowa: 'NOWA',
   naPewno: 'NA PEWNO?',
-  samouczek: 'SAMOUCZEK',
   zamknij: 'ZAMKNIJ',
   blad: 'BŁĄD',
   zasoby: {

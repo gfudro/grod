@@ -1,6 +1,6 @@
 # Nagrania głosowe
 
-Na pierwszą wersję są 28 krótkich nagrań po 1–3 sekundy. Gra działa bez nich, więc można je dograć w dowolnym momencie.
+Na pierwszą wersję jest 20 krótkich nagrań po 1–3 sekundy. Gra działa bez nich, więc można je dograć w dowolnym momencie.
 
 ## Jak nagrywać
 
@@ -34,15 +34,6 @@ Na pierwszą wersję są 28 krótkich nagrań po 1–3 sekundy. Gra działa bez 
 | `zima` | „Zima idzie!” | Początek zimy |
 | `malo-opalu` | „Mało opału!” | Ostrzeżenie przed zimą |
 | `malo-jedzenia` | „Mało jedzenia na zimę!” | Ostrzeżenie przed zimą |
-| `samouczek-drwal` | „Postaw drwala!” | Samouczek, krok 1 |
-| `samouczek-rybak` | „Postaw rybaka!” | Samouczek, krok 2 |
-| `samouczek-ziemianka` | „Postaw ziemiankę!” | Samouczek, krok 3 |
-| `samouczek-pole` | „Zasiej pole!” | Samouczek, krok 4 |
-| `samouczek-glinianka` | „Postaw gliniankę!” | Samouczek, krok 5 |
-| `samouczek-zarna` | „Postaw żarna!” | Samouczek, krok 6 |
-| `samouczek-studnia` | „Wykop studnię!” | Samouczek, krok 7 |
-| `samouczek-droga` | „Zbuduj drogę!” | Samouczek: budynek bez drogi, droga do drzew lub wody, droga na skraj mapy |
-| `samouczek-chata` | „Postaw chatę!” | Na razie nieużywane (chata rośnie z ziemianki, nie stawia się jej) |
 
 ## Później
 

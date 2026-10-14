@@ -110,8 +110,6 @@ export interface GameState {
   /** Important moments, oldest first. Saved apart from the rest (see save/). */
   chronicle: ChronicleEntry[];
   seasonLog: SeasonLog;
-  /** Tutorial steps done so far (index into TUTORIAL_STEPS); the tutorial ends at its length. */
-  tutorialStep: number;
 }
 
 export function warehouseAmount(state: GameState, resource: ResourceType): number {
@@ -180,7 +178,6 @@ export function createInitialState(seed = 1): GameState {
     name: '',
     chronicle: [],
     seasonLog: emptySeasonLog(),
-    tutorialStep: 0,
   };
   addChronicleEntry(state, 'zalozenie');
   for (let i = 0; i < STARTING_WORKER_POOL; i++) {
