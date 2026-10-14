@@ -63,6 +63,17 @@ Decyzje z 0.9.0 (burzenie, prośba Grega 2026-10-14):
 - **Nikt się nie wyprowadza:** mieszkańcy zburzonego domu zostają w grodzie jako wolni ludzie, a osadnicy w drodze do niego dołączają do puli.
 - Na razie bez zgliszczy i bez wpisu w kronice. Drogi nadal usuwa się tylko przez COFNIJ (ostatnia narysowana).
 
+Decyzje z M8 (piętro 3: zagroda, 0.10.0):
+
+- **Obora** (4 drewna, 1 glina) działa jak glinianka: krowy stoją w oborze, dojarz doi na miejscu (3 s) i nosi 1 mleko do magazynu. Zimą doi tak samo szybko.
+- **Serowarnia** (2 drewna, 3 gliny) działa jak żarna: serowarz bierze z magazynu 1 mleko, robi ser (5 s) i odnosi 1 ser. Bez mleka stoi przed serowarnią z białym dymkiem.
+- **Plac wiecowy** (3 drewna, 1 glina) to usługa jak studnia: bez pracownika, działa przy drodze, zasięg 7×7 (3 kafelki w każdą stronę). Na mapie podpis „WIEC”.
+- **Chata zbiera ser (3)**, tak jak ziemianka zbiera kaszę: tylko do wzrostu, chata sera nie je. Znaczek w rogu chaty świeci na różowo, gdy plac wiecowy jest w zasięgu (u ziemianki na niebiesko, gdy studnia).
+- **Awans chata → zagroda:** ryby, kasza i ser pełne, plac wiecowy w zasięgu, droga; koszt 4 drewna i 3 gliny, przebudowa 5 s. Zagroda ma 8 miejsc, wyższy drewniany dach i płot, na mapie podpis „ZAG”.
+- **Zagroda je** 1 rybę co 30 s, 1 kaszę co 60 s i 1 ser co 60 s. Brak sera nie jest głodem (nie wstrzymuje osadników), zatrzymuje tylko dalszy wzrost — tak jak brak kaszy w chacie. Zagroda to na razie najwyższe piętro.
+- Kronika zapisuje pierwszą zagrodę. Na pasku dochodzą MLEKO i SER.
+- **Zapis:** `SAVE_VERSION = 5`. Kształt stanu się nie zmienił; podbicie chroni zapis przed starą wersją gry z pamięci podręcznej, która nie zna nowych budynków.
+
 ## Wizja i filary
 
 Gród to spokojna gra budowlana na iPada dla 6-letniego Artura: łańcuchy produkcji jak w Anno, przejrzystość jak w Warcraft 2, bez walki. Artur gra przy tacie, ale ma sobie radzić choć trochę samodzielnie.

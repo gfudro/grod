@@ -68,6 +68,8 @@ export function findServingBuilding(state: GameState, type: BuildingType, tile: 
 export interface UpgradeReadiness {
   /** False on the top tier — there is nothing to grow into. */
   canGrow: boolean;
+  /** The service building growing needs in range (studnia, plac), or null on the top tier. */
+  service: BuildingType | null;
   goodsFull: boolean;
   serviceInRange: boolean;
   connected: boolean;
@@ -81,6 +83,7 @@ export function upgradeReadiness(state: GameState, house: House): UpgradeReadine
   if (!upgrade) {
     return {
       canGrow: false,
+      service: null,
       goodsFull: houseGoodsFull(house),
       serviceInRange: false,
       connected: false,
@@ -93,6 +96,7 @@ export function upgradeReadiness(state: GameState, house: House): UpgradeReadine
     .map(([resource]) => resource);
   return {
     canGrow: true,
+    service: upgrade.service,
     goodsFull: houseGoodsFull(house),
     serviceInRange: findServingBuilding(state, upgrade.service, house.tile) !== null,
     connected: isAdjacentToRoad(house.tile, state.roads),
@@ -125,4 +129,5 @@ export function completeUpgrade(state: GameState, house: House): void {
   house.tier = Math.min(house.tier + 1, HOUSE_TIERS.length - 1);
   house.upgrade = null;
   if (house.tier === 1) addChronicleFirst(state, 'pierwsza-chata');
+  if (house.tier === 2) addChronicleFirst(state, 'pierwsza-zagroda');
 }

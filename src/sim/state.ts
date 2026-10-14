@@ -85,7 +85,7 @@ export interface HouseUpgrade {
 export interface House {
   id: string;
   tile: Vec2;
-  /** Index into HOUSE_TIERS: 0 = ziemianka, 1 = chata. Never goes down. */
+  /** Index into HOUSE_TIERS: 0 = ziemianka, 1 = chata, 2 = zagroda. Never goes down. */
   tier: number;
   /** Residents this house has contributed to the shared worker pool so far. */
   residents: number;

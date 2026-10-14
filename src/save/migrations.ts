@@ -40,4 +40,10 @@ export const MIGRATIONS: Record<number, (save: RawSave) => RawSave> = {
     const { tutorialStep: _dropped, ...state } = save.state;
     return { ...save, saveVersion: 4, state };
   },
+  /**
+   * v5 (0.10.0): the zagroda tier, obora, serowarnia, plac wiecowy, mleko
+   * and ser. The state's shape is unchanged — the bump keeps an older
+   * cached copy of the game from loading buildings it doesn't know.
+   */
+  4: (save) => ({ ...save, saveVersion: 5 }),
 };

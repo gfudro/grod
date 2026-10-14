@@ -44,8 +44,16 @@ export const HOUSE_TIERS: HouseTierDef[] = [
   {
     name: 'CHATA',
     capacity: 5,
-    goods: { ryba: 5, kasza: 3 },
+    goods: { ryba: 5, kasza: 3, ser: 3 },
+    // Ser here is only what it takes to grow — a chata doesn't eat it.
     eatsEvery: { ryba: 300, kasza: 600 },
+    upgrade: { cost: { drewno: 4, glina: 3 }, buildTicks: 50, service: 'plac' },
+  },
+  {
+    name: 'ZAGRODA',
+    capacity: 8,
+    goods: { ryba: 5, kasza: 3, ser: 3 },
+    eatsEvery: { ryba: 300, kasza: 600, ser: 600 },
   },
 ];
 

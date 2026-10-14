@@ -104,9 +104,9 @@ Kolejność od 0.9.0 (Greg, 2026-10-14): najpierw mechanika, grafiki i dźwięki
 
 ## M8 · Piętro 3: zagroda
 
-- [ ] Obora (krowy, mleko) i serowarnia: łańcuch obora → magazyn → serowarnia → magazyn
-- [ ] Plac wiecowy jako usługa z zasięgiem
-- [ ] Awans chata → zagroda, gdy jest ser i plac wiecowy w zasięgu
+- [x] Obora (krowy, mleko) i serowarnia: łańcuch obora → magazyn → serowarnia → magazyn
+- [x] Plac wiecowy jako usługa z zasięgiem
+- [x] Awans chata → zagroda, gdy jest ser i plac wiecowy w zasięgu
 
 **Gotowe, gdy:** Artur ma po chacie nowy cel i doprowadza pierwszą chatę do zagrody.
 

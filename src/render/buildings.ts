@@ -19,10 +19,21 @@ export const BUILDING_COLOR: Record<string, number> = {
   zarna: 0x7d7468,
   studnia: 0x4f7fa0,
   ziemianka: 0x8a6a42,
+  obora: 0x6b4a2e,
+  serowarnia: 0xc08a2a,
+  plac: 0xa0527a,
+};
+/** Placeholder labels where the first letter alone would clash (STUDNIA / SEROWARNIA). */
+const BUILDING_LABEL: Partial<Record<BuildingType, string>> = {
+  serowarnia: 'SER',
+  plac: 'WIEC',
 };
 /** Body colour per house tier (HOUSE_TIERS index). */
-const HOUSE_TIER_COLOR = [0x8a6a42, 0xb48a52];
-const ROOF_COLOR = 0xc9a24a;
+const HOUSE_TIER_COLOR = [0x8a6a42, 0xb48a52, 0xc79a5e];
+/** Roof colour per house tier; a ziemianka has none. */
+const ROOF_COLOR: (number | null)[] = [null, 0xc9a24a, 0x9a5a2e];
+const FENCE_COLOR = 0x5e3f22;
+const COW_COLOR = 0xffffff;
 const PLOT_COLOR: Record<PlotStage, number> = {
   zaorane: 0x7a5530,
   kielki: 0x7a5530,
@@ -38,8 +49,12 @@ const FURROW_COLOR = 0x5e3f22;
 const NO_ROAD_COLOR = 0xcc4433;
 const PAUSED_OVERLAY_COLOR = 0x2b2016;
 const PAUSED_ICON_COLOR = 0xf4e9d8;
-const WELL_ON_COLOR = 0x4f9fd8;
-const WELL_OFF_COLOR = 0x6b6258;
+/** The service marker on a house is lit in the colour of the service it needs. */
+const SERVICE_ON_COLOR: Partial<Record<BuildingType, number>> = {
+  studnia: 0x4f9fd8,
+  plac: 0xd06aa0,
+};
+const SERVICE_OFF_COLOR = 0x6b6258;
 const COUNTER_BG_COLOR = 0x2b2016;
 /** Drewno's own colour is too dark to read on the counter background. */
 const FIREWOOD_TEXT_COLOR = 0xf2bf7e;
@@ -125,8 +140,10 @@ export function createBuildingsLayer(): BuildingsLayer {
           .fill(BUILDING_COLOR[building.type] ?? 0x555555)
           .rect(px + inset, py + inset, size, size)
           .stroke({ color: 0x241a0d, width: 3 });
+        if (building.type === 'obora') drawCow(graphics, px + TILE_SIZE - inset - 14, py + TILE_SIZE - inset - 10);
         if (winter) drawSnowCap(graphics, px + inset, py + inset, size);
-        addLabel(def.name[0], px + TILE_SIZE / 2, py + TILE_SIZE / 2, 0xf4e9d8, 24);
+        const label = BUILDING_LABEL[building.type] ?? def.name[0];
+        addLabel(label, px + TILE_SIZE / 2, py + TILE_SIZE / 2, 0xf4e9d8, label.length > 1 ? 16 : 24);
       }
 
       if (building.paused) {
@@ -150,15 +167,25 @@ export function createBuildingsLayer(): BuildingsLayer {
       .fill(HOUSE_TIER_COLOR[house.tier] ?? HOUSE_TIER_COLOR[0])
       .rect(px + inset, py + inset, size, size)
       .stroke({ color: 0x241a0d, width: 3 });
-    if (house.tier >= 1) {
-      // A chata gets a thatched roof so the growth is visible at a glance.
+    if (house.tier >= 2) {
+      // A zagroda stands inside its own fence.
+      for (const fx of [px + 2, px + TILE_SIZE - 5]) {
+        graphics.rect(fx, py + inset + 6, 3, size - 8).fill(FENCE_COLOR);
+      }
+    }
+    const roof = ROOF_COLOR[house.tier] ?? null;
+    if (roof !== null) {
+      // A chata gets a thatched roof, a zagroda a taller wooden one, so the growth is visible at a glance.
+      const peak = house.tier >= 2 ? 14 : 8;
       graphics
-        .poly([px + inset - 3, py + inset + 10, px + TILE_SIZE / 2, py + inset - 8, px + TILE_SIZE - inset + 3, py + inset + 10])
-        .fill(ROOF_COLOR)
-        .stroke({ color: 0x6b5220, width: 2 });
+        .poly([px + inset - 3, py + inset + 10, px + TILE_SIZE / 2, py + inset - peak, px + TILE_SIZE - inset + 3, py + inset + 10])
+        .fill(roof)
+        .stroke({ color: 0x4a3218, width: 2 });
     }
     if (winter) drawSnowCap(graphics, px + inset, py + inset - (house.tier >= 1 ? 6 : 0), size);
-    addLabel(houseTier(house).name[0], px + TILE_SIZE / 2, py + TILE_SIZE / 2 + 2, 0xf4e9d8, 24);
+    // ZIEMIANKA and ZAGRODA share a first letter, so the zagroda spells out more.
+    const houseLabel = house.tier >= 2 ? houseTier(house).name.slice(0, 3) : houseTier(house).name[0];
+    addLabel(houseLabel, px + TILE_SIZE / 2, py + TILE_SIZE / 2 + 2, 0xf4e9d8, houseLabel.length > 1 ? 16 : 24);
 
     if (house.upgrade) {
       // Rebuild in progress: the same rising fill as a construction site.
@@ -183,13 +210,15 @@ export function createBuildingsLayer(): BuildingsLayer {
       .roundRect(px + 1, py + TILE_SIZE - inset, TILE_SIZE - 2, 18, 5)
       .fill({ color: COUNTER_BG_COLOR, alpha: 0.85 });
     const slotWidth = (TILE_SIZE - 2) / goods.length;
+    // Three counters (chata, zagroda) only fit the tile in a smaller font.
+    const counterFont = goods.length >= 3 ? 12 : 14;
     goods.forEach((resource, i) => {
       addLabel(
         `${houseGood(house, resource)}/${houseGoodTarget(house, resource, season)}`,
         px + 1 + slotWidth * i + slotWidth / 2,
-        py + TILE_SIZE - inset + 1,
+        py + TILE_SIZE - inset + 1 + (14 - counterFont) / 2,
         RESOURCE_COLOR[resource],
-        14,
+        counterFont,
         0,
       );
     });
@@ -211,7 +240,8 @@ export function createBuildingsLayer(): BuildingsLayer {
       );
     }
 
-    // Well marker: does this house have the service it needs to grow?
+    // Service marker: does this house have the service it needs to grow
+    // (studnia for a ziemianka, plac wiecowy for a chata)?
     const upgrade = houseTier(house).upgrade;
     if (upgrade && HOUSE_TIERS[house.tier + 1]) {
       const served = upgradeReadiness(state, house).serviceInRange;
@@ -219,7 +249,7 @@ export function createBuildingsLayer(): BuildingsLayer {
       const cy = py + inset + 2;
       graphics
         .circle(cx, cy, 7)
-        .fill(served ? WELL_ON_COLOR : WELL_OFF_COLOR)
+        .fill(served ? (SERVICE_ON_COLOR[upgrade.service] ?? 0xffffff) : SERVICE_OFF_COLOR)
         .circle(cx, cy, 7)
         .stroke({ color: 0x1f2a33, width: 2 });
     }
@@ -295,6 +325,21 @@ function drawPlot(graphics: Graphics, px: number, py: number, plot: FieldPlot, p
       }
     }
   }
+}
+
+/** A little white cow with black patches in the corner of an obora. */
+function drawCow(graphics: Graphics, x: number, y: number): void {
+  graphics
+    .ellipse(x, y, 10, 6)
+    .fill(COW_COLOR)
+    .stroke({ color: 0x241a0d, width: 1.5 })
+    .circle(x + 10, y - 3, 4)
+    .fill(COW_COLOR)
+    .stroke({ color: 0x241a0d, width: 1.5 })
+    .circle(x - 3, y - 1, 2.5)
+    .fill(0x241a0d)
+    .circle(x + 3, y + 2, 2)
+    .fill(0x241a0d);
 }
 
 /** A strip of snow along the top edge of a building in winter. */

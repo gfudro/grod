@@ -1,6 +1,6 @@
 import type { ResourceType } from './resources';
 
-export type BuildingType = 'drwal' | 'rybak' | 'glinianka' | 'pole' | 'zarna' | 'studnia' | 'ziemianka';
+export type BuildingType = 'drwal' | 'rybak' | 'glinianka' | 'pole' | 'zarna' | 'studnia' | 'ziemianka' | 'obora' | 'serowarnia' | 'plac';
 
 export type ResourceSearch = 'drzewo' | 'woda' | 'na-miejscu';
 
@@ -129,6 +129,35 @@ export const BUILDINGS: Record<BuildingType, BuildingDef> = {
     buildTicks: 30,
     serviceRange: 3,
   },
+  obora: {
+    id: 'obora',
+    name: 'OBORA',
+    kind: 'produkcja',
+    cost: { drewno: 4, glina: 1 },
+    buildTicks: 40,
+    produces: 'mleko',
+    // The cows live in the barn: milking happens on the spot.
+    gatherTicks: 30,
+    resourceSearch: 'na-miejscu',
+  },
+  serowarnia: {
+    id: 'serowarnia',
+    name: 'SEROWARNIA',
+    kind: 'przetworstwo',
+    cost: { drewno: 2, glina: 3 },
+    buildTicks: 40,
+    consumes: 'mleko',
+    produces: 'ser',
+    processTicks: 50,
+  },
+  plac: {
+    id: 'plac',
+    name: 'PLAC WIECOWY',
+    kind: 'usluga',
+    cost: { drewno: 3, glina: 1 },
+    buildTicks: 30,
+    serviceRange: 3,
+  },
   ziemianka: {
     id: 'ziemianka',
     name: 'ZIEMIANKA',
@@ -138,7 +167,7 @@ export const BUILDINGS: Record<BuildingType, BuildingDef> = {
   },
 };
 
-export const BUILDING_ORDER: BuildingType[] = ['drwal', 'rybak', 'glinianka', 'ziemianka', 'pole', 'zarna', 'studnia'];
+export const BUILDING_ORDER: BuildingType[] = ['drwal', 'rybak', 'glinianka', 'ziemianka', 'pole', 'zarna', 'studnia', 'obora', 'serowarnia', 'plac'];
 
 /** Starting warehouse stock, enough for one or two starter buildings. */
 export const STARTING_WAREHOUSE_STOCK: Partial<Record<ResourceType, number>> = {

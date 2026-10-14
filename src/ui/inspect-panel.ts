@@ -1,3 +1,4 @@
+import { BUILDINGS } from '../data/buildings';
 import type { InspectInfo } from '../sim/inspect';
 import { STRINGS } from './strings';
 
@@ -94,7 +95,7 @@ function describe(info: InspectInfo): string {
         const r = info.readiness;
         const missing = [
           !r.goodsFull && 'towary',
-          !r.serviceInRange && 'studnia',
+          !r.serviceInRange && r.service && BUILDINGS[r.service].name.toLowerCase(),
           ...r.missingCost,
         ].filter(Boolean);
         growth = ` — ${info.nextName}: ${missing.length > 0 ? `brak ${missing.join(', ')}` : 'zaraz'}`;

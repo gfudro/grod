@@ -72,7 +72,7 @@ const JOB_DESCRIPTIONS: Record<string, string> = {
   upgrade: 'buduje',
   produce: 'pracuje',
   farm: 'rolnik',
-  process: 'mieli',
+  process: 'przerabia',
   deliver: 'nosi',
   arriving: 'osadnik w drodze',
 };

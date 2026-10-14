@@ -33,6 +33,8 @@ export const STRINGS = {
     ryba: 'RYBA',
     proso: 'PROSO',
     kasza: 'KASZA',
+    mleko: 'MLEKO',
+    ser: 'SER',
   },
 } as const;
 
@@ -86,6 +88,8 @@ function entryBody(entry: ChronicleEntry): string {
       return 'stanęła pierwsza ziemianka';
     case 'pierwsza-chata':
       return 'pierwsza ziemianka urosła w chatę';
+    case 'pierwsza-zagroda':
+      return 'pierwsza chata urosła w zagrodę';
     case 'pierwsze-zniwa':
       return 'zebrano pierwsze proso';
     case 'osadnicy':
