@@ -26,6 +26,13 @@ export const STRINGS = {
   naPewno: 'NA PEWNO?',
   zamknij: 'ZAMKNIJ',
   blad: 'BŁĄD',
+  zasoby: {
+    drewno: 'DREWNO',
+    glina: 'GLINA',
+    ryba: 'RYBA',
+    proso: 'PROSO',
+    kasza: 'KASZA',
+  },
 } as const;
 
 // ---- Chronicle sentences (read aloud by dad, so full sentences are fine) ----

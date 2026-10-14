@@ -53,6 +53,18 @@ const TOPBAR_STYLE = `
   from { transform: scale(1); }
   to { transform: scale(1.06); }
 }
+#topbar .resource .amount {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  line-height: 1.05;
+}
+#topbar .resource .label {
+  font-size: 10px;
+  font-weight: normal;
+  letter-spacing: 0.04em;
+  opacity: 0.65;
+}
 #topbar .swatch {
   width: 16px;
   height: 16px;
@@ -192,7 +204,19 @@ export function mountTopBar(): TopBar {
   warning.el.appendChild(warningSwatches);
   let shownMissing = '';
 
-  const resourceChips = RESOURCE_ORDER.map((resource) => ({ resource, ...chip(RESOURCE_COLOR[resource]) }));
+  // Swatch, the amount, and the resource's name in small print under it.
+  const resourceChips = RESOURCE_ORDER.map((resource) => {
+    const { el, value } = chip(RESOURCE_COLOR[resource]);
+    el.classList.add('resource');
+    const amount = document.createElement('div');
+    amount.className = 'amount';
+    const label = document.createElement('span');
+    label.className = 'label';
+    label.textContent = STRINGS.zasoby[resource];
+    el.replaceChild(amount, value);
+    amount.append(value, label);
+    return { resource, el, value };
+  });
   const ludzie = chip(null);
   const wolni = chip(null);
 

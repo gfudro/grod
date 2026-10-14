@@ -1,6 +1,6 @@
 import { Application } from 'pixi.js';
 import type { Viewport } from 'pixi-viewport';
-import { createMapViewport } from '../input/viewport';
+import { createMapViewport, keepMapInView } from '../input/viewport';
 import type { Season } from '../data/seasons';
 import { createTerrainLayer, WORLD_PIXEL_HEIGHT, WORLD_PIXEL_WIDTH, type TerrainLayer } from './terrain';
 
@@ -27,6 +27,7 @@ export async function createGameApp(container: HTMLElement, season: Season): Pro
   // (rotation, the bands changing height).
   app.renderer.on('resize', (width: number, height: number) => {
     viewport.resize(width, height, WORLD_PIXEL_WIDTH, WORLD_PIXEL_HEIGHT);
+    keepMapInView(viewport);
   });
   app.stage.addChild(viewport);
   const terrain = createTerrainLayer(season);
