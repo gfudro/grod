@@ -3,7 +3,7 @@ import { RESOURCE_COLOR } from '../data/resources';
 import type { BuildPlacementController } from '../input/build-place';
 import type { RoadDrawController } from '../input/road-draw';
 import { canAfford } from '../sim/placement';
-import type { GameState, SpeedMultiplier } from '../sim/state';
+import { SPEEDS, type GameState, type SpeedMultiplier } from '../sim/state';
 import { STRINGS } from './strings';
 
 export interface HudCallbacks {
@@ -116,13 +116,16 @@ export function mountHud({ roadDraw, buildPlace, state, getSpeed, onSpeedChange 
   centerGroup.className = 'hud-group';
   const pauseButton = document.createElement('button');
   pauseButton.textContent = STRINGS.pauza;
-  const speed1Button = document.createElement('button');
-  speed1Button.textContent = 'x1';
-  const speed2Button = document.createElement('button');
-  speed2Button.textContent = 'x2';
-  const speed3Button = document.createElement('button');
-  speed3Button.textContent = 'x3';
-  centerGroup.append(pauseButton, speed1Button, speed2Button, speed3Button);
+  const speedButtons = SPEEDS.map((speed) => {
+    const button = document.createElement('button');
+    button.textContent = `x${speed}`;
+    button.addEventListener('click', () => {
+      onSpeedChange(speed);
+      refresh();
+    });
+    return { speed, button };
+  });
+  centerGroup.append(pauseButton, ...speedButtons.map((b) => b.button));
 
   const rightGroup = document.createElement('div');
   rightGroup.className = 'hud-group';
@@ -165,9 +168,7 @@ export function mountHud({ roadDraw, buildPlace, state, getSpeed, onSpeedChange 
     roadButton.classList.toggle('active', roadDraw.isRoadMode());
     const speed = getSpeed();
     pauseButton.classList.toggle('active', speed === 0);
-    speed1Button.classList.toggle('active', speed === 1);
-    speed2Button.classList.toggle('active', speed === 2);
-    speed3Button.classList.toggle('active', speed === 3);
+    for (const b of speedButtons) b.button.classList.toggle('active', speed === b.speed);
     undoButton.disabled = !roadDraw.canUndo();
 
     const armed = buildPlace.armedType();
@@ -188,18 +189,6 @@ export function mountHud({ roadDraw, buildPlace, state, getSpeed, onSpeedChange 
   });
   pauseButton.addEventListener('click', () => {
     onSpeedChange(0);
-    refresh();
-  });
-  speed1Button.addEventListener('click', () => {
-    onSpeedChange(1);
-    refresh();
-  });
-  speed2Button.addEventListener('click', () => {
-    onSpeedChange(2);
-    refresh();
-  });
-  speed3Button.addEventListener('click', () => {
-    onSpeedChange(3);
     refresh();
   });
 

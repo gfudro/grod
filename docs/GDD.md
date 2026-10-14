@@ -112,7 +112,7 @@ Wszystkie towary płyną po drogach przez magazyn, a odległość ma znaczenie. 
 - **Bez korków.** Ludziki przechodzą przez siebie.
 - **Bezczynność widać.** Ludzik bez surowca stoi przed budynkiem z ikonką tego, czego mu brakuje.
 - **Drogi rosną razem z grodem:** najpierw ścieżka, potem szybsza droga z dyli (drewnianych bali), później most.
-- **Prędkość gry** x1, x2 i x3 oraz pauza.
+- **Prędkość gry** x1, x2 i x3 oraz pauza. Do testów dochodzą x5 i x10 (prośba Grega, 2026-10-14), żeby szybko przewinąć do zimy.
 
 ## Pory roku i zagrożenia
 
