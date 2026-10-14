@@ -41,6 +41,8 @@ const PAUSED_ICON_COLOR = 0xf4e9d8;
 const WELL_ON_COLOR = 0x4f9fd8;
 const WELL_OFF_COLOR = 0x6b6258;
 const COUNTER_BG_COLOR = 0x2b2016;
+/** Drewno's own colour is too dark to read on the counter background. */
+const FIREWOOD_TEXT_COLOR = 0xf2bf7e;
 
 export interface BuildingsLayer {
   container: Container;
@@ -173,30 +175,41 @@ export function createBuildingsLayer(): BuildingsLayer {
 
     // Need counters under the house, one per good, in that good's colour,
     // on a dark strip so they read against grass and road alike.
-    // Leftover firewood after winter keeps its counter (without a target)
-    // so the drewno never silently disappears from view.
+    // Food counters on a strip under the house, never wider than the
+    // tile so neighbouring houses' counters can't overlap.
     const season = currentSeason(state);
-    const goods = houseWantedGoods(house, season);
-    if (!goods.includes('drewno') && houseGood(house, 'drewno') > 0) goods.push('drewno');
-    const slot = 28;
-    const stripWidth = Math.max(TILE_SIZE - 2, slot * goods.length);
-    const stripLeft = px + TILE_SIZE / 2 - stripWidth / 2;
+    const goods = houseWantedGoods(house, season).filter((r) => r !== 'drewno');
     graphics
-      .roundRect(stripLeft, py + TILE_SIZE - inset, stripWidth, 18, 5)
+      .roundRect(px + 1, py + TILE_SIZE - inset, TILE_SIZE - 2, 18, 5)
       .fill({ color: COUNTER_BG_COLOR, alpha: 0.85 });
-    const slotWidth = stripWidth / goods.length;
+    const slotWidth = (TILE_SIZE - 2) / goods.length;
     goods.forEach((resource, i) => {
-      const target = houseGoodTarget(house, resource, season);
-      const have = houseGood(house, resource);
       addLabel(
-        target > 0 ? `${have}/${target}` : String(have),
-        stripLeft + slotWidth * i + slotWidth / 2,
+        `${houseGood(house, resource)}/${houseGoodTarget(house, resource, season)}`,
+        px + 1 + slotWidth * i + slotWidth / 2,
         py + TILE_SIZE - inset + 1,
         RESOURCE_COLOR[resource],
         14,
         0,
       );
     });
+
+    // Firewood gets its own chip in the house's top-left corner. Leftover
+    // wood after winter keeps it (without a target) so the drewno never
+    // silently disappears from view.
+    const firewoodTarget = houseGoodTarget(house, 'drewno', season);
+    const firewood = houseGood(house, 'drewno');
+    if (firewoodTarget > 0 || firewood > 0) {
+      graphics.roundRect(px + 2, py + inset + 2, 30, 17, 5).fill({ color: COUNTER_BG_COLOR, alpha: 0.95 });
+      addLabel(
+        firewoodTarget > 0 ? `${firewood}/${firewoodTarget}` : String(firewood),
+        px + 17,
+        py + inset + 3,
+        FIREWOOD_TEXT_COLOR,
+        13,
+        0,
+      );
+    }
 
     // Well marker: does this house have the service it needs to grow?
     const upgrade = houseTier(house).upgrade;

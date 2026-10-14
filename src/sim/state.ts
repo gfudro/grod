@@ -5,8 +5,8 @@ import type { Vec2 } from '../data/types';
 import { WAREHOUSE_TILE } from '../data/waypoints';
 import { createRng, type RngState } from './rng';
 
-/** Game speeds on the HUD; x5 and x10 are mainly for playtesting long stretches. */
-export const SPEEDS = [1, 2, 3, 5, 10] as const;
+/** Game speeds on the HUD; x5 and above are mainly for playtesting long stretches. */
+export const SPEEDS = [1, 2, 3, 5, 10, 20, 60] as const;
 
 /** 0 = paused. */
 export type SpeedMultiplier = 0 | (typeof SPEEDS)[number];

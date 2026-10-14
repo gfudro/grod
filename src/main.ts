@@ -141,7 +141,8 @@ async function start(): Promise<void> {
       }
     }
     if (ticked) refreshWorldLayers();
-    snowfall.update(state.speed > 0 ? ticker.deltaMS * state.speed : 0, currentSeason(state) === 'zima');
+    // Flakes speed up a little with the game, but never into a blur.
+    snowfall.update(state.speed > 0 ? ticker.deltaMS * Math.min(state.speed, 3) : 0, currentSeason(state) === 'zima');
   });
 
   mountVersionLabel();
