@@ -9,7 +9,7 @@ import { WAREHOUSE_TILE } from '../data/waypoints';
 import { canPlaceBuildingAt, tryPlaceConstructionSite } from './placement';
 import { createInitialState, type GameState } from './state';
 import { tick } from './tick';
-import { advanceTutorial, suggestTile, tutorialDone, tutorialHint, unlockedBuildings, warehouseRoadNetwork } from './tutorial';
+import { advanceTutorial, skipTutorial, suggestTile, tutorialDone, tutorialHint, unlockedBuildings, warehouseRoadNetwork } from './tutorial';
 
 function road(state: GameState, from: Vec2, to: Vec2): void {
   // An L-shaped road: along x first, then along y.
@@ -130,6 +130,14 @@ describe('first-spring tutorial', () => {
     state.warehouse = { drewno: 50, glina: 50 };
     tryPlaceConstructionSite(state, 'studnia', suggestTile(state, 'studnia')!);
     tick(state);
+    expect(tutorialDone(state)).toBe(true);
+    expect(tutorialHint(state)).toBeNull();
+    expect(unlockedBuildings(state)).toEqual(new Set(BUILDING_ORDER));
+  });
+
+  it('can be skipped, showing every building at once', () => {
+    const state = createInitialState();
+    skipTutorial(state);
     expect(tutorialDone(state)).toBe(true);
     expect(tutorialHint(state)).toBeNull();
     expect(unlockedBuildings(state)).toEqual(new Set(BUILDING_ORDER));

@@ -25,7 +25,7 @@ import { tick } from './sim/tick';
 import { currentSeason } from './sim/seasons';
 import { createSnowfall } from './render/snowfall';
 import { createTutorialMarker } from './render/tutorial-marker';
-import { advanceTutorial, tutorialHint, type TutorialHint } from './sim/tutorial';
+import { advanceTutorial, skipTutorial, tutorialHint, type TutorialHint } from './sim/tutorial';
 import { playVoice } from './audio/voice';
 import { WAREHOUSE_TILE } from './data/waypoints';
 import { TILE_SIZE } from './data/tiles';
@@ -211,6 +211,11 @@ async function start(): Promise<void> {
       return true;
     },
     onNewGame: () => void restartWith(startNewGame),
+    onSkipTutorial: () => {
+      skipTutorial(state);
+      refreshWorldLayers();
+      saveNow();
+    },
     onOpenChange: (open) => {
       // The game waits while dad reads the chronicle.
       if (open) {

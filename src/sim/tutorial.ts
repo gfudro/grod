@@ -31,6 +31,11 @@ export function advanceTutorial(state: GameState): void {
   }
 }
 
+/** Dad's shortcut (KRONIKA → SAMOUCZEK): every building at once, no more hints. */
+export function skipTutorial(state: GameState): void {
+  state.tutorialStep = TUTORIAL_STEPS.length;
+}
+
 /** Buildings shown in the palette: every one after the tutorial, else those reached so far. */
 export function unlockedBuildings(state: GameState): Set<BuildingType> {
   if (tutorialDone(state)) return new Set(BUILDING_ORDER);
