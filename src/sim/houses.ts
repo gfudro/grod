@@ -4,6 +4,7 @@ import type { ResourceType } from '../data/resources';
 import { SEASONS, type Season } from '../data/seasons';
 import type { Vec2 } from '../data/types';
 import { footprintTouchesRoad } from './footprint';
+import { addChronicleFirst } from './chronicle';
 import { isAdjacentToRoad } from './pathfinding';
 import { houseGood, takeFromWarehouse, warehouseAmount, type Building, type GameState, type House } from './state';
 
@@ -120,7 +121,8 @@ export function startReadyUpgrades(state: GameState): void {
   }
 }
 
-export function completeUpgrade(house: House): void {
+export function completeUpgrade(state: GameState, house: House): void {
   house.tier = Math.min(house.tier + 1, HOUSE_TIERS.length - 1);
   house.upgrade = null;
+  if (house.tier === 1) addChronicleFirst(state, 'pierwsza-chata');
 }

@@ -16,6 +16,7 @@ import {
 import { findPath, isAdjacentToRoad } from './pathfinding';
 import { findResourceTile, manhattan } from './resource-tiles';
 import { consumeHouseGoods, currentSeason, houseShortages, startSeason } from './seasons';
+import { addChronicleFirst, closeSeasonLog } from './chronicle';
 import {
   addToWarehouse,
   houseGood,
@@ -40,8 +41,12 @@ export const SETTLER_CHECK_INTERVAL = 50;
 
 export function tick(state: GameState): void {
   state.tick += 1;
-  if (state.tick % SEASON_TICKS === 0) startSeason(state, currentSeason(state));
+  if (state.tick % SEASON_TICKS === 0) {
+    closeSeasonLog(state);
+    startSeason(state, currentSeason(state));
+  }
   consumeHouseGoods(state);
+  noteShortages(state);
   startReadyUpgrades(state);
   for (const villager of state.villagers) {
     advanceVillager(state, villager);
@@ -224,7 +229,7 @@ function runUpgrade(state: GameState, villager: VillagerState): void {
     cost: upgradeDef.cost,
     buildTicks: upgradeDef.buildTicks,
     delivered: house.upgrade.delivered,
-    complete: () => completeUpgrade(house),
+    complete: () => completeUpgrade(state, house),
   });
 }
 
@@ -384,6 +389,7 @@ function runFarm(state: GameState, villager: VillagerState): void {
       job.stage = 'toField';
     } else {
       plot.yieldLeft -= 1;
+      addChronicleFirst(state, 'pierwsze-zniwa');
       if (plot.yieldLeft <= 0) plot.stage = 'sciete';
       villager.carrying = def.produces!;
       job.stage = 'toWarehouse';
@@ -545,6 +551,7 @@ function runArriving(state: GameState, villager: VillagerState): void {
   }
   if (atTile(villager.from, house.tile)) {
     house.residents += 1;
+    state.seasonLog.settlers += 1;
     villager.job = { kind: 'idle' };
     villager.motion = 'idle';
     return;
@@ -555,6 +562,7 @@ function runArriving(state: GameState, villager: VillagerState): void {
 function completeConstruction(state: GameState, site: ConstructionSite): void {
   const def = BUILDINGS[site.type];
   if (def.kind === 'dom') {
+    addChronicleFirst(state, 'pierwsza-ziemianka');
     state.houses.push({
       id: nextEntityId(state, 'dom'),
       tile: site.tile,
@@ -583,6 +591,16 @@ function createBuilding(state: GameState, type: BuildingType, tile: Vec2): Build
     building.plots = footprintTiles(type, tile).map(() => ({ stage: 'zaorane', yieldLeft: 0 }));
   }
   return building;
+}
+
+/** Remembers hunger and cold this season, for the chronicle. */
+function noteShortages(state: GameState): void {
+  for (const house of state.houses) {
+    for (const missing of houseShortages(state, house)) {
+      if (missing === 'ryba') state.seasonLog.hungry = true;
+      if (missing === 'drewno') state.seasonLog.cold = true;
+    }
+  }
 }
 
 /** True when an occupied house has no fish, or no firewood in winter — blocks new settlers. */

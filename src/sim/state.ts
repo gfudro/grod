@@ -4,6 +4,7 @@ import type { ResourceAmounts, ResourceType } from '../data/resources';
 import type { Vec2 } from '../data/types';
 import { WAREHOUSE_TILE } from '../data/waypoints';
 import { createRng, type RngState } from './rng';
+import { addChronicleEntry, emptySeasonLog, type ChronicleEntry, type SeasonLog } from './chronicle';
 
 /** Game speeds on the HUD; x5 and above are mainly for playtesting long stretches. */
 export const SPEEDS = [1, 2, 3, 5, 10, 20, 60] as const;
@@ -104,6 +105,11 @@ export interface GameState {
   buildings: Building[];
   houses: House[];
   nextEntityId: number;
+  /** The gród's name, given by Artur; empty until named. */
+  name: string;
+  /** Important moments, oldest first. Saved apart from the rest (see save/). */
+  chronicle: ChronicleEntry[];
+  seasonLog: SeasonLog;
 }
 
 export function warehouseAmount(state: GameState, resource: ResourceType): number {
@@ -160,7 +166,11 @@ export function createInitialState(seed = 1): GameState {
     buildings: [],
     houses: [],
     nextEntityId: 1,
+    name: '',
+    chronicle: [],
+    seasonLog: emptySeasonLog(),
   };
+  addChronicleEntry(state, 'zalozenie');
   for (let i = 0; i < STARTING_WORKER_POOL; i++) {
     state.villagers.push(createIdleVillager(nextEntityId(state, 'ludzik')));
   }

@@ -76,13 +76,13 @@ Do obserwacji przy teście M4 (jeszcze nie zadania, czekają na uwagi Grega):
 
 ## M6 · Zapisy i kronika
 
-- [ ] Zapis w IndexedDB, autozapis co porę roku i przy wyjściu, `navigator.storage.persist()`
-- [ ] Eksport i import zapisu jako plik
-- [ ] `SAVE_VERSION = 1`, pierwszy przykładowy zapis w `tests/fixtures/saves/`, test wczytywania
-- [ ] Testowa migracja v1 → v2, żeby mechanizm był sprawdzony, zanim będzie potrzebny
-- [ ] Kronika: wpisy o ważnych chwilach (pierwsza chata, przetrwana zima, nowi osadnicy)
-- [ ] Ekran kroniki do czytania przez tatę
-- [ ] Nadawanie nazwy grodowi
+- [x] Zapis w IndexedDB, autozapis co porę roku i przy wyjściu, `navigator.storage.persist()`
+- [x] Eksport i import zapisu jako plik
+- [x] `SAVE_VERSION = 1`, pierwszy przykładowy zapis w `tests/fixtures/saves/`, test wczytywania
+- [x] Testowa migracja v1 → v2, żeby mechanizm był sprawdzony, zanim będzie potrzebny
+- [x] Kronika: wpisy o ważnych chwilach (pierwsza chata, przetrwana zima, nowi osadnicy)
+- [x] Ekran kroniki do czytania przez tatę
+- [x] Nadawanie nazwy grodowi
 
 **Gotowe, gdy:** zapis z poprzedniej wersji gry wczytuje się w nowej, a kronika pokazuje historię grodu.
 

@@ -6,14 +6,19 @@ import { createTargetHighlight } from './render/target-highlight';
 import { createRangeHighlight } from './render/range-highlight';
 import { createWarehouseMarker } from './render/markers';
 import { createVillagerSprite } from './render/villager';
-import { mountVersionLabel } from './ui/version';
+import { APP_VERSION, mountVersionLabel } from './ui/version';
+import { mountChronicleScreen } from './ui/chronicle-screen';
+import { bootGame, exportSave, importSave, saveGame, startNewGame } from './save/game-save';
+import { requestPersistentStorage } from './save/storage';
+import { nameVillage } from './sim/chronicle';
+import { SEASON_TICKS } from './data/seasons';
 import { mountHud } from './ui/hud';
 import { mountTopBar } from './ui/topbar';
 import { mountInspectPanel } from './ui/inspect-panel';
 import { createRoadDrawController, type RoadDrawController } from './input/road-draw';
 import { createBuildPlacementController, type BuildPlacementController } from './input/build-place';
 import { createInspectController } from './input/inspect';
-import { createInitialState, type SpeedMultiplier } from './sim/state';
+import type { SpeedMultiplier } from './sim/state';
 import { inspectTile } from './sim/inspect';
 import { setBuildingPaused } from './sim/building-control';
 import { tick } from './sim/tick';
@@ -29,7 +34,23 @@ async function start(): Promise<void> {
     throw new Error('Brak elementu #app w index.html');
   }
 
-  const state = createInitialState();
+  void requestPersistentStorage();
+  const { state, canSave } = await bootGame();
+
+  // Autosave each new season and whenever the app goes to the background
+  // (iPad home button, app switcher, closing the tab).
+  let autosave = canSave;
+  function saveNow(): void {
+    if (!autosave) return;
+    saveGame(state, APP_VERSION).catch(() => {
+      // Storage full or unavailable — the game goes on; export still works.
+    });
+  }
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'hidden') saveNow();
+  });
+  window.addEventListener('pagehide', saveNow);
+  let savedSeason = Math.floor(state.tick / SEASON_TICKS);
   const { app, viewport, terrain } = await createGameApp(container, currentSeason(state));
 
   const roadsLayer = createRoadsLayer();
@@ -117,6 +138,42 @@ async function start(): Promise<void> {
     },
   });
   const topBar = mountTopBar();
+
+  /** Replacing the game: stop autosaving the old one, then start afresh from storage. */
+  async function restartWith(prepare: () => Promise<void>): Promise<void> {
+    autosave = false;
+    await prepare();
+    location.reload();
+  }
+
+  let speedBeforeChronicle: SpeedMultiplier = 1;
+  mountChronicleScreen({
+    getState: () => state,
+    onRename: (name) => {
+      if (nameVillage(state, name)) saveNow();
+    },
+    onExport: () => void exportSave(state, APP_VERSION),
+    onImport: async (file) => {
+      autosave = false;
+      if (!(await importSave(file))) {
+        autosave = canSave;
+        return false;
+      }
+      location.reload();
+      return true;
+    },
+    onNewGame: () => void restartWith(startNewGame),
+    onOpenChange: (open) => {
+      // The game waits while dad reads the chronicle.
+      if (open) {
+        speedBeforeChronicle = state.speed;
+        state.speed = 0;
+      } else {
+        state.speed = speedBeforeChronicle;
+      }
+      hud.refresh();
+    },
+  });
   refreshWorldLayers();
 
   let accumulatorMs = 0;
@@ -141,6 +198,11 @@ async function start(): Promise<void> {
       }
     }
     if (ticked) refreshWorldLayers();
+    const season = Math.floor(state.tick / SEASON_TICKS);
+    if (season !== savedSeason) {
+      savedSeason = season;
+      saveNow();
+    }
     // Flakes speed up a little with the game, but never into a blur.
     snowfall.update(state.speed > 0 ? ticker.deltaMS * Math.min(state.speed, 3) : 0, currentSeason(state) === 'zima');
   });

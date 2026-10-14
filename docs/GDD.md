@@ -45,6 +45,16 @@ Decyzje z M5 (pory roku):
 - **Dom czekający na materiał** do przebudowy (ma towary i studnię, ale w magazynie brakuje np. gliny) pokazuje dymek w kolorze tego materiału z białą obwódką. Panel po stuknięciu wymienia brakujący materiał z nazwy.
 - **Wygląd pór roku kodem:** wiosną jasna trawa, jesienią żółta trawa i kolorowe liście, zimą śnieg na ziemi, drzewach i dachach, zamarznięta rzeka i padające płatki. Ikony pór roku to na razie emoji, do podmiany na `ui/wiosna.png` itd.
 
+Decyzje z M6 (zapisy i kronika):
+
+- **Autozapis** do IndexedDB na początku każdej pory roku i gdy gra schodzi w tło (przycisk Home, przełączenie aplikacji, zamknięcie karty). Przy starcie gra prosi przeglądarkę o trwałe przechowywanie danych.
+- **Zapisy nigdy nie są kasowane.** NOWA gra, wczytanie pliku albo zapis nie do przeniesienia przenoszą dotychczasowy zapis do archiwum w IndexedDB (klucz `archive-…`), a nie usuwają go. NOWA wymaga dwóch stuknięć (drugie na czerwonym „NA PEWNO?”).
+- **Zapis z nowszej wersji gry** (np. gdy otworzy się stara wersja z pamięci podręcznej) nie jest ruszany: stara wersja gra wtedy bez zapisywania, a zapis czeka na nową.
+- **Zapis nie do przeniesienia** trafia do archiwum, a nowy gród dostaje w kronice wpis o „dawnym grodzie” z jego nazwą (kurhan na mapie przyjdzie później).
+- **Format:** `SAVE_VERSION = 2`. Wersja 1 to stan z M5, wersja 2 dodaje nazwę grodu — migracja v1 → v2 powstała celowo, żeby sprawdzić mechanizm. Przykładowe zapisy obu wersji leżą w `tests/fixtures/saves/`, a test wczytuje każdy plik z tego katalogu i gra nim dalej 2000 kroków.
+- **Kronika** zapisuje: założenie grodu, nadanie nazwy, pierwszą ziemiankę, pierwszą chatę, pierwsze żniwa, osadników (podsumowanie na koniec każdej pory) i każdą zimę (czy brakło ryb lub opału). Wpisy to dane `{ year, season, kind, params }`, a zdania („Roku pierwszego, zimą, gród przetrwał zimę w cieple i sytości.”) powstają z szablonów w `strings.ts`.
+- **Ekran kroniki** otwiera przycisk 📜 KRONIKA nad przyciskiem DROGA. Gra stoi, gdy kronika jest otwarta. Na ekranie: nazwa grodu i rok, pole do nadania nazwy, wpisy od najnowszego oraz przyciski ZAPISZ (plik przez arkusz udostępniania na iPadzie), WCZYTAJ, NOWA i ZAMKNIJ. Zdania w kronice są dla taty — to jedyne miejsce poza samouczkiem, gdzie gra używa całych zdań.
+
 ## Wizja i filary
 
 Gród to spokojna gra budowlana na iPada dla 6-letniego Artura: łańcuchy produkcji jak w Anno, przejrzystość jak w Warcraft 2, bez walki. Artur gra przy tacie, ale ma sobie radzić choć trochę samodzielnie.

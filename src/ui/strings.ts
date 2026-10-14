@@ -1,3 +1,6 @@
+import type { ChronicleEntry } from '../sim/chronicle';
+import type { Season } from '../data/seasons';
+
 /** Every Polish word shown in the interface lives here, per CLAUDE.md. */
 export const STRINGS = {
   droga: 'DROGA',
@@ -12,4 +15,85 @@ export const STRINGS = {
     jesien: 'JESIEŃ',
     zima: 'ZIMA',
   },
+  kronika: 'KRONIKA',
+  grod: 'GRÓD',
+  nazwa: 'NAZWA',
+  nazwij: 'NAZWIJ',
+  zapisz: 'ZAPISZ',
+  wczytaj: 'WCZYTAJ',
+  nowa: 'NOWA',
+  naPewno: 'NA PEWNO?',
+  zamknij: 'ZAMKNIJ',
+  blad: 'BŁĄD',
 } as const;
+
+// ---- Chronicle sentences (read aloud by dad, so full sentences are fine) ----
+
+const YEAR_ORDINAL = [
+  'pierwszego',
+  'drugiego',
+  'trzeciego',
+  'czwartego',
+  'piątego',
+  'szóstego',
+  'siódmego',
+  'ósmego',
+  'dziewiątego',
+  'dziesiątego',
+  'jedenastego',
+  'dwunastego',
+];
+
+const SEASON_WHEN: Record<Season, string> = {
+  wiosna: 'wiosną',
+  lato: 'latem',
+  jesien: 'jesienią',
+  zima: 'zimą',
+};
+
+function settlersPhrase(count: number): string {
+  if (count === 1) return 'przybył nowy osadnik';
+  const lastTwo = count % 100;
+  const last = count % 10;
+  if (last >= 2 && last <= 4 && (lastTwo < 12 || lastTwo > 14)) return `przybyli ${count} osadnicy`;
+  return `przybyło ${count} osadników`;
+}
+
+function winterPhrase(cold: boolean, hungry: boolean): string {
+  if (cold && hungry) return 'gród przetrwał ciężką zimę, choć brakło ryb i opału';
+  if (cold) return 'gród przetrwał mroźną zimę, choć brakło opału';
+  if (hungry) return 'gród przetrwał zimę, choć brakło ryb';
+  return 'gród przetrwał zimę w cieple i sytości';
+}
+
+function entryBody(entry: ChronicleEntry): string {
+  const p = entry.params;
+  switch (entry.kind) {
+    case 'zalozenie':
+      return 'założono gród nad rzeką';
+    case 'nazwa':
+      return `gród nazwano „${String(p.name)}”`;
+    case 'pierwsza-ziemianka':
+      return 'stanęła pierwsza ziemianka';
+    case 'pierwsza-chata':
+      return 'pierwsza ziemianka urosła w chatę';
+    case 'pierwsze-zniwa':
+      return 'zebrano pierwsze proso';
+    case 'osadnicy':
+      return settlersPhrase(Number(p.count));
+    case 'zima':
+      return winterPhrase(Boolean(p.cold), Boolean(p.hungry));
+    case 'dawny-grod':
+      return p.name
+        ? `pamiętano dawny gród „${String(p.name)}”, którego nie dało się już odbudować`
+        : 'pamiętano dawny gród, którego nie dało się już odbudować';
+    default:
+      return String(entry.kind);
+  }
+}
+
+/** E.g. "Roku pierwszego, zimą, gród przetrwał zimę w cieple i sytości." */
+export function chronicleSentence(entry: ChronicleEntry): string {
+  const year = YEAR_ORDINAL[entry.year - 1] ?? `${entry.year}.`;
+  return `Roku ${year}, ${SEASON_WHEN[entry.season] ?? entry.season}, ${entryBody(entry)}.`;
+}
