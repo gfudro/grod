@@ -57,6 +57,13 @@ Każdy etap kończy się wersją, którą Artur może otworzyć na iPadzie. Kole
 
 **Gotowe, gdy:** Artur doprowadza pierwszą ziemiankę do chaty bez podpowiedzi.
 
+Do obserwacji przy teście M4 (jeszcze nie zadania, czekają na uwagi Grega):
+
+- Przebudowa w chatę trwa długo: jeden budowniczy nosi 5 materiałów po jednym (ok. minuty przy x1).
+- Kasza i proso gromadzą się w magazynie, bo nic ich nie zjada aż do M5.
+- Podświetlenie zasięgu studni jest dość blade.
+- Zasięg i panel z poprzedniego stuknięcia zostają widoczne, gdy wybierze się budynek do postawienia.
+
 ## M5 · Pory roku
 
 - [ ] Cykl czterech pór roku, 3–4 minuty każda przy x1, ikona pory roku na pasku
