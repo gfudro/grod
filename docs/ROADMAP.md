@@ -66,11 +66,11 @@ Do obserwacji przy teście M4 (jeszcze nie zadania, czekają na uwagi Grega):
 
 ## M5 · Pory roku
 
-- [ ] Cykl czterech pór roku, 3–4 minuty każda przy x1, ikona pory roku na pasku
-- [ ] Wiosna: siew; jesień: żniwa; pole widocznie rośnie w czterech stadiach
-- [ ] Zima: pole nie rodzi, domy zużywają drewno na opał, rybak łowi wolniej
-- [ ] Ostrzeżenie przed zimą (ikona i licznik dni), gdy zapasów jest za mało
-- [ ] Wygląd zimy nakładany kodem (kolory, śnieg)
+- [x] Cykl czterech pór roku, 3–4 minuty każda przy x1, ikona pory roku na pasku
+- [x] Wiosna: siew; jesień: żniwa; pole widocznie rośnie w czterech stadiach
+- [x] Zima: pole nie rodzi, domy zużywają drewno na opał, rybak łowi wolniej
+- [x] Ostrzeżenie przed zimą (ikona i licznik dni), gdy zapasów jest za mało
+- [x] Wygląd zimy nakładany kodem (kolory, śnieg)
 
 **Gotowe, gdy:** Artur rozumie, że latem trzeba odłożyć drewno i ryby na zimę.
 

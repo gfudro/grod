@@ -4,6 +4,7 @@ import { tick } from './tick';
 import { canPlaceBuildingAt, tryPlaceConstructionSite } from './placement';
 import { houseCapacity } from './houses';
 import { tileKey, type Vec2 } from '../data/types';
+import { SEASON_TICKS } from '../data/seasons';
 
 // Layout west of the warehouse (8,9): a road along row 8 from x=2 to x=9.
 const FIELD_ANCHOR = { x: 4, y: 6 }; // 2×2 field (4..5, 6..7), its bottom row touches the road
@@ -50,7 +51,7 @@ function addHouse(state: GameState, extra: Partial<House> = {}): House {
 }
 
 describe('pole prosa', () => {
-  it('is built as a 2×2 field whose farmer sows, waits for the crop and carries proso to the warehouse', () => {
+  it('is sown in spring, grows through summer, and is harvested in autumn', () => {
     const state = withRoad();
     expect(tryPlaceConstructionSite(state, 'pole', FIELD_ANCHOR)).toBe(true);
 
@@ -59,11 +60,35 @@ describe('pole prosa', () => {
     const field = state.buildings.find((b) => b.type === 'pole')!;
     expect(field.plots).toHaveLength(4);
 
-    runTicks(state, 1500); // sow all four plots, let them ripen, harvest
-    expect(warehouseAmount(state, 'proso')).toBeGreaterThanOrEqual(2);
-    // Nobody got stuck inside the field: the farmer is never "waiting".
-    const farmer = state.villagers.find((v) => v.id === field.workerId)!;
-    expect(farmer.motion).not.toBe('waiting');
+    runTicks(state, 300); // sow all four plots
+    expect(field.plots!.map((p) => p.stage)).toEqual(['kielki', 'kielki', 'kielki', 'kielki']);
+    // Nothing more to do until autumn: the farmer goes back to the pool.
+    expect(field.workerId).toBeNull();
+
+    runTicks(state, SEASON_TICKS + 10 - state.tick); // into summer
+    expect(field.plots!.every((p) => p.stage === 'lodygi')).toBe(true);
+    expect(warehouseAmount(state, 'proso')).toBe(0);
+
+    runTicks(state, SEASON_TICKS * 2 - state.tick + 1); // first tick of autumn
+    expect(field.plots!.every((p) => p.stage === 'dojrzale' && p.yieldLeft === 3)).toBe(true);
+
+    runTicks(state, 2400); // harvest: 4 plots × 3 units, one trip each
+    expect(warehouseAmount(state, 'proso')).toBe(12);
+    expect(field.plots!.every((p) => p.stage === 'sciete')).toBe(true);
+    expect(state.villagers.every((v) => v.motion !== 'waiting')).toBe(true);
+  });
+
+  it('is not sown outside spring', () => {
+    const state = withRoad();
+    state.tick = SEASON_TICKS; // summer
+    const field = addBuilding(state, 'pole', FIELD_ANCHOR, {
+      plots: [0, 1, 2, 3].map(() => ({ stage: 'zaorane' as const, yieldLeft: 0 })),
+    });
+
+    runTicks(state, 300);
+
+    expect(field.plots!.every((p) => p.stage === 'zaorane')).toBe(true);
+    expect(field.workerId).toBeNull();
   });
 
   it('cannot overlap a road with any of its four tiles', () => {

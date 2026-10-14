@@ -4,4 +4,12 @@ export const STRINGS = {
   cofnij: 'COFNIJ',
   pauza: 'PAUZA',
   wolni: 'WOLNI',
+  rok: 'ROK',
+  zima: 'ZIMA',
+  pory: {
+    wiosna: 'WIOSNA',
+    lato: 'LATO',
+    jesien: 'JESIEŃ',
+    zima: 'ZIMA',
+  },
 } as const;

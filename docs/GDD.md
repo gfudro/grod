@@ -31,6 +31,18 @@ Decyzje z M4 (chata i drugi łańcuch):
 - **Bez zużycia towarów w M4.** Liczniki nad domami nie spadają; zjadanie zapasów przychodzi razem z porami roku (M5). Awans nigdy się nie cofa.
 - **Pierwsze liczby (do balansu):** pole 2 drewna, sianie i żniwa po 2 s, wzrost 30 s; żarna 2 drewna i 2 gliny, mielenie 4 s; studnia 1 drewno i 2 gliny.
 
+Decyzje z M5 (pory roku):
+
+- **Pora roku trwa 3 minuty przy x1** (30 „dni” po 6 s). Gra zaczyna się wiosną roku 1. Na pasku: ikona pory roku, nazwa, rok i pasek postępu pory.
+- **Pole idzie za kalendarzem:** rolnik sieje tylko wiosną (kiełki), latem rosną łodygi, z początkiem jesieni pole dojrzewa i rolnik zbiera. Cztery widoczne stadia: zaorane → kiełki → łodygi → dojrzałe. Dojrzały kafelek daje 3 proso (jedno na kurs do magazynu, kłosów ubywa w oczach). Niezebrane proso czeka do skutku, także zimą — nic nie przepada.
+- **Rolnik pracuje tylko przy siewie i żniwach.** Gdy na polu nie ma nic do zrobienia, wraca do puli wolnych. Pole bez pracy nie blokuje ludzika przez pół roku.
+- **Domy jedzą:** zamieszkana ziemianka zjada 1 rybę co 30 s; chata 1 rybę co 30 s i 1 kaszę co 60 s. Kasza w ziemiance służy tylko do wzrostu. Jedno pole (12 prosa rocznie) wykarmia mniej więcej jedną chatę.
+- **Opał:** od jesieni tragarze układają przy każdym domu stos drewna do 4, a zimą zamieszkany dom spala 1 drewno co 45 s. Licznik drewna pojawia się nad domem jesienią.
+- **Głód i zimno:** dom bez ryb albo (zimą) bez drewna ma nad sobą dymek w kolorze brakującego towaru i wstrzymuje nowych osadników. Nikt się nie wyprowadza, dom nie spada piętro niżej.
+- **Rybak zimą łowi 3 razy wolniej** (rzeka zamarza — widać to po kolorze wody).
+- **Ostrzeżenie przed zimą:** przez całą jesień, jeśli zapas (magazyn + to, co już leży w domach) nie wystarczy na jedną zimę, na pasku pulsuje czerwony znaczek ze śnieżynką, liczbą dni do zimy i kolorami brakujących towarów.
+- **Wygląd pór roku kodem:** wiosną jasna trawa, jesienią żółta trawa i kolorowe liście, zimą śnieg na ziemi, drzewach i dachach, zamarznięta rzeka i padające płatki. Ikony pór roku to na razie emoji, do podmiany na `ui/wiosna.png` itd.
+
 ## Wizja i filary
 
 Gród to spokojna gra budowlana na iPada dla 6-letniego Artura: łańcuchy produkcji jak w Anno, przejrzystość jak w Warcraft 2, bez walki. Artur gra przy tacie, ale ma sobie radzić choć trochę samodzielnie.

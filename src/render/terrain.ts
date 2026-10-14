@@ -1,35 +1,54 @@
 import { Container, Graphics } from 'pixi.js';
 import { FOREST, MAP_HEIGHT, MAP_WIDTH, TERRAIN } from '../data/map';
-import { TERRAIN_COLOR, TILE_SIZE, TREE_COLOR } from '../data/tiles';
+import type { Season } from '../data/seasons';
+import { SEASON_TERRAIN_COLOR, SEASON_TREE_COLOR, TILE_SIZE } from '../data/tiles';
 
-export function buildTerrainLayer(): Container {
-  const layer = new Container();
+const SNOW_COLOR = 0xf4f7fb;
 
+export interface TerrainLayer {
+  container: Container;
+  /** Repaints grass, water and trees in the colours of the season. */
+  setSeason(season: Season): void;
+}
+
+export function createTerrainLayer(initialSeason: Season): TerrainLayer {
+  const container = new Container();
   const tiles = new Graphics();
-  for (let y = 0; y < MAP_HEIGHT; y++) {
-    for (let x = 0; x < MAP_WIDTH; x++) {
-      const color = TERRAIN_COLOR[TERRAIN[y][x]];
-      tiles
-        .rect(x * TILE_SIZE, y * TILE_SIZE, TILE_SIZE, TILE_SIZE)
-        .fill(color);
+  const trees = new Graphics();
+  container.addChild(tiles);
+  container.addChild(trees);
+  let shown: Season | null = null;
+
+  function setSeason(season: Season): void {
+    if (season === shown) return;
+    shown = season;
+
+    tiles.clear();
+    const terrainColor = SEASON_TERRAIN_COLOR[season];
+    for (let y = 0; y < MAP_HEIGHT; y++) {
+      for (let x = 0; x < MAP_WIDTH; x++) {
+        tiles.rect(x * TILE_SIZE, y * TILE_SIZE, TILE_SIZE, TILE_SIZE).fill(terrainColor[TERRAIN[y][x]]);
+      }
+    }
+
+    trees.clear();
+    const treeColor = SEASON_TREE_COLOR[season];
+    for (const tree of FOREST) {
+      const cx = tree.x * TILE_SIZE + TILE_SIZE / 2;
+      const cy = tree.y * TILE_SIZE + TILE_SIZE / 2;
+      trees
+        .circle(cx, cy, TILE_SIZE * 0.3)
+        .fill(treeColor[tree.type])
+        .circle(cx, cy, TILE_SIZE * 0.3)
+        .stroke({ color: 0x1f3a22, width: 2 });
+      if (season === 'zima') {
+        trees.circle(cx - 4, cy - 6, TILE_SIZE * 0.14).fill(SNOW_COLOR);
+      }
     }
   }
-  layer.addChild(tiles);
 
-  const trees = new Graphics();
-  for (const tree of FOREST) {
-    const cx = tree.x * TILE_SIZE + TILE_SIZE / 2;
-    const cy = tree.y * TILE_SIZE + TILE_SIZE / 2;
-    const color = TREE_COLOR[tree.type];
-    trees
-      .circle(cx, cy, TILE_SIZE * 0.3)
-      .fill(color)
-      .circle(cx, cy, TILE_SIZE * 0.3)
-      .stroke({ color: 0x1f3a22, width: 2 });
-  }
-  layer.addChild(trees);
-
-  return layer;
+  setSeason(initialSeason);
+  return { container, setSeason };
 }
 
 export const WORLD_PIXEL_WIDTH = MAP_WIDTH * TILE_SIZE;

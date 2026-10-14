@@ -89,7 +89,8 @@ function describe(info: InspectInfo): string {
         ].filter(Boolean);
         growth = ` — ${info.nextName}: ${missing.length > 0 ? `brak ${missing.join(', ')}` : 'zaraz'}`;
       }
-      return `${info.name} — ${info.connected ? 'droga OK' : 'brak drogi'} — mieszkańcy ${info.residents}/${info.capacity} — ${goods}${growth}`;
+      const need = info.shortages.length > 0 ? ` — brak: ${info.shortages.join(', ')}` : '';
+      return `${info.name} — ${info.connected ? 'droga OK' : 'brak drogi'} — mieszkańcy ${info.residents}/${info.capacity} — ${goods}${need}${growth}`;
     }
     case 'villager':
       return `LUDZIK — ${info.description}`;

@@ -1,6 +1,7 @@
 import { BUILDINGS, type BuildingType } from '../data/buildings';
-import { HOUSE_TIERS, type HouseTierDef } from '../data/houses';
+import { FIREWOOD, HOUSE_TIERS, type HouseTierDef } from '../data/houses';
 import type { ResourceType } from '../data/resources';
+import { SEASONS, type Season } from '../data/seasons';
 import type { Vec2 } from '../data/types';
 import { footprintTouchesRoad } from './footprint';
 import { isAdjacentToRoad } from './pathfinding';
@@ -14,17 +15,24 @@ export function houseCapacity(house: House): number {
   return houseTier(house).capacity;
 }
 
-export function houseGoodTarget(house: House, resource: ResourceType): number {
-  return houseTier(house).goods[resource] ?? 0;
+export function houseGoodTarget(house: House, resource: ResourceType, season: Season): number {
+  const tierTarget = houseTier(house).goods[resource] ?? 0;
+  if (resource === 'drewno' && SEASONS[season].stocksFirewood) return Math.max(tierTarget, FIREWOOD.target);
+  return tierTarget;
 }
 
-/** Goods this house keeps receiving, in table order. */
-export function houseWantedGoods(house: House): ResourceType[] {
-  return Object.keys(houseTier(house).goods) as ResourceType[];
+/** Goods this house keeps receiving, in table order, plus firewood from autumn on. */
+export function houseWantedGoods(house: House, season: Season): ResourceType[] {
+  const goods = Object.keys(houseTier(house).goods) as ResourceType[];
+  if (SEASONS[season].stocksFirewood && !goods.includes('drewno')) goods.push('drewno');
+  return goods;
 }
 
+/** The tier's own goods are all full — what growing into the next tier takes. */
 export function houseGoodsFull(house: House): boolean {
-  return houseWantedGoods(house).every((r) => houseGood(house, r) >= houseGoodTarget(house, r));
+  return (Object.entries(houseTier(house).goods) as [ResourceType, number][]).every(
+    ([resource, target]) => houseGood(house, resource) >= target,
+  );
 }
 
 /** Square (Chebyshev) distance: the range drawn on the map is a square of tiles. */

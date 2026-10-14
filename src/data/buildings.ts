@@ -6,7 +6,7 @@ export type ResourceSearch = 'drzewo' | 'woda' | 'na-miejscu';
 
 /**
  * - produkcja: worker gathers a resource and carries it to the warehouse
- * - pole: farmer sows and harvests the building's own field plots
+ * - pole: farmer sows (spring) and harvests (autumn) the building's own field plots
  * - przetworstwo: worker fetches an input from the warehouse, processes it
  *   at the building and carries the output back
  * - usluga: no worker; serves houses within range while road-connected
@@ -47,10 +47,10 @@ export interface BuildingDef {
   // --- kind: 'pole' only ---
   /** Ticks the farmer spends sowing one plot. */
   sowTicks?: number;
-  /** Ticks a sown plot takes to ripen on its own. */
-  growTicks?: number;
-  /** Ticks the farmer spends harvesting one ripe plot (yields one unit). */
+  /** Ticks the farmer spends harvesting one unit from a ripe plot. */
   harvestTicks?: number;
+  /** Units one ripe plot yields at harvest (one per trip to the warehouse). */
+  plotYield?: number;
 
   // --- kind: 'przetworstwo' only ---
   consumes?: ResourceType;
@@ -108,8 +108,8 @@ export const BUILDINGS: Record<BuildingType, BuildingDef> = {
     footprint: { w: 2, h: 2 },
     produces: 'proso',
     sowTicks: 20,
-    growTicks: 300,
     harvestTicks: 20,
+    plotYield: 3,
   },
   zarna: {
     id: 'zarna',

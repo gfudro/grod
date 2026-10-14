@@ -19,6 +19,11 @@ export interface HouseTierDef {
    * it takes to grow.
    */
   goods: ResourceAmounts;
+  /**
+   * Ticks between meals, per good: an occupied house eats one unit of
+   * that good every so often (the counter visibly drops, e.g. 5/5 → 4/5).
+   */
+  eatsEvery: ResourceAmounts;
   /** How this house grows into the next tier; absent on the top tier. */
   upgrade?: HouseUpgradeDef;
 }
@@ -32,11 +37,23 @@ export const HOUSE_TIERS: HouseTierDef[] = [
     name: 'ZIEMIANKA',
     capacity: 3,
     goods: { ryba: 5, kasza: 3 },
+    // Kasza here is only what it takes to grow — a ziemianka doesn't eat it.
+    eatsEvery: { ryba: 300 },
     upgrade: { cost: { drewno: 3, glina: 2 }, buildTicks: 40, service: 'studnia' },
   },
   {
     name: 'CHATA',
     capacity: 5,
     goods: { ryba: 5, kasza: 3 },
+    eatsEvery: { ryba: 300, kasza: 600 },
   },
 ];
+
+/**
+ * Firewood (opał): from autumn on, tragarze stack drewno at every house up
+ * to `target`; in winter an occupied house burns one every `burnEvery` ticks.
+ */
+export const FIREWOOD = {
+  target: 4,
+  burnEvery: 450,
+} as const;

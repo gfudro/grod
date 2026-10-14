@@ -17,6 +17,8 @@ import { createInitialState, type SpeedMultiplier } from './sim/state';
 import { inspectTile } from './sim/inspect';
 import { setBuildingPaused } from './sim/building-control';
 import { tick } from './sim/tick';
+import { currentSeason } from './sim/seasons';
+import { createSnowfall } from './render/snowfall';
 import { WAREHOUSE_TILE } from './data/waypoints';
 
 const BASE_TICK_MS = 1000 / 10; // 10 ticks/second at x1
@@ -27,8 +29,8 @@ async function start(): Promise<void> {
     throw new Error('Brak elementu #app w index.html');
   }
 
-  const { app, viewport } = await createGameApp(container);
   const state = createInitialState();
+  const { app, viewport, terrain } = await createGameApp(container, currentSeason(state));
 
   const roadsLayer = createRoadsLayer();
   viewport.addChild(roadsLayer.container);
@@ -60,7 +62,11 @@ async function start(): Promise<void> {
   const targetHighlight = createTargetHighlight();
   viewport.addChild(targetHighlight.container);
 
+  const snowfall = createSnowfall();
+  viewport.addChild(snowfall.container);
+
   function refreshWorldLayers(): void {
+    terrain.setSeason(currentSeason(state));
     roadsLayer.redraw(state.roads);
     buildingsLayer.redraw(state);
     warehouseMarker.update(state.roads);
@@ -135,6 +141,7 @@ async function start(): Promise<void> {
       }
     }
     if (ticked) refreshWorldLayers();
+    snowfall.update(state.speed > 0 ? ticker.deltaMS * state.speed : 0, currentSeason(state) === 'zima');
   });
 
   mountVersionLabel();

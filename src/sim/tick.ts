@@ -3,6 +3,7 @@ import { MAP_HEIGHT, MAP_WIDTH, TERRAIN } from '../data/map';
 import type { ResourceAmounts, ResourceType } from '../data/resources';
 import { tileKey, type Vec2 } from '../data/types';
 import { WAREHOUSE_TILE } from '../data/waypoints';
+import { SEASONS, SEASON_TICKS, type Season } from '../data/seasons';
 import { footprintContains, footprintTiles, footprintTouchesRoad } from './footprint';
 import {
   completeUpgrade,
@@ -14,6 +15,7 @@ import {
 } from './houses';
 import { findPath, isAdjacentToRoad } from './pathfinding';
 import { findResourceTile, manhattan } from './resource-tiles';
+import { consumeHouseGoods, currentSeason, houseShortages, startSeason } from './seasons';
 import {
   addToWarehouse,
   houseGood,
@@ -38,7 +40,8 @@ export const SETTLER_CHECK_INTERVAL = 50;
 
 export function tick(state: GameState): void {
   state.tick += 1;
-  growFields(state);
+  if (state.tick % SEASON_TICKS === 0) startSeason(state, currentSeason(state));
+  consumeHouseGoods(state);
   startReadyUpgrades(state);
   for (const villager of state.villagers) {
     advanceVillager(state, villager);
@@ -127,12 +130,15 @@ function tryAssignWork(state: GameState, villager: VillagerState): boolean {
     return true;
   }
 
+  const season = currentSeason(state);
   const building = state.buildings.find(
     (b) =>
       BUILDINGS[b.type].kind !== 'usluga' &&
       b.workerId === null &&
       !b.paused &&
-      footprintTouchesRoad(b.type, b.tile, state.roads),
+      footprintTouchesRoad(b.type, b.tile, state.roads) &&
+      // A field only takes a farmer while there is something to sow or reap.
+      (!b.plots || pickPlot(b.plots, season) !== null),
   );
   if (building) {
     building.workerId = villager.id;
@@ -142,13 +148,13 @@ function tryAssignWork(state: GameState, villager: VillagerState): boolean {
 
   for (const house of state.houses) {
     if (!isAdjacentToRoad(house.tile, state.roads)) continue;
-    for (const resource of houseWantedGoods(house)) {
+    for (const resource of houseWantedGoods(house, season)) {
       if (warehouseAmount(state, resource) === 0) continue;
       // Count goods already claimed by other tragarze so we never assign
       // more deliveries than the house actually needs (the surplus would
       // just be wasted once the counter hits its target).
       const committed = committedDeliveries(state, house, resource, villager);
-      if (houseGood(house, resource) + committed < houseGoodTarget(house, resource)) {
+      if (houseGood(house, resource) + committed < houseGoodTarget(house, resource, season)) {
         villager.job = { kind: 'deliver', houseId: house.id, resource, stage: 'toWarehouse' };
         return true;
       }
@@ -293,7 +299,9 @@ function runProduce(state: GameState, villager: VillagerState): void {
     }
     if (atTile(villager.from, building.resourceTile)) {
       job.stage = 'gathering';
-      villager.workTicksRemaining = def.gatherTicks!;
+      // e.g. a rybak fishes slower through the winter ice
+      const slowdown = SEASONS[currentSeason(state)].gatherMultiplier[building.type] ?? 1;
+      villager.workTicksRemaining = def.gatherTicks! * slowdown;
       villager.motion = 'idle';
       return;
     }
@@ -322,8 +330,9 @@ function runProduce(state: GameState, villager: VillagerState): void {
 }
 
 /**
- * Farmer: harvest any ripe plot, otherwise sow any bare one, otherwise
- * stand on the field while the millet grows on its own.
+ * Farmer: harvest any ripe plot, otherwise (in spring) sow any bare one.
+ * With nothing to do the farmer goes back to the pool of free workers —
+ * the field only needs hands at sowing and at harvest.
  */
 function runFarm(state: GameState, villager: VillagerState): void {
   const job = villager.job as Extract<VillagerJob, { kind: 'farm' }>;
@@ -341,14 +350,19 @@ function runFarm(state: GameState, villager: VillagerState): void {
       villager.motion = 'waiting'; // field lost its road connection
       return;
     }
-    const plot = pickPlot(building.plots);
-    const target = tiles[plot ?? 0];
+    const plot = pickPlot(building.plots, currentSeason(state));
+    if (plot === null) {
+      building.workerId = null;
+      villager.job = { kind: 'idle' };
+      villager.motion = 'idle';
+      return;
+    }
+    const target = tiles[plot];
     if (!atTile(villager.from, target)) {
       beginWalk(state, villager, target, fieldKeys);
       return;
     }
     villager.motion = 'idle';
-    if (plot === null) return; // everything sown and still growing
     job.plot = plot;
     if (building.plots[plot].stage === 'dojrzale') {
       job.stage = 'harvesting';
@@ -367,10 +381,10 @@ function runFarm(state: GameState, villager: VillagerState): void {
     const plot = building.plots[job.plot];
     if (job.stage === 'sowing') {
       plot.stage = 'kielki';
-      plot.growTicksRemaining = def.growTicks!;
       job.stage = 'toField';
     } else {
-      plot.stage = 'sciete';
+      plot.yieldLeft -= 1;
+      if (plot.yieldLeft <= 0) plot.stage = 'sciete';
       villager.carrying = def.produces!;
       job.stage = 'toWarehouse';
     }
@@ -383,21 +397,12 @@ function runFarm(state: GameState, villager: VillagerState): void {
   });
 }
 
-function pickPlot(plots: FieldPlot[]): number | null {
+function pickPlot(plots: FieldPlot[], season: Season): number | null {
   const ripe = plots.findIndex((p) => p.stage === 'dojrzale');
   if (ripe >= 0) return ripe;
+  if (!SEASONS[season].sowing) return null;
   const bare = plots.findIndex((p) => p.stage === 'zaorane' || p.stage === 'sciete');
   return bare >= 0 ? bare : null;
-}
-
-function growFields(state: GameState): void {
-  for (const building of state.buildings) {
-    for (const plot of building.plots ?? []) {
-      if (plot.stage !== 'kielki') continue;
-      plot.growTicksRemaining -= 1;
-      if (plot.growTicksRemaining <= 0) plot.stage = 'dojrzale';
-    }
-  }
 }
 
 /**
@@ -484,7 +489,7 @@ function runDeliver(state: GameState, villager: VillagerState): void {
     villager.job = { kind: 'idle' };
     return;
   }
-  const target = houseGoodTarget(house, job.resource);
+  const target = houseGoodTarget(house, job.resource, currentSeason(state));
 
   if (job.stage === 'toWarehouse') {
     if (!atTile(villager.from, WAREHOUSE_TILE)) {
@@ -517,7 +522,9 @@ function runDeliver(state: GameState, villager: VillagerState): void {
     beginWalk(state, villager, house.tile);
     return;
   }
-  house.goods[job.resource] = Math.min(target, houseGood(house, job.resource) + 1);
+  // No cap here: if the season turned while walking (firewood no longer
+  // wanted in spring), the unit is still put down rather than vanishing.
+  house.goods[job.resource] = houseGood(house, job.resource) + 1;
   villager.carrying = null;
   villager.motion = 'idle';
   if (houseGood(house, job.resource) >= target) {
@@ -573,14 +580,14 @@ function createBuilding(state: GameState, type: BuildingType, tile: Vec2): Build
     paused: false,
   };
   if (def.kind === 'pole') {
-    building.plots = footprintTiles(type, tile).map(() => ({ stage: 'zaorane', growTicksRemaining: 0 }));
+    building.plots = footprintTiles(type, tile).map(() => ({ stage: 'zaorane', yieldLeft: 0 }));
   }
   return building;
 }
 
-/** True when an occupied house has no fish at all — blocks new settlers. */
-function hasHunger(state: GameState): boolean {
-  return state.houses.some((h) => h.residents > 0 && houseGood(h, 'ryba') === 0);
+/** True when an occupied house has no fish, or no firewood in winter — blocks new settlers. */
+function hasHungerOrCold(state: GameState): boolean {
+  return state.houses.some((h) => houseShortages(state, h).length > 0);
 }
 
 function findReachableEdgeTile(state: GameState, target: Vec2): Vec2 | null {
@@ -609,7 +616,7 @@ function maybeSpawnSettler(state: GameState): void {
     return h.residents + enRoute < houseCapacity(h);
   });
   if (!house) return;
-  if (hasHunger(state)) return;
+  if (hasHungerOrCold(state)) return;
 
   const spawnTile = findReachableEdgeTile(state, house.tile);
   if (!spawnTile) return; // no road reaches the map edge yet

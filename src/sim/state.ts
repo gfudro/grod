@@ -59,15 +59,16 @@ export interface Building {
 }
 
 /**
- * zaorane/sciete: waiting to be sown; kielki: growing on its own;
- * dojrzale: ready for harvest.
+ * The field follows the calendar (GDD "Pory roku"):
+ * zaorane/sciete: bare, sown in spring; kielki: sprouts (spring);
+ * lodygi: green stalks (summer); dojrzale: ripe, harvested from autumn on.
  */
-export type PlotStage = 'zaorane' | 'kielki' | 'dojrzale' | 'sciete';
+export type PlotStage = 'zaorane' | 'kielki' | 'lodygi' | 'dojrzale' | 'sciete';
 
 export interface FieldPlot {
   stage: PlotStage;
-  /** Ticks left until a 'kielki' plot ripens. */
-  growTicksRemaining: number;
+  /** Units still to harvest from a 'dojrzale' plot. */
+  yieldLeft: number;
 }
 
 /** A house rebuilding into its next tier — works like a construction site. */

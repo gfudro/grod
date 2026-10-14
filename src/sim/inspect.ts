@@ -15,6 +15,7 @@ import {
   type UpgradeReadiness,
 } from './houses';
 import { isAdjacentToRoad } from './pathfinding';
+import { currentSeason, houseShortages } from './seasons';
 import { houseGood, type GameState, type PlotStage, type VillagerState } from './state';
 
 export interface GoodCounter {
@@ -53,6 +54,8 @@ export type InspectInfo =
       nextName: string | null;
       readiness: UpgradeReadiness;
       upgrading: boolean;
+      /** Hunger (ryba) or cold (drewno) right now. */
+      shortages: ResourceType[];
       /** Range of the service building serving this house, so the player sees it covers the house. */
       rangeTiles: Vec2[] | null;
     }
@@ -164,14 +167,15 @@ export function inspectTile(state: GameState, tile: Vec2): InspectInfo | null {
       connected: isAdjacentToRoad(house.tile, state.roads),
       residents: house.residents,
       capacity: houseCapacity(house),
-      goods: houseWantedGoods(house).map((resource) => ({
+      goods: houseWantedGoods(house, currentSeason(state)).map((resource) => ({
         resource,
         have: houseGood(house, resource),
-        target: houseGoodTarget(house, resource),
+        target: houseGoodTarget(house, resource, currentSeason(state)),
       })),
       nextName: upgrade ? HOUSE_TIERS[house.tier + 1].name : null,
       readiness: upgradeReadiness(state, house),
       upgrading: house.upgrade !== null,
+      shortages: houseShortages(state, house),
       rangeTiles: serving ? serviceRangeTiles(serving.tile, servingRange) : null,
     };
   }

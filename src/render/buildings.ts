@@ -6,7 +6,8 @@ import { TILE_SIZE } from '../data/tiles';
 import { footprintTiles, footprintTouchesRoad } from '../sim/footprint';
 import { houseGoodTarget, houseTier, houseWantedGoods, upgradeReadiness } from '../sim/houses';
 import { isAdjacentToRoad } from '../sim/pathfinding';
-import { houseGood, type GameState, type House, type PlotStage } from '../sim/state';
+import { currentSeason, houseShortages } from '../sim/seasons';
+import { houseGood, type FieldPlot, type GameState, type House, type PlotStage } from '../sim/state';
 
 const SITE_COLOR = 0x9b7a4a;
 const SITE_PROGRESS_COLOR = 0xd9b96a;
@@ -25,10 +26,13 @@ const ROOF_COLOR = 0xc9a24a;
 const PLOT_COLOR: Record<PlotStage, number> = {
   zaorane: 0x7a5530,
   kielki: 0x7a5530,
+  lodygi: 0x6b6a2e,
   dojrzale: 0xe0b84a,
   sciete: 0xc8b27a,
 };
 const SPROUT_COLOR = 0x7fc04a;
+const STALK_COLOR = 0x4f8f2a;
+const SNOW_COLOR = 0xf4f7fb;
 const STUBBLE_COLOR = 0x9a8350;
 const FURROW_COLOR = 0x5e3f22;
 const NO_ROAD_COLOR = 0xcc4433;
@@ -70,6 +74,7 @@ export function createBuildingsLayer(): BuildingsLayer {
     for (const child of labels.removeChildren()) child.destroy();
 
     const inset = TILE_SIZE * 0.1;
+    const winter = currentSeason(state) === 'zima';
 
     for (const site of state.sites) {
       const { px, py } = tileTopLeft(site.tile.x, site.tile.y);
@@ -100,8 +105,14 @@ export function createBuildingsLayer(): BuildingsLayer {
 
       if (building.plots) {
         const tiles = footprintTiles(building.type, building.tile);
-        building.plots.forEach((plot, i) => drawPlot(graphics, tiles[i].x * TILE_SIZE, tiles[i].y * TILE_SIZE, plot.stage));
+        const plotYield = def.plotYield ?? 1;
+        building.plots.forEach((plot, i) =>
+          drawPlot(graphics, tiles[i].x * TILE_SIZE, tiles[i].y * TILE_SIZE, plot, plotYield),
+        );
         const { w, h } = footprintSize(building.type);
+        if (winter) {
+          graphics.rect(px + 2, py + 2, w * TILE_SIZE - 4, h * TILE_SIZE - 4).fill({ color: SNOW_COLOR, alpha: 0.55 });
+        }
         graphics
           .rect(px + 2, py + 2, w * TILE_SIZE - 4, h * TILE_SIZE - 4)
           .stroke({ color: 0x4a3218, width: 3 });
@@ -112,6 +123,7 @@ export function createBuildingsLayer(): BuildingsLayer {
           .fill(BUILDING_COLOR[building.type] ?? 0x555555)
           .rect(px + inset, py + inset, size, size)
           .stroke({ color: 0x241a0d, width: 3 });
+        if (winter) drawSnowCap(graphics, px + inset, py + inset, size);
         addLabel(def.name[0], px + TILE_SIZE / 2, py + TILE_SIZE / 2, 0xf4e9d8, 24);
       }
 
@@ -123,11 +135,11 @@ export function createBuildingsLayer(): BuildingsLayer {
     }
 
     for (const house of state.houses) {
-      drawHouse(state, house);
+      drawHouse(state, house, winter);
     }
   }
 
-  function drawHouse(state: GameState, house: House): void {
+  function drawHouse(state: GameState, house: House, winter: boolean): void {
     const { px, py } = tileTopLeft(house.tile.x, house.tile.y);
     const inset = TILE_SIZE * 0.1;
     const size = TILE_SIZE - inset * 2;
@@ -143,6 +155,7 @@ export function createBuildingsLayer(): BuildingsLayer {
         .fill(ROOF_COLOR)
         .stroke({ color: 0x6b5220, width: 2 });
     }
+    if (winter) drawSnowCap(graphics, px + inset, py + inset - (house.tier >= 1 ? 6 : 0), size);
     addLabel(houseTier(house).name[0], px + TILE_SIZE / 2, py + TILE_SIZE / 2 + 2, 0xf4e9d8, 24);
 
     if (house.upgrade) {
@@ -160,15 +173,24 @@ export function createBuildingsLayer(): BuildingsLayer {
 
     // Need counters under the house, one per good, in that good's colour,
     // on a dark strip so they read against grass and road alike.
-    const goods = houseWantedGoods(house);
-    const slot = TILE_SIZE / goods.length;
+    // Leftover firewood after winter keeps its counter (without a target)
+    // so the drewno never silently disappears from view.
+    const season = currentSeason(state);
+    const goods = houseWantedGoods(house, season);
+    if (!goods.includes('drewno') && houseGood(house, 'drewno') > 0) goods.push('drewno');
+    const slot = 28;
+    const stripWidth = Math.max(TILE_SIZE - 2, slot * goods.length);
+    const stripLeft = px + TILE_SIZE / 2 - stripWidth / 2;
     graphics
-      .roundRect(px + 1, py + TILE_SIZE - inset, TILE_SIZE - 2, 18, 5)
+      .roundRect(stripLeft, py + TILE_SIZE - inset, stripWidth, 18, 5)
       .fill({ color: COUNTER_BG_COLOR, alpha: 0.85 });
+    const slotWidth = stripWidth / goods.length;
     goods.forEach((resource, i) => {
+      const target = houseGoodTarget(house, resource, season);
+      const have = houseGood(house, resource);
       addLabel(
-        `${houseGood(house, resource)}/${houseGoodTarget(house, resource)}`,
-        px + slot * i + slot / 2,
+        target > 0 ? `${have}/${target}` : String(have),
+        stripLeft + slotWidth * i + slotWidth / 2,
         py + TILE_SIZE - inset + 1,
         RESOURCE_COLOR[resource],
         14,
@@ -189,6 +211,18 @@ export function createBuildingsLayer(): BuildingsLayer {
         .stroke({ color: 0x1f2a33, width: 2 });
     }
 
+    // Hunger (no fish) or cold (no firewood in winter): a bubble in the
+    // colour of what is missing, like the one over a waiting villager.
+    houseShortages(state, house).forEach((resource, i) => {
+      const cx = px + inset + 4 + i * 18;
+      const cy = py + inset - 6;
+      graphics
+        .circle(cx, cy, 8)
+        .fill(RESOURCE_COLOR[resource])
+        .circle(cx, cy, 8)
+        .stroke({ color: NO_ROAD_COLOR, width: 3 });
+    });
+
     if (!isAdjacentToRoad(house.tile, state.roads)) {
       drawNoRoadIcon(graphics, px, py, inset);
     }
@@ -197,9 +231,10 @@ export function createBuildingsLayer(): BuildingsLayer {
   return { container, redraw };
 }
 
-function drawPlot(graphics: Graphics, px: number, py: number, stage: PlotStage): void {
+function drawPlot(graphics: Graphics, px: number, py: number, plot: FieldPlot, plotYield: number): void {
   const pad = 3;
   const size = TILE_SIZE - pad * 2;
+  const stage: PlotStage = plot.stage;
   graphics.rect(px + pad, py + pad, size, size).fill(PLOT_COLOR[stage]);
   for (let row = 1; row <= 3; row++) {
     const y = py + pad + (size * row) / 4;
@@ -209,9 +244,21 @@ function drawPlot(graphics: Graphics, px: number, py: number, stage: PlotStage):
       for (let col = 1; col <= 4; col++) {
         graphics.circle(px + pad + (size * col) / 5, y, 3).fill(SPROUT_COLOR);
       }
-    } else if (stage === 'dojrzale') {
+    } else if (stage === 'lodygi') {
       for (let col = 1; col <= 4; col++) {
-        graphics.rect(px + pad + (size * col) / 5 - 2, y - 7, 4, 10).fill(0xb8892a);
+        graphics.rect(px + pad + (size * col) / 5 - 2, y - 6, 4, 9).fill(STALK_COLOR);
+      }
+    } else if (stage === 'dojrzale') {
+      // One row of ripe ears per unit still to harvest, so the field
+      // visibly empties as the farmer carries the crop away.
+      if (row > 3 - Math.min(3, Math.round((plot.yieldLeft / plotYield) * 3))) {
+        for (let col = 1; col <= 4; col++) {
+          graphics.rect(px + pad + (size * col) / 5 - 2, y - 7, 4, 10).fill(0xb8892a);
+        }
+      } else {
+        for (let col = 1; col <= 4; col++) {
+          graphics.rect(px + pad + (size * col) / 5 - 1, y - 2, 3, 4).fill(STUBBLE_COLOR);
+        }
       }
     } else {
       for (let col = 1; col <= 4; col++) {
@@ -219,6 +266,11 @@ function drawPlot(graphics: Graphics, px: number, py: number, stage: PlotStage):
       }
     }
   }
+}
+
+/** A strip of snow along the top edge of a building in winter. */
+function drawSnowCap(graphics: Graphics, x: number, y: number, width: number): void {
+  graphics.roundRect(x - 2, y - 3, width + 4, 9, 4).fill(SNOW_COLOR);
 }
 
 function drawNoRoadIcon(graphics: Graphics, px: number, py: number, inset: number): void {
