@@ -100,7 +100,33 @@ Przy okazji poprawione w 0.8.2: w trybie DROGA palec przesuwał mapę zamiast ry
 
 - [x] ZBURZ w panelu budynku, placu budowy i domu: dwa stuknięcia, pełny zwrot materiałów, nikt się nie wyprowadza
 
-## M8 · Grafiki i dźwięki (czeka na pliki od Grega)
+Kolejność od 0.9.0 (Greg, 2026-10-14): najpierw mechanika, grafiki i dźwięki dopiero wtedy, gdy będą pliki.
+
+## M8 · Piętro 3: zagroda
+
+- [ ] Obora (krowy, mleko) i serowarnia: łańcuch obora → magazyn → serowarnia → magazyn
+- [ ] Plac wiecowy jako usługa z zasięgiem
+- [ ] Awans chata → zagroda, gdy jest ser i plac wiecowy w zasięgu
+
+**Gotowe, gdy:** Artur ma po chacie nowy cel i doprowadza pierwszą chatę do zagrody.
+
+## M9 · Burza i pożar
+
+- [ ] Pierwsze zagrożenie: latem piorun podpala chatę, widać je zawczasu
+- [ ] Zgliszcza do odbudowy, nic nie znika na zawsze
+- [ ] Ochrona budynkiem (kontyna Peruna jako „piorunochron”)
+
+**Gotowe, gdy:** Artur widzi, że idzie burza, i wie, co postawić, żeby chronić gród.
+
+## M10 · Piętro 4: dwór
+
+- [ ] Owczarnia (wełna) → tkalnia → ubrania, kontyna Peruna, awans zagroda → dwór
+
+## M11 · Kopiec
+
+- [ ] Bagno z rudą, dymarka, kuźnia (łopaty), kamień; wspólna budowa kopca jako cel gry
+
+## Grafiki i dźwięki (gdy Greg wrzuci pliki)
 
 - [ ] Skrypt przetwarzania grafik: usunięcie tła magenta, przycięcie, skalowanie
 - [ ] Podmiana zastępników na grafiki z `assets/raw/sprites/`
@@ -109,12 +135,8 @@ Przy okazji poprawione w 0.8.2: w trybie DROGA palec przesuwał mapę zamiast ry
 
 **Gotowe, gdy:** gra wygląda i brzmi jak gra, a brakujące pliki nadal działają jako zastępniki.
 
-## Po pierwszej wersji
+## Później
 
-- [ ] Burza i pożar (pierwsze zagrożenie), kontyna Peruna, zgliszcza do odbudowy
-- [ ] Piętro 3: obora, serowarnia, plac wiecowy, zagroda
-- [ ] Piętro 4: owczarnia, tkalnia, kontyna, dwór
-- [ ] Kopiec: bagno z rudą, dymarka, kuźnia, łopaty, kamień
 - [ ] Drugi magazyn, droga z dyli, mosty
 - [ ] Legendy, powodzie, śnieżyce, myszy, wilki, święto Marzanny
 - [ ] Dawne grody jako kurhany na nowych mapach
