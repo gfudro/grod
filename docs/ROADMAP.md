@@ -96,7 +96,11 @@ Zrobiony w 0.8.0 (podpowiedzi, stopniowe odblokowanie budynków), usunięty w 0.
 
 Przy okazji poprawione w 0.8.2: w trybie DROGA palec przesuwał mapę zamiast rysować drogę.
 
-## M8 · Grafiki i dźwięki
+## Burzenie (0.9.0)
+
+- [x] ZBURZ w panelu budynku, placu budowy i domu: dwa stuknięcia, pełny zwrot materiałów, nikt się nie wyprowadza
+
+## M8 · Grafiki i dźwięki (czeka na pliki od Grega)
 
 - [ ] Skrypt przetwarzania grafik: usunięcie tła magenta, przycięcie, skalowanie
 - [ ] Podmiana zastępników na grafiki z `assets/raw/sprites/`

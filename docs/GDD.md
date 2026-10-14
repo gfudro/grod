@@ -53,7 +53,15 @@ Decyzje z M6 (zapisy i kronika):
 - **Zapis nie do przeniesienia** trafia do archiwum, a nowy gród dostaje w kronice wpis o „dawnym grodzie” z jego nazwą (kurhan na mapie przyjdzie później).
 - **Format:** `SAVE_VERSION = 2`. Wersja 1 to stan z M5, wersja 2 dodaje nazwę grodu — migracja v1 → v2 powstała celowo, żeby sprawdzić mechanizm. Przykładowe zapisy obu wersji leżą w `tests/fixtures/saves/`, a test wczytuje każdy plik z tego katalogu i gra nim dalej 2000 kroków.
 - **Kronika** zapisuje: założenie grodu, nadanie nazwy, pierwszą ziemiankę, pierwszą chatę, pierwsze żniwa, osadników (podsumowanie na koniec każdej pory) i każdą zimę (czy brakło ryb lub opału). Wpisy to dane `{ year, season, kind, params }`, a zdania („Roku pierwszego, zimą, gród przetrwał zimę w cieple i sytości.”) powstają z szablonów w `strings.ts`.
-- **Ekran kroniki** otwiera przycisk 📜 KRONIKA nad przyciskiem DROGA. Gra stoi, gdy kronika jest otwarta. Na ekranie: nazwa grodu i rok, pole do nadania nazwy, wpisy od najnowszego oraz przyciski ZAPISZ (plik przez arkusz udostępniania na iPadzie), WCZYTAJ, NOWA i ZAMKNIJ. Zdania w kronice są dla taty — to jedyne miejsce poza samouczkiem, gdzie gra używa całych zdań.
+- **Ekran kroniki** otwiera przycisk 📜 KRONIKA nad przyciskiem DROGA. Gra stoi, gdy kronika jest otwarta. Na ekranie: nazwa grodu i rok, pole do nadania nazwy, wpisy od najnowszego oraz przyciski ZAPISZ (plik przez arkusz udostępniania na iPadzie), WCZYTAJ, NOWA i ZAMKNIJ. Zdania w kronice są dla taty — to jedyne miejsce, gdzie gra używa całych zdań.
+
+Decyzje z 0.9.0 (burzenie, prośba Grega 2026-10-14):
+
+- **ZBURZ** jest w panelu po stuknięciu w budynek, plac budowy albo dom. Magazynu nie da się zburzyć. Burzenie wymaga dwóch stuknięć (drugie na czerwonym „NA PEWNO?”), tak jak NOWA w kronice.
+- **Pełny zwrot, zgodnie z lekką karą:** koszt budynku wraca do magazynu w całości. Przy domu wraca koszt ziemianki, koszt każdej przebudowy i towary leżące w domu (ryby, kasza, opał). Plac budowy oddaje wszystko, także materiał już przyniesiony na miejsce.
+- **Nic nie znika z rąk:** ludzik, który coś niesie, staje się wolny i odnosi to pieszo do magazynu. Ludzik stojący na zburzonym polu najpierw z niego schodzi.
+- **Nikt się nie wyprowadza:** mieszkańcy zburzonego domu zostają w grodzie jako wolni ludzie, a osadnicy w drodze do niego dołączają do puli.
+- Na razie bez zgliszczy i bez wpisu w kronice. Drogi nadal usuwa się tylko przez COFNIJ (ostatnia narysowana).
 
 ## Wizja i filary
 

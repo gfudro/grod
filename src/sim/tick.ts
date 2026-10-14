@@ -109,6 +109,12 @@ function runJob(state: GameState, villager: VillagerState): void {
 }
 
 function runIdle(state: GameState, villager: VillagerState): void {
+  // Still holding something from a job that ended (its building was
+  // demolished): carry it home before taking new work.
+  if (villager.carrying) {
+    carryToWarehouse(state, villager, () => {});
+    return;
+  }
   if (tryAssignWork(state, villager)) {
     runJob(state, villager); // act on the fresh assignment this same tick
     return;

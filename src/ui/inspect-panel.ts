@@ -1,4 +1,5 @@
 import type { InspectInfo } from '../sim/inspect';
+import { STRINGS } from './strings';
 
 const PANEL_STYLE = `
 #inspect-panel {
@@ -35,6 +36,14 @@ const PANEL_STYLE = `
   font-family: sans-serif;
   touch-action: manipulation;
   flex-shrink: 0;
+}
+#inspect-panel button.demolish {
+  background: #b5513f;
+  color: #fff;
+}
+#inspect-panel button.demolish.armed {
+  background: #cc2211;
+  border-color: #ffe14d;
 }
 #inspect-panel button.active {
   background: #6fa83f;
@@ -99,8 +108,12 @@ function describe(info: InspectInfo): string {
 }
 
 export type TogglePauseCallback = (buildingId: string, paused: boolean) => void;
+export type DemolishCallback = (id: string) => void;
 
-export function mountInspectPanel(onTogglePause: TogglePauseCallback): (info: InspectInfo | null) => void {
+export function mountInspectPanel(
+  onTogglePause: TogglePauseCallback,
+  onDemolish: DemolishCallback,
+): (info: InspectInfo | null) => void {
   injectStyle();
   const panel = document.createElement('div');
   panel.id = 'inspect-panel';
@@ -111,12 +124,32 @@ export function mountInspectPanel(onTogglePause: TogglePauseCallback): (info: In
   const pauseButton = document.createElement('button');
   panel.appendChild(pauseButton);
 
+  // Two taps, like NOWA in the chronicle: the first asks, the second pulls it down.
+  const demolishButton = document.createElement('button');
+  demolishButton.className = 'demolish';
+  panel.appendChild(demolishButton);
+  let demolishId: string | null = null;
+  let demolishArmed = false;
+  demolishButton.addEventListener('click', () => {
+    if (!demolishId) return;
+    if (!demolishArmed) {
+      demolishArmed = true;
+      demolishButton.classList.add('armed');
+      demolishButton.textContent = STRINGS.naPewno;
+      return;
+    }
+    onDemolish(demolishId);
+  });
+
   // Floats at the top of the map area, below the top band.
   (document.getElementById('app') ?? document.body).appendChild(panel);
 
   return (info: InspectInfo | null) => {
     if (!info) {
       panel.classList.remove('visible');
+      demolishId = null;
+      demolishArmed = false;
+      demolishButton.classList.remove('armed');
       return;
     }
     text.textContent = describe(info);
@@ -130,6 +163,16 @@ export function mountInspectPanel(onTogglePause: TogglePauseCallback): (info: In
       pauseButton.style.display = 'none';
       pauseButton.onclick = null;
     }
+
+    const id = info.kind === 'site' || info.kind === 'building' || info.kind === 'house' ? info.id : null;
+    if (id !== demolishId) {
+      // A different thing was tapped: start the two-tap question over.
+      demolishId = id;
+      demolishArmed = false;
+      demolishButton.classList.remove('armed');
+    }
+    demolishButton.style.display = id ? '' : 'none';
+    if (!demolishArmed) demolishButton.textContent = `🔨 ${STRINGS.zburz}`;
 
     panel.classList.add('visible');
   };

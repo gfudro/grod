@@ -26,7 +26,7 @@ export interface GoodCounter {
 
 export type InspectInfo =
   | { kind: 'warehouse'; connected: boolean; stock: Partial<Record<string, number>> }
-  | { kind: 'site'; name: string; delivered: string; assignedWorkerId: string | null }
+  | { kind: 'site'; id: string; name: string; delivered: string; assignedWorkerId: string | null }
   | {
       kind: 'building';
       id: string;
@@ -45,6 +45,7 @@ export type InspectInfo =
     }
   | {
       kind: 'house';
+      id: string;
       name: string;
       connected: boolean;
       residents: number;
@@ -163,6 +164,7 @@ export function inspectTile(state: GameState, tile: Vec2): InspectInfo | null {
     const servingRange = serving ? BUILDINGS[serving.type].serviceRange ?? 0 : 0;
     return {
       kind: 'house',
+      id: house.id,
       name: houseTier(house).name,
       connected: isAdjacentToRoad(house.tile, state.roads),
       residents: house.residents,
@@ -187,6 +189,7 @@ export function inspectTile(state: GameState, tile: Vec2): InspectInfo | null {
     const need = Object.values(def.cost).reduce((sum, n) => sum + (n ?? 0), 0);
     return {
       kind: 'site',
+      id: site.id,
       name: def.name,
       delivered: `${have}/${need}`,
       assignedWorkerId: site.assignedWorkerId,

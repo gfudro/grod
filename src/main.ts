@@ -21,6 +21,7 @@ import { createInspectController } from './input/inspect';
 import type { SpeedMultiplier } from './sim/state';
 import { inspectTile } from './sim/inspect';
 import { setBuildingPaused } from './sim/building-control';
+import { demolish } from './sim/demolish';
 import { tick } from './sim/tick';
 import { currentSeason } from './sim/seasons';
 import { createSnowfall } from './render/snowfall';
@@ -116,12 +117,20 @@ async function start(): Promise<void> {
     rangeHighlight.update(info?.kind === 'building' || info?.kind === 'house' ? info.rangeTiles : null);
   }
 
-  const showInspect = mountInspectPanel((buildingId, paused) => {
-    setBuildingPaused(state, buildingId, paused);
-    refreshWorldLayers();
-    const building = state.buildings.find((b) => b.id === buildingId);
-    if (building) handleInspectResult(inspectTile(state, building.tile));
-  });
+  const showInspect = mountInspectPanel(
+    (buildingId, paused) => {
+      setBuildingPaused(state, buildingId, paused);
+      refreshWorldLayers();
+      const building = state.buildings.find((b) => b.id === buildingId);
+      if (building) handleInspectResult(inspectTile(state, building.tile));
+    },
+    (id) => {
+      if (demolish(state, id)) {
+        handleInspectResult(null);
+        refreshWorldLayers();
+      }
+    },
+  );
 
   createInspectController(
     viewport,
