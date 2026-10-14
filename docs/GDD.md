@@ -198,6 +198,14 @@ Pierwsza wersja ma być grywalna, a nie kompletna: dwa piętra piramidy, drogi, 
 - Prędkość x1, x2, x3 i pauza
 - Pierwsza wiosna jako samouczek: ikona pokazuje, co postawić
 
+### Samouczek pierwszej wiosny (0.8.0)
+
+- **Kolejność kroków:** drwal → rybak → ziemianka → pole → glinianka → żarna → studnia (tabela w `src/data/tutorial.ts`). Pole jest wcześnie, bo sieje się tylko wiosną.
+- **Podpowiedź to zawsze jedna rzecz naraz:** pulsuje przycisk, a na mapie podskakuje żółta strzałka nad ramką w proponowanym miejscu. Nagrany głos mówi komunikat z `docs/AUDIO.md`, gdy podpowiedź się zmienia.
+- **Najpierw drogi:** zanim samouczek pokaże kolejny budynek, każdy postawiony musi mieć drogę do magazynu, drwal i rybak także drogę do drzew i wody, a po pierwszej ziemiance musi być droga na skraj mapy (tamtędy przychodzą osadnicy). Wtedy pulsuje DROGA, a strzałka wskazuje, dokąd ją doprowadzić.
+- **Budynki odblokowują się stopniowo:** przycisk pojawia się, gdy przychodzi jego krok. Krok kończy się w chwili postawienia placu budowy. Po studni samouczek znika i widać wszystkie budynki.
+- **Stare zapisy** (sprzed 0.8.0) mają samouczek zaliczony.
+
 Pierwszy prototyp powstaje na prostych kształtach rysowanych kodem, żeby nie czekać na grafiki.
 
 ## Grafiki i nagrania

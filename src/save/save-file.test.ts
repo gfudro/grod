@@ -4,6 +4,7 @@ import { tick } from '../sim/tick';
 import { tileKey } from '../data/types';
 import { loadSaveFile, SAVE_VERSION, toSaveFile } from './save-file';
 import { MIGRATIONS } from './migrations';
+import { tutorialDone, tutorialHint } from '../sim/tutorial';
 
 // Every file in tests/fixtures/saves/, picked up automatically: a new
 // fixture is tested the moment it is added.
@@ -85,6 +86,33 @@ describe('migrations', () => {
     expect(result.state.name).toBe('');
     expect(result.state.tick).toBe(v1.state.tick);
     expect(result.state.chronicle).toEqual(v1.chronicle);
+  });
+});
+
+describe('migrations v2 → v3', () => {
+  it('marks the tutorial done for games begun before it existed', () => {
+    const result = loadSaveFile(readFixture('v2-rok2-wiosna.json'));
+    if (!result.ok) throw new Error(result.reason);
+    expect(result.migratedFrom).toBe(2);
+    expect(tutorialDone(result.state)).toBe(true);
+    expect(tutorialHint(result.state)).toBeNull();
+  });
+
+  it('gives the tutorial to an old save where nothing has been built yet', () => {
+    const fresh = toSaveFile(createInitialState(), '0.7.3', new Date());
+    const v2 = { ...fresh, saveVersion: 2, state: { ...fresh.state } as Record<string, unknown> };
+    delete v2.state.tutorialStep;
+    const result = loadSaveFile(JSON.parse(JSON.stringify(v2)));
+    if (!result.ok) throw new Error(result.reason);
+    expect(result.state.tutorialStep).toBe(0);
+  });
+
+  it('a new game starts the tutorial, and a save mid-tutorial carries on where it was', () => {
+    expect(createInitialState().tutorialStep).toBe(0);
+    const result = loadSaveFile(readFixture('v3-rok1-wiosna-samouczek.json'));
+    if (!result.ok) throw new Error(result.reason);
+    expect(result.state.tutorialStep).toBe(1);
+    expect(tutorialHint(result.state)).toMatchObject({ kind: 'build', type: 'rybak' });
   });
 });
 

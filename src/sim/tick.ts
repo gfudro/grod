@@ -17,6 +17,7 @@ import { findPath, isAdjacentToRoad } from './pathfinding';
 import { findResourceTile, manhattan } from './resource-tiles';
 import { consumeHouseGoods, currentSeason, houseShortages, startSeason } from './seasons';
 import { addChronicleFirst, closeSeasonLog } from './chronicle';
+import { advanceTutorial } from './tutorial';
 import {
   addToWarehouse,
   houseGood,
@@ -54,6 +55,7 @@ export function tick(state: GameState): void {
   if (state.tick % SETTLER_CHECK_INTERVAL === 0) {
     maybeSpawnSettler(state);
   }
+  advanceTutorial(state);
 }
 
 function advanceVillager(state: GameState, villager: VillagerState): void {

@@ -24,6 +24,9 @@ import { setBuildingPaused } from './sim/building-control';
 import { tick } from './sim/tick';
 import { currentSeason } from './sim/seasons';
 import { createSnowfall } from './render/snowfall';
+import { createTutorialMarker } from './render/tutorial-marker';
+import { advanceTutorial, tutorialHint, type TutorialHint } from './sim/tutorial';
+import { playVoice } from './audio/voice';
 import { WAREHOUSE_TILE } from './data/waypoints';
 import { TILE_SIZE } from './data/tiles';
 
@@ -88,10 +91,48 @@ async function start(): Promise<void> {
   const targetHighlight = createTargetHighlight();
   viewport.addChild(targetHighlight.container);
 
+  const tutorialMarker = createTutorialMarker();
+  viewport.addChild(tutorialMarker.container);
+
   const snowfall = createSnowfall();
   viewport.addChild(snowfall.container);
 
+  let hint: TutorialHint | null = null;
+  let spokenHint = '';
+  let shownHintTile = '';
+  /** Glides the camera to the hinted tile if it (with its arrow) is off screen. */
+  function bringHintIntoView(tile: { x: number; y: number }): void {
+    const margin = TILE_SIZE;
+    const x = (tile.x + 0.5) * TILE_SIZE;
+    const y = (tile.y + 0.5) * TILE_SIZE;
+    const onScreen =
+      x - margin >= viewport.left &&
+      x + margin <= viewport.right &&
+      y - 2 * margin >= viewport.top &&
+      y + margin <= viewport.bottom;
+    if (!onScreen) viewport.animate({ position: { x, y }, time: 700, ease: 'easeInOutSine' });
+  }
+
+  /** Recomputes the tutorial pointer and says it aloud whenever it changes. */
+  function refreshTutorial(): void {
+    advanceTutorial(state);
+    hint = tutorialHint(state);
+    tutorialMarker.update(hint);
+    const tileKeyNow = hint?.tile ? `${hint.tile.x},${hint.tile.y}` : '';
+    if (tileKeyNow !== shownHintTile) {
+      shownHintTile = tileKeyNow;
+      // Never yank the map away mid-swipe while a road is being drawn.
+      if (hint?.tile && !roadDraw.isRoadMode()) bringHintIntoView(hint.tile);
+    }
+    const voice = hint ? (hint.kind === 'road' ? 'samouczek-droga' : `samouczek-${hint.type}`) : '';
+    if (voice !== spokenHint) {
+      spokenHint = voice;
+      if (voice) playVoice(voice);
+    }
+  }
+
   function refreshWorldLayers(): void {
+    refreshTutorial();
     terrain.setSeason(currentSeason(state));
     roadsLayer.redraw(state.roads);
     buildingsLayer.redraw(state);
@@ -141,6 +182,7 @@ async function start(): Promise<void> {
     onSpeedChange: (speed: SpeedMultiplier) => {
       state.speed = speed;
     },
+    getHint: () => hint,
   });
   const topBar = mountTopBar();
 
@@ -210,6 +252,7 @@ async function start(): Promise<void> {
       saveNow();
     }
     // Flakes speed up a little with the game, but never into a blur.
+    tutorialMarker.animate(ticker.deltaMS);
     snowfall.update(state.speed > 0 ? ticker.deltaMS * Math.min(state.speed, 3) : 0, currentSeason(state) === 'zima');
   });
 

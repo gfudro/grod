@@ -92,9 +92,9 @@ Obserwacje po M4 (Greg, 2026-10-14: „jest ok”, zostają bez zmian):
 
 ## M7 · Samouczek pierwszej wiosny
 
-- [ ] Pierwsza wiosna prowadzi krok po kroku: ikona wskazuje, co postawić i gdzie
-- [ ] Budynki odblokowują się stopniowo
-- [ ] Pojedyncze słowa i nagrane komunikaty zamiast zdań
+- [x] Pierwsza wiosna prowadzi krok po kroku: ikona wskazuje, co postawić i gdzie
+- [x] Budynki odblokowują się stopniowo
+- [x] Pojedyncze słowa i nagrane komunikaty zamiast zdań
 
 **Gotowe, gdy:** Artur zaczyna nową grę i dochodzi do pierwszej chaty bez pomocy taty.
 
