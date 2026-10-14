@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { createInitialState, houseGood, warehouseAmount, type GameState } from './state';
+import { createInitialState, houseGood, villagePopulation, warehouseAmount, type GameState } from './state';
 import { tick, SETTLER_CHECK_INTERVAL } from './tick';
 import { tryPlaceConstructionSite } from './placement';
 import { tileKey } from '../data/types';
@@ -101,6 +101,23 @@ describe('settlers', () => {
     expect(houseGood(state.houses[0], 'ryba')).toBe(0);
     expect(state.houses[0].residents).toBeGreaterThanOrEqual(1);
     expect(state.houses[0].residents).toBeLessThan(3); // hunger blocked the rest
+  });
+});
+
+describe('population', () => {
+  it('counts the starting crew and settlers once they have arrived, not while walking in', () => {
+    const state = createInitialState();
+    expect(villagePopulation(state)).toBe(3);
+    buildHouse(state);
+    connectToSouthEdge(state, 8);
+    state.warehouse.ryba = 999;
+
+    runTicks(state, SETTLER_CHECK_INTERVAL);
+    expect(state.villagers.length).toBe(4); // one settler on the way
+    expect(villagePopulation(state)).toBe(3);
+
+    runTicks(state, MAP_HEIGHT * 20);
+    expect(villagePopulation(state)).toBe(3 + state.houses[0].residents);
   });
 });
 

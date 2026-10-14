@@ -127,6 +127,15 @@ export function takeFromWarehouse(state: GameState, resource: ResourceType, amou
   return true;
 }
 
+/**
+ * Everyone living in the gród: the starting crew plus every settler who
+ * has reached their house. Settlers still walking in with their bundles
+ * don't count yet — they join the moment they arrive.
+ */
+export function villagePopulation(state: GameState): number {
+  return state.villagers.filter((v) => v.job.kind !== 'arriving').length;
+}
+
 export function houseGood(house: House, resource: ResourceType): number {
   return house.goods[resource] ?? 0;
 }

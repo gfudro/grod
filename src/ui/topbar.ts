@@ -1,5 +1,5 @@
 import type { GameState } from '../sim/state';
-import { warehouseAmount } from '../sim/state';
+import { villagePopulation, warehouseAmount } from '../sim/state';
 import { RESOURCE_COLOR, RESOURCE_ORDER } from '../data/resources';
 import { SEASON_ORDER, type Season } from '../data/seasons';
 import { currentSeason, currentYear, winterWarning, yearProgress } from '../sim/seasons';
@@ -195,6 +195,7 @@ export function mountTopBar(): TopBar {
   let shownMissing = '';
 
   const resourceChips = RESOURCE_ORDER.map((resource) => ({ resource, ...chip(RESOURCE_COLOR[resource]) }));
+  const ludzie = chip(null);
   const wolni = chip(null);
 
   document.body.appendChild(topbar);
@@ -204,6 +205,7 @@ export function mountTopBar(): TopBar {
       value.textContent = String(warehouseAmount(state, resource));
     }
     const freeCount = state.villagers.filter((v) => v.job.kind === 'idle').length;
+    ludzie.value.textContent = `${STRINGS.ludzie}: ${villagePopulation(state)}`;
     wolni.value.textContent = `${STRINGS.wolni}: ${freeCount}`;
 
     const now = currentSeason(state);

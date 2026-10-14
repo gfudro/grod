@@ -7,6 +7,7 @@ export const STRINGS = {
   cofnij: 'COFNIJ',
   pauza: 'PAUZA',
   wolni: 'WOLNI',
+  ludzie: 'LUDZIE',
   rok: 'ROK',
   zima: 'ZIMA',
   pory: {

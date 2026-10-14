@@ -105,7 +105,7 @@ Pracownicy pochodzą z domów i tworzą jedną wspólną pulę, a nowi osadnicy 
 - Przychodzą, gdy w chacie jest wolne miejsce, a w grodzie nie ma głodu.
 - **Chata daje ludzików od razu**, nawet bez spełnionych potrzeb. Potrzeby decydują tylko o tym, czy dom rośnie. Inaczej gra mogłaby zablokować się na starcie.
 - **Wyższe piętro domu** to więcej mieszkańców.
-- **Każdy budynek potrzebuje jednego pracownika.** Na górnym pasku widać licznik „Wolni: 3”.
+- **Każdy budynek potrzebuje jednego pracownika.** Na górnym pasku widać licznik „Wolni: 3”. Obok licznik „LUDZIE” pokazuje wszystkich mieszkańców grodu: startową załogę i osadników, którzy już doszli do domu (idący z tobołkami liczą się dopiero po dojściu).
 - **Wolni ludziki budują.** Idą na plac budowy, stukają młotkami i budynek rośnie na oczach.
 - **Nikt się nie wyprowadza.** Niespełniona potrzeba zatrzymuje wzrost domu, ale dom nie spada piętro niżej.
 - **Jedna pula pracowników**, bez podziału na typy. To świadomie inaczej niż w Anno, gdzie ten podział psuje czytelność.

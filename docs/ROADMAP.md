@@ -57,7 +57,7 @@ Każdy etap kończy się wersją, którą Artur może otworzyć na iPadzie. Kole
 
 **Gotowe, gdy:** Artur doprowadza pierwszą ziemiankę do chaty bez podpowiedzi.
 
-Do obserwacji przy teście M4 (jeszcze nie zadania, czekają na uwagi Grega):
+Obserwacje po M4 (Greg, 2026-10-14: „jest ok”, zostają bez zmian):
 
 - Przebudowa w chatę trwa długo: jeden budowniczy nosi 5 materiałów po jednym (ok. minuty przy x1).
 - Kasza i proso gromadzą się w magazynie, bo nic ich nie zjada aż do M5.
@@ -85,6 +85,10 @@ Do obserwacji przy teście M4 (jeszcze nie zadania, czekają na uwagi Grega):
 - [x] Nadawanie nazwy grodowi
 
 **Gotowe, gdy:** zapis z poprzedniej wersji gry wczytuje się w nowej, a kronika pokazuje historię grodu.
+
+## Przed M7
+
+- [x] Licznik „LUDZIE” na górnym pasku: wszyscy mieszkańcy grodu (bez osadników jeszcze w drodze)
 
 ## M7 · Samouczek pierwszej wiosny
 
