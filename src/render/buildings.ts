@@ -211,6 +211,22 @@ export function createBuildingsLayer(): BuildingsLayer {
         .stroke({ color: 0x1f2a33, width: 2 });
     }
 
+    // Fed and served, but the warehouse lacks a material for the rebuild:
+    // a bubble in that material's colour (white rim = "to grow", red rim =
+    // hunger/cold) so a stalled house says what it waits for.
+    const readiness = upgradeReadiness(state, house);
+    if (!house.upgrade && readiness.canGrow && readiness.goodsFull && readiness.serviceInRange) {
+      readiness.missingCost.forEach((resource, i) => {
+        const cx = px + TILE_SIZE / 2 + i * 18;
+        const cy = py + inset - 10;
+        graphics
+          .circle(cx, cy, 9)
+          .fill(RESOURCE_COLOR[resource])
+          .circle(cx, cy, 9)
+          .stroke({ color: 0xffffff, width: 3 });
+      });
+    }
+
     // Hunger (no fish) or cold (no firewood in winter): a bubble in the
     // colour of what is missing, like the one over a waiting villager.
     houseShortages(state, house).forEach((resource, i) => {

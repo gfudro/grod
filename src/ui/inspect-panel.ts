@@ -85,7 +85,7 @@ function describe(info: InspectInfo): string {
         const missing = [
           !r.goodsFull && 'towary',
           !r.serviceInRange && 'studnia',
-          !r.canAffordCost && 'materiały',
+          ...r.missingCost,
         ].filter(Boolean);
         growth = ` — ${info.nextName}: ${missing.length > 0 ? `brak ${missing.join(', ')}` : 'zaraz'}`;
       }

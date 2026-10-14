@@ -41,6 +41,8 @@ Decyzje z M5 (pory roku):
 - **Głód i zimno:** dom bez ryb albo (zimą) bez drewna ma nad sobą dymek w kolorze brakującego towaru i wstrzymuje nowych osadników. Nikt się nie wyprowadza, dom nie spada piętro niżej.
 - **Rybak zimą łowi 3 razy wolniej** (rzeka zamarza — widać to po kolorze wody).
 - **Ostrzeżenie przed zimą:** przez całą jesień, jeśli zapas (magazyn + to, co już leży w domach) nie wystarczy na jedną zimę, na pasku pulsuje czerwony znaczek ze śnieżynką, liczbą dni do zimy i kolorami brakujących towarów.
+- **Zegar pór roku** (prośba Grega po teście M5): okrągła tarcza na pasku z czterema kolorowymi ćwiartkami i wskazówką, która obiega ją raz na rok — widać, ile zostało do zimy.
+- **Dom czekający na materiał** do przebudowy (ma towary i studnię, ale w magazynie brakuje np. gliny) pokazuje dymek w kolorze tego materiału z białą obwódką. Panel po stuknięciu wymienia brakujący materiał z nazwy.
 - **Wygląd pór roku kodem:** wiosną jasna trawa, jesienią żółta trawa i kolorowe liście, zimą śnieg na ziemi, drzewach i dachach, zamarznięta rzeka i padające płatki. Ikony pór roku to na razie emoji, do podmiany na `ui/wiosna.png` itd.
 
 ## Wizja i filary

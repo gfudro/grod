@@ -17,9 +17,10 @@ export function currentYear(state: GameState): number {
   return Math.floor(state.tick / (SEASON_TICKS * SEASON_ORDER.length)) + 1;
 }
 
-/** 0..1 — how far through the current season we are. */
-export function seasonProgress(state: GameState): number {
-  return (state.tick % SEASON_TICKS) / SEASON_TICKS;
+/** 0..1 — how far through the whole year (spring start = 0). */
+export function yearProgress(state: GameState): number {
+  const yearTicks = SEASON_TICKS * SEASON_ORDER.length;
+  return (state.tick % yearTicks) / yearTicks;
 }
 
 /** Whole days left until winter starts (0 during winter itself). */

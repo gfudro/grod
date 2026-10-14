@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { createInitialState, houseGood, warehouseAmount, type Building, type GameState, type House } from './state';
 import { tick } from './tick';
 import { canPlaceBuildingAt, tryPlaceConstructionSite } from './placement';
-import { houseCapacity } from './houses';
+import { houseCapacity, upgradeReadiness } from './houses';
 import { tileKey, type Vec2 } from '../data/types';
 import { SEASON_TICKS } from '../data/seasons';
 
@@ -200,6 +200,19 @@ describe('ziemianka → chata', () => {
 
     expect(house.tier).toBe(0);
     expect(house.upgrade).toBeNull();
+  });
+
+  it('says which material it is waiting for when the warehouse is short', () => {
+    const state = withRoad();
+    state.warehouse.drewno = 50;
+    state.warehouse.glina = 0;
+    const house = addHouse(state, { goods: { ryba: 5, kasza: 3 } });
+    addBuilding(state, 'studnia', STUDNIA_TILE);
+
+    tick(state);
+
+    expect(house.upgrade).toBeNull();
+    expect(upgradeReadiness(state, house).missingCost).toEqual(['glina']);
   });
 
   it('never drops back to a ziemianka when its goods run out', () => {

@@ -1,8 +1,8 @@
 import type { GameState } from '../sim/state';
 import { warehouseAmount } from '../sim/state';
 import { RESOURCE_COLOR, RESOURCE_ORDER } from '../data/resources';
-import type { Season } from '../data/seasons';
-import { currentSeason, currentYear, seasonProgress, winterWarning } from '../sim/seasons';
+import { SEASON_ORDER, type Season } from '../data/seasons';
+import { currentSeason, currentYear, winterWarning, yearProgress } from '../sim/seasons';
 import { STRINGS } from './strings';
 
 const TOPBAR_STYLE = `
@@ -32,27 +32,17 @@ const TOPBAR_STYLE = `
   box-sizing: border-box;
 }
 #topbar .season {
-  position: relative;
-  overflow: hidden;
-  padding-bottom: 9px;
+  gap: 10px;
+  padding: 4px 14px 4px 4px;
 }
-#topbar .season .icon, #topbar .warning .icon {
+#topbar .season .clock {
+  width: 64px;
+  height: 64px;
+  flex-shrink: 0;
+}
+#topbar .warning .icon {
   font-size: 22px;
   line-height: 1;
-}
-#topbar .season .bar {
-  position: absolute;
-  left: 8px;
-  right: 8px;
-  bottom: 4px;
-  height: 4px;
-  border-radius: 2px;
-  background: rgba(244, 233, 216, 0.25);
-}
-#topbar .season .bar div {
-  height: 100%;
-  border-radius: 2px;
-  background: #f4e9d8;
 }
 #topbar .warning {
   background: rgba(150, 40, 30, 0.9);
@@ -80,6 +70,75 @@ const SEASON_ICON: Record<Season, string> = {
   jesien: '🍂',
   zima: '❄️',
 };
+
+const SEASON_CLOCK_COLOR: Record<Season, string> = {
+  wiosna: '#7fb84a',
+  lato: '#e8c24a',
+  jesien: '#c9782e',
+  zima: '#dfe9f0',
+};
+
+const SVG_NS = 'http://www.w3.org/2000/svg';
+
+/**
+ * A round year clock: four coloured quarters (spring at the top right,
+ * then clockwise), each with its icon, and a hand that goes round once
+ * a year — so the coming winter can be seen approaching.
+ */
+function buildSeasonClock(): { svg: SVGSVGElement; setHand(progress: number): void } {
+  const svg = document.createElementNS(SVG_NS, 'svg');
+  svg.setAttribute('viewBox', '-32 -32 64 64');
+  svg.classList.add('clock');
+  const r = 30;
+  SEASON_ORDER.forEach((season, i) => {
+    const a0 = (i / 4) * Math.PI * 2 - Math.PI / 2;
+    const a1 = ((i + 1) / 4) * Math.PI * 2 - Math.PI / 2;
+    const wedge = document.createElementNS(SVG_NS, 'path');
+    wedge.setAttribute(
+      'd',
+      `M0 0 L${r * Math.cos(a0)} ${r * Math.sin(a0)} A${r} ${r} 0 0 1 ${r * Math.cos(a1)} ${r * Math.sin(a1)} Z`,
+    );
+    wedge.setAttribute('fill', SEASON_CLOCK_COLOR[season]);
+    wedge.setAttribute('stroke', '#2b2016');
+    wedge.setAttribute('stroke-width', '1.5');
+    svg.appendChild(wedge);
+    const mid = (a0 + a1) / 2;
+    const icon = document.createElementNS(SVG_NS, 'text');
+    icon.setAttribute('x', String(r * 0.58 * Math.cos(mid)));
+    icon.setAttribute('y', String(r * 0.58 * Math.sin(mid)));
+    icon.setAttribute('text-anchor', 'middle');
+    icon.setAttribute('dominant-baseline', 'central');
+    icon.setAttribute('font-size', '13');
+    icon.textContent = SEASON_ICON[season];
+    svg.appendChild(icon);
+  });
+  const hand = document.createElementNS(SVG_NS, 'line');
+  hand.setAttribute('x1', '0');
+  hand.setAttribute('y1', '0');
+  hand.setAttribute('x2', '0');
+  hand.setAttribute('y2', String(-r + 2));
+  hand.setAttribute('stroke', '#2b2016');
+  hand.setAttribute('stroke-width', '3.5');
+  hand.setAttribute('stroke-linecap', 'round');
+  svg.appendChild(hand);
+  const hub = document.createElementNS(SVG_NS, 'circle');
+  hub.setAttribute('r', '4');
+  hub.setAttribute('fill', '#2b2016');
+  svg.appendChild(hub);
+  const rim = document.createElementNS(SVG_NS, 'circle');
+  rim.setAttribute('r', String(r));
+  rim.setAttribute('fill', 'none');
+  rim.setAttribute('stroke', '#f4e9d8');
+  rim.setAttribute('stroke-width', '2');
+  svg.appendChild(rim);
+
+  return {
+    svg,
+    setHand(progress: number): void {
+      hand.setAttribute('transform', `rotate(${(progress * 360).toFixed(1)})`);
+    },
+  };
+}
 
 function injectStyle(): void {
   const style = document.createElement('style');
@@ -118,14 +177,8 @@ export function mountTopBar(): TopBar {
 
   const season = chip(null);
   season.el.classList.add('season');
-  const seasonIcon = document.createElement('span');
-  seasonIcon.className = 'icon';
-  season.el.insertBefore(seasonIcon, season.value);
-  const seasonBar = document.createElement('div');
-  seasonBar.className = 'bar';
-  const seasonFill = document.createElement('div');
-  seasonBar.appendChild(seasonFill);
-  season.el.appendChild(seasonBar);
+  const clock = buildSeasonClock();
+  season.el.insertBefore(clock.svg, season.value);
 
   // Before winter, while stores fall short: snowflake, days left, and a
   // swatch for each good that is missing.
@@ -154,9 +207,8 @@ export function mountTopBar(): TopBar {
     wolni.value.textContent = `${STRINGS.wolni}: ${freeCount}`;
 
     const now = currentSeason(state);
-    seasonIcon.textContent = SEASON_ICON[now];
     season.value.textContent = `${STRINGS.pory[now]} · ${STRINGS.rok} ${currentYear(state)}`;
-    seasonFill.style.width = `${Math.round(seasonProgress(state) * 100)}%`;
+    clock.setHand(yearProgress(state));
 
     const warn = winterWarning(state);
     warning.el.classList.toggle('hidden', warn === null);

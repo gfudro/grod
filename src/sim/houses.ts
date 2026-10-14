@@ -71,21 +71,32 @@ export interface UpgradeReadiness {
   serviceInRange: boolean;
   connected: boolean;
   canAffordCost: boolean;
+  /** Materials the warehouse is short of for the rebuild, e.g. ['glina']. */
+  missingCost: ResourceType[];
 }
 
 export function upgradeReadiness(state: GameState, house: House): UpgradeReadiness {
   const upgrade = houseTier(house).upgrade;
   if (!upgrade) {
-    return { canGrow: false, goodsFull: houseGoodsFull(house), serviceInRange: false, connected: false, canAffordCost: false };
+    return {
+      canGrow: false,
+      goodsFull: houseGoodsFull(house),
+      serviceInRange: false,
+      connected: false,
+      canAffordCost: false,
+      missingCost: [],
+    };
   }
+  const missingCost = (Object.entries(upgrade.cost) as [ResourceType, number][])
+    .filter(([resource, amount]) => warehouseAmount(state, resource) < amount)
+    .map(([resource]) => resource);
   return {
     canGrow: true,
     goodsFull: houseGoodsFull(house),
     serviceInRange: findServingBuilding(state, upgrade.service, house.tile) !== null,
     connected: isAdjacentToRoad(house.tile, state.roads),
-    canAffordCost: Object.entries(upgrade.cost).every(
-      ([resource, amount]) => warehouseAmount(state, resource as ResourceType) >= (amount ?? 0),
-    ),
+    canAffordCost: missingCost.length === 0,
+    missingCost,
   };
 }
 
