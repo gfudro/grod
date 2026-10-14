@@ -7,13 +7,11 @@ import { STRINGS } from './strings';
 
 const TOPBAR_STYLE = `
 #topbar {
-  position: fixed;
-  left: 0;
-  right: 0;
-  top: 0;
   display: flex;
+  flex-wrap: wrap;
+  align-items: center;
   gap: 10px;
-  padding: 8px 14px;
+  padding: 6px 14px;
   box-sizing: border-box;
   font-family: sans-serif;
   pointer-events: none;
@@ -22,7 +20,7 @@ const TOPBAR_STYLE = `
   display: flex;
   align-items: center;
   gap: 6px;
-  background: rgba(43, 32, 22, 0.75);
+  background: #3a2b1c;
   color: #f4e9d8;
   border-radius: 10px;
   padding: 6px 12px;
@@ -198,7 +196,7 @@ export function mountTopBar(): TopBar {
   const ludzie = chip(null);
   const wolni = chip(null);
 
-  document.body.appendChild(topbar);
+  (document.getElementById('top-band') ?? document.body).appendChild(topbar);
 
   function refresh(state: GameState): void {
     for (const { resource, value } of resourceChips) {

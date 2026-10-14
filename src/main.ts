@@ -25,6 +25,7 @@ import { tick } from './sim/tick';
 import { currentSeason } from './sim/seasons';
 import { createSnowfall } from './render/snowfall';
 import { WAREHOUSE_TILE } from './data/waypoints';
+import { TILE_SIZE } from './data/tiles';
 
 const BASE_TICK_MS = 1000 / 10; // 10 ticks/second at x1
 
@@ -52,6 +53,10 @@ async function start(): Promise<void> {
   window.addEventListener('pagehide', saveNow);
   let savedSeason = Math.floor(state.tick / SEASON_TICKS);
   const { app, viewport, terrain } = await createGameApp(container, currentSeason(state));
+
+  // The map area is shorter now that the menus have their own bands:
+  // start the camera on the warehouse, where the gród begins.
+  viewport.moveCenter((WAREHOUSE_TILE.x + 0.5) * TILE_SIZE, (WAREHOUSE_TILE.y + 0.5) * TILE_SIZE);
 
   const roadsLayer = createRoadsLayer();
   viewport.addChild(roadsLayer.container);
@@ -149,6 +154,7 @@ async function start(): Promise<void> {
   let speedBeforeChronicle: SpeedMultiplier = 1;
   mountChronicleScreen({
     getState: () => state,
+    buttonSlot: hud.extraSlot,
     onRename: (name) => {
       if (nameVillage(state, name)) saveNow();
     },

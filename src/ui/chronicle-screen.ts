@@ -9,15 +9,14 @@ export interface ChronicleScreenCallbacks {
   /** Resolves false when the file is not a save that can be loaded. */
   onImport: (file: File) => Promise<boolean>;
   onNewGame: () => void;
+  /** Where the KRONIKA button goes (the bottom band, next to DROGA). */
+  buttonSlot: HTMLElement;
   /** The game pauses while the chronicle is open. */
   onOpenChange: (open: boolean) => void;
 }
 
 const STYLE = `
 #chronicle-button {
-  position: fixed;
-  left: 14px;
-  bottom: 94px;
   min-width: 64px;
   min-height: 64px;
   padding: 4px 10px;
@@ -117,7 +116,7 @@ export function mountChronicleScreen(cb: ChronicleScreenCallbacks): ChronicleScr
   const openButton = document.createElement('button');
   openButton.id = 'chronicle-button';
   openButton.innerHTML = `<span class="icon">📜</span><span>${STRINGS.kronika}</span>`;
-  document.body.appendChild(openButton);
+  cb.buttonSlot.appendChild(openButton);
 
   const overlay = document.createElement('div');
   overlay.id = 'chronicle';

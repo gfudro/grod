@@ -2,9 +2,10 @@ import type { InspectInfo } from '../sim/inspect';
 
 const PANEL_STYLE = `
 #inspect-panel {
-  position: fixed;
+  position: absolute;
+  z-index: 10;
   left: 50%;
-  top: 56px;
+  top: 8px;
   transform: translateX(-50%);
   background: rgba(43, 32, 22, 0.9);
   color: #f4e9d8;
@@ -110,7 +111,8 @@ export function mountInspectPanel(onTogglePause: TogglePauseCallback): (info: In
   const pauseButton = document.createElement('button');
   panel.appendChild(pauseButton);
 
-  document.body.appendChild(panel);
+  // Floats at the top of the map area, below the top band.
+  (document.getElementById('app') ?? document.body).appendChild(panel);
 
   return (info: InspectInfo | null) => {
     if (!info) {

@@ -22,9 +22,30 @@
         -webkit-user-select: none;
         user-select: none;
       }
+      /* Menus sit in solid bands above and below the map, never over it. */
+      body {
+        display: flex;
+        flex-direction: column;
+      }
+      #top-band,
+      #bottom-band {
+        flex: none;
+        background: #1f170f;
+        touch-action: manipulation;
+      }
+      #top-band {
+        border-bottom: 3px solid #5c4326;
+        padding-top: env(safe-area-inset-top);
+      }
+      #bottom-band {
+        border-top: 3px solid #5c4326;
+        padding-bottom: env(safe-area-inset-bottom);
+      }
       #app {
-        width: 100%;
-        height: 100%;
+        position: relative;
+        flex: 1;
+        min-height: 0;
+        overflow: hidden;
         touch-action: none;
       }
       #app canvas {
@@ -43,7 +64,9 @@
     </style>
   </head>
   <body>
+    <div id="top-band"></div>
     <div id="app"></div>
+    <div id="bottom-band"></div>
     <script type="module" src="/src/main.ts"></script>
   </body>
 </html>

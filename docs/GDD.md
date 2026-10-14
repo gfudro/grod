@@ -164,6 +164,8 @@ Gra działa w przeglądarce na iPadzie, w poziomie, uruchamiana ikoną z ekranu 
 - **Szczypanie** przybliża i oddala.
 - **Duży przycisk „cofnij”** dla ostatniej akcji.
 
+- **Menu nie zasłania mapy** (prośba Grega, 2026-10-14): górny pasek (zegar, surowce, ludzie) i dolne menu (budynki, DROGA, KRONIKA, prędkość, COFNIJ) mają własne, pełne pasy nad i pod mapą. Mapa zajmuje tylko przestrzeń między nimi, a kamera startuje nad magazynem.
+
 Tekst dla Artura:
 
 - W interfejsie są tylko pojedyncze słowa, wyraźną czcionką i zawsze z ikoną. Żadnych zdań.

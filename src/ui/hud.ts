@@ -16,29 +16,23 @@ export interface HudCallbacks {
 
 const HUD_STYLE = `
 #hud, #palette {
-  position: fixed;
-  left: 0;
-  right: 0;
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 10px 14px;
+  gap: 8px;
+  padding: 6px 14px;
   box-sizing: border-box;
   font-family: sans-serif;
-  pointer-events: none;
 }
 #hud {
-  bottom: 0;
   justify-content: space-between;
+  padding-top: 0;
 }
 #palette {
-  bottom: 84px;
   justify-content: center;
 }
-#hud .hud-group, #palette {
+#hud .hud-group {
   display: flex;
   gap: 8px;
-  pointer-events: auto;
 }
 #hud button, #palette button {
   min-width: 64px;
@@ -98,6 +92,8 @@ function hexColor(color: number): string {
 
 export interface Hud {
   refresh(): void;
+  /** Where other modules can add a button next to DROGA (e.g. KRONIKA). */
+  extraSlot: HTMLElement;
 }
 
 export function mountHud({ roadDraw, buildPlace, state, getSpeed, onSpeedChange }: HudCallbacks): Hud {
@@ -111,6 +107,7 @@ export function mountHud({ roadDraw, buildPlace, state, getSpeed, onSpeedChange 
   const roadButton = document.createElement('button');
   roadButton.textContent = STRINGS.droga;
   leftGroup.appendChild(roadButton);
+  const extraSlot = leftGroup;
 
   const centerGroup = document.createElement('div');
   centerGroup.className = 'hud-group';
@@ -135,7 +132,6 @@ export function mountHud({ roadDraw, buildPlace, state, getSpeed, onSpeedChange 
   rightGroup.appendChild(undoButton);
 
   hud.append(leftGroup, centerGroup, rightGroup);
-  document.body.appendChild(hud);
 
   const palette = document.createElement('div');
   palette.id = 'palette';
@@ -162,7 +158,8 @@ export function mountHud({ roadDraw, buildPlace, state, getSpeed, onSpeedChange 
     palette.appendChild(button);
     buildingButtons.set(type, button);
   }
-  document.body.appendChild(palette);
+  // Bottom band: building palette on top, controls underneath.
+  (document.getElementById('bottom-band') ?? document.body).append(palette, hud);
 
   function refresh(): void {
     roadButton.classList.toggle('active', roadDraw.isRoadMode());
@@ -193,5 +190,5 @@ export function mountHud({ roadDraw, buildPlace, state, getSpeed, onSpeedChange 
   });
 
   refresh();
-  return { refresh };
+  return { refresh, extraSlot };
 }
