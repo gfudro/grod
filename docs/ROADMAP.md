@@ -136,7 +136,12 @@ Kolejność od 0.9.0 (Greg, 2026-10-14): najpierw mechanika, grafiki i dźwięki
 
 ## M10 · Piętro 4: dwór
 
-- [ ] Owczarnia (wełna) → tkalnia → ubrania, kontyna Peruna, awans zagroda → dwór
+- [x] Owczarnia (wełna) → tkalnia → ubrania: łańcuch owczarnia → magazyn → tkalnia → magazyn (0.14.0)
+- [x] Kontyna Peruna jako usługa z zasięgiem dla zagrody
+- [x] Awans zagroda → dwór, gdy są ubrania i kontyna w zasięgu
+- [x] Górny pasek: towar pojawia się, gdy gród go ma; pasek budynków przesuwa się palcem w bok
+
+**Gotowe, gdy:** Artur doprowadza pierwszą zagrodę do dworu.
 
 ## M11 · Kopiec
 
@@ -161,4 +166,4 @@ Kolejność od 0.9.0 (Greg, 2026-10-14): najpierw mechanika, grafiki i dźwięki
 
 Zadania z notatek w `docs/playtests/` trafiają tutaj, z datą testu.
 
-- [ ] Przeprojektować dolny pasek (Greg, 2026-10-15). Przy 11 budynkach i 7 prędkościach robi się ciasno, kolejne piętra dołożą przyciski. Do ustalenia z Gregiem, jak ma wyglądać.
+- [ ] Przeprojektować dolny pasek (Greg, 2026-10-15). Przy 11 budynkach i 7 prędkościach robi się ciasno, kolejne piętra dołożą przyciski. Od 0.14.0 (13 budynków) pasek budynków przesuwa się palcem w bok, to tymczasowe. Do ustalenia z Gregiem, jak ma wyglądać.

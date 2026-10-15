@@ -52,8 +52,17 @@ export const HOUSE_TIERS: HouseTierDef[] = [
   {
     name: 'ZAGRODA',
     capacity: 8,
-    goods: { ryba: 5, kasza: 3, ser: 3 },
+    goods: { ryba: 5, kasza: 3, ser: 3, ubrania: 3 },
+    // Ubrania here are only what it takes to grow — a zagroda doesn't wear them out.
     eatsEvery: { ryba: 300, kasza: 600, ser: 600 },
+    upgrade: { cost: { drewno: 5, glina: 4 }, buildTicks: 60, service: 'kontyna' },
+  },
+  {
+    name: 'DWÓR',
+    capacity: 12,
+    goods: { ryba: 5, kasza: 3, ser: 3, ubrania: 3 },
+    // Clothes wear out slower than food is eaten.
+    eatsEvery: { ryba: 300, kasza: 600, ser: 600, ubrania: 900 },
   },
 ];
 

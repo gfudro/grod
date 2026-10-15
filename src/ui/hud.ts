@@ -27,8 +27,17 @@ const HUD_STYLE = `
   justify-content: space-between;
   padding-top: 0;
 }
+/* Wider than an iPad since the dwór chain: it slides sideways under a
+   finger until the bottom bar gets its redesign (ROADMAP "Z testów"). */
 #palette {
-  justify-content: center;
+  justify-content: safe center;
+  overflow-x: auto;
+  overflow-y: hidden;
+  touch-action: pan-x;
+  scrollbar-width: none;
+}
+#palette::-webkit-scrollbar {
+  display: none;
 }
 #hud .hud-group {
   display: flex;
@@ -54,6 +63,7 @@ const HUD_STYLE = `
   font-size: 13px;
   gap: 4px;
   min-width: 72px;
+  flex-shrink: 0;
 }
 #palette button .cost {
   display: flex;

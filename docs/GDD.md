@@ -107,6 +107,19 @@ Decyzje z M9 (burza i pożar, 0.13.0, Greg 2026-10-15):
 - Kronika zapisuje każdy pożar, każde ugaszenie, każdy piorun w kontynę i każdą odbudowę.
 - **Zapis:** `SAVE_VERSION = 7` (w stanie burze, ostatni piorun, a w domach ogień i zgliszcza).
 
+Decyzje z M10 (piętro 4: dwór, 0.14.0):
+
+- **Owczarnia** (4 drewna, 1 glina) działa jak obora: owce stoją w owczarni, pasterz strzyże na miejscu (3 s) i nosi 1 wełnę do magazynu. Na mapie podpis „OWCE” i owieczka w rogu (litera O zderzałaby się z OBORĄ).
+- **Tkalnia** (3 drewna, 3 gliny) działa jak serowarnia: tkaczka bierze z magazynu 1 wełnę, tka (6 s) i odnosi 1 ubranie. Bez wełny stoi przed tkalnią z dymkiem w kolorze wełny.
+- **Kontyna Peruna** jest usługą dla zagrody, tak jak plac wiecowy dla chaty, w swoim zasięgu 9×9. Znaczek w rogu zagrody świeci na fioletowo, gdy kontyna jest w zasięgu. Ta sama kontyna dalej chroni przed piorunami.
+- **Zagroda zbiera ubrania (3)**, tylko do wzrostu, tak jak chata ser.
+- **Awans zagroda → dwór:** ryby, kasza, ser i ubrania pełne, kontyna w zasięgu, droga; koszt 5 drewna i 4 gliny, przebudowa 6 s. Dwór ma 12 miejsc, najwyższy ciemny dach z okienkiem, na mapie podpis „DWÓR”.
+- **Dwór je** jak zagroda (ryba co 30 s, kasza i ser co 60 s) i zużywa 1 ubranie co 90 s (ubrania zdzierają się wolniej, niż się je). Brak ubrań nie jest głodem. Dwór to na razie najwyższe piętro; dalej jest już tylko kopiec (M11).
+- **Cztery liczniki nad zagrodą i dworem** stoją dwa na dwa (ryby i kasza u góry, ser i ubrania pod spodem), bo w jednym rzędzie nie mieszczą się na kafelku.
+- **Górny pasek:** dochodzą WEŁNA i UBRANIA. Żeby wszystko zmieściło się na iPadzie, kafelek towaru pojawia się na pasku dopiero wtedy, gdy gród go ma (w magazynie, w domu, w rękach) albo stoi budynek, który go robi. DREWNO, GLINA i RYBA są zawsze. Raz pokazany kafelek już nie znika. Do tego ciaśniejsze odstępy: pełny pasek z trzycyfrowymi liczbami i ostrzeżeniem przed zimą zajmuje ok. 990 px.
+- **Dolny pasek budynków** (13 przycisków) jest szerszy niż iPad, więc do czasu przeprojektowania przesuwa się palcem w bok.
+- Kronika zapisuje pierwszy dwór. **Zapis:** `SAVE_VERSION = 8`, kształt stanu bez zmian (podbicie chroni zapis przed starą wersją gry).
+
 ## Wizja i filary
 
 Gród to spokojna gra budowlana na iPada dla 6-letniego Artura: łańcuchy produkcji jak w Anno, przejrzystość jak w Warcraft 2, bez walki. Artur gra przy tacie, ale ma sobie radzić choć trochę samodzielnie.
@@ -138,7 +151,7 @@ Dom rośnie o piętro, gdy mieszkańcy dostają swój towar i mają w pobliżu p
 | 1 · przetrwanie | Ziemianka | ryby; zimą opał | — | rybak → magazyn; drwal → magazyn (opał = drewno) | tak |
 | 2 · bezpieczeństwo | Chata | kasza | studnia | pole prosa → magazyn → żarna → magazyn | tak |
 | 3 · wspólnota | Zagroda | ser | plac wiecowy | obora (krowy, mleko) → serowarnia | nie |
-| 4 · uznanie | Dwór | ubrania | kontyna Peruna | owczarnia (wełna) → tkalnia | nie |
+| 4 · uznanie | Dwór | ubrania | kontyna Peruna | owczarnia (wełna) → magazyn → tkalnia | od 0.14.0 |
 | 5 · cel gry | Kopiec (nie jest domem) | wspólna budowa: drewno, kamień, łopaty | — | ruda darniowa (bagno) → dymarka → kuźnia (łopaty) | nie |
 
 Łańcuch rośnie od jednego kroku przy ziemiance do trzech przy kopcu. Żelazne łopaty z kuźni są potrzebne dopiero do usypania kopca.

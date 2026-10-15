@@ -12,6 +12,7 @@ export type ChronicleKind =
   | 'pierwsza-ziemianka'
   | 'pierwsza-chata'
   | 'pierwsza-zagroda'
+  | 'pierwszy-dwor'
   | 'pierwsze-zniwa'
   | 'osadnicy'
   | 'zima'

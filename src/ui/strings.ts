@@ -38,6 +38,8 @@ export const STRINGS = {
     kasza: 'KASZA',
     mleko: 'MLEKO',
     ser: 'SER',
+    welna: 'WEŁNA',
+    ubrania: 'UBRANIA',
   },
 } as const;
 
@@ -100,6 +102,8 @@ function entryBody(entry: ChronicleEntry): string {
       return 'pierwsza ziemianka urosła w chatę';
     case 'pierwsza-zagroda':
       return 'pierwsza chata urosła w zagrodę';
+    case 'pierwszy-dwor':
+      return 'pierwsza zagroda urosła w dwór';
     case 'pierwsze-zniwa':
       return 'zebrano pierwsze proso';
     case 'osadnicy':

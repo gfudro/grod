@@ -130,13 +130,13 @@ describe('chata → zagroda', () => {
     expect(house.tier).toBe(1);
   });
 
-  it('a zagroda eats ser, and is the top tier', () => {
+  it('a zagroda eats ser, and grows on into a dwór', () => {
     const state = withRoad();
     const house = addChata(state, { tier: 2, residents: 8, goods: { ryba: 5, kasza: 3, ser: 3 } });
 
     runTicks(state, 600);
 
     expect(houseGood(house, 'ser')).toBeLessThan(3);
-    expect(upgradeReadiness(state, house).canGrow).toBe(false);
+    expect(upgradeReadiness(state, house).service).toBe('kontyna');
   });
 });

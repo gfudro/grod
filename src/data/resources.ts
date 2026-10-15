@@ -1,4 +1,4 @@
-export type ResourceType = 'drewno' | 'glina' | 'ryba' | 'proso' | 'kasza' | 'mleko' | 'ser';
+export type ResourceType = 'drewno' | 'glina' | 'ryba' | 'proso' | 'kasza' | 'mleko' | 'ser' | 'welna' | 'ubrania';
 
 export const RESOURCE_COLOR: Record<ResourceType, number> = {
   drewno: 0x8a5a2b,
@@ -8,9 +8,11 @@ export const RESOURCE_COLOR: Record<ResourceType, number> = {
   kasza: 0xf0e2b6,
   mleko: 0xffffff,
   ser: 0xf5a623,
+  welna: 0xcfc3ad,
+  ubrania: 0x9b59b6,
 };
 
 /** Order of the resource chips on the top bar. */
-export const RESOURCE_ORDER: ResourceType[] = ['drewno', 'glina', 'ryba', 'proso', 'kasza', 'mleko', 'ser'];
+export const RESOURCE_ORDER: ResourceType[] = ['drewno', 'glina', 'ryba', 'proso', 'kasza', 'mleko', 'ser', 'welna', 'ubrania'];
 
 export type ResourceAmounts = Partial<Record<ResourceType, number>>;

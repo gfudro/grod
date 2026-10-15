@@ -74,4 +74,10 @@ export const MIGRATIONS: Record<number, (save: RawSave) => RawSave> = {
    * fields lazily (absent = not burning, not burned).
    */
   6: (save) => ({ ...save, saveVersion: 7, state: { ...save.state, storms: [], lastStrike: null } }),
+  /**
+   * v8 (0.14.0): the dwór tier, owczarnia, tkalnia, wełna and ubrania. The
+   * state's shape is unchanged — the bump keeps an older cached copy of
+   * the game from loading buildings it doesn't know.
+   */
+  7: (save) => ({ ...save, saveVersion: 8 }),
 };

@@ -1,6 +1,7 @@
 import type { GameState } from '../sim/state';
 import { villagePopulation, warehouseAmount } from '../sim/state';
-import { RESOURCE_COLOR, RESOURCE_ORDER } from '../data/resources';
+import { RESOURCE_COLOR, RESOURCE_ORDER, type ResourceType } from '../data/resources';
+import { BUILDINGS } from '../data/buildings';
 import { SEASON_ORDER, type Season } from '../data/seasons';
 import { currentSeason, currentYear, winterWarning, yearProgress } from '../sim/seasons';
 import { activeStorm, protectingKontyna, stormDaysLeft } from '../sim/storms';
@@ -11,8 +12,8 @@ const TOPBAR_STYLE = `
   display: flex;
   flex-wrap: nowrap; /* one line always: a wrap would make the whole map jump */
   align-items: center;
-  gap: 6px;
-  padding: 6px 8px;
+  gap: 4px;
+  padding: 6px;
   box-sizing: border-box;
   font-family: sans-serif;
   pointer-events: none;
@@ -21,11 +22,11 @@ const TOPBAR_STYLE = `
 #topbar .chip {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 4px;
   background: #3a2b1c;
   color: #f4e9d8;
   border-radius: 10px;
-  padding: 4px 9px;
+  padding: 4px 6px;
   font-size: 17px;
   font-weight: bold;
   min-height: 40px;
@@ -52,7 +53,7 @@ const TOPBAR_STYLE = `
   background: rgba(150, 40, 30, 0.9);
   animation: winter-pulse 1.2s ease-in-out infinite alternate;
 }
-#topbar .warning.hidden {
+#topbar .warning.hidden, #topbar .resource.hidden {
   display: none;
 }
 /* A storm over a house the kontyna guards: shown, but calm. */
@@ -77,7 +78,6 @@ const TOPBAR_STYLE = `
 #topbar .resource .label, #topbar .stacked .label {
   font-size: 10px;
   font-weight: normal;
-  letter-spacing: 0.04em;
   opacity: 0.65;
 }
 #topbar .season .label {
@@ -88,8 +88,8 @@ const TOPBAR_STYLE = `
   min-width: 0;
 }
 #topbar .swatch {
-  width: 16px;
-  height: 16px;
+  width: 14px;
+  height: 14px;
   border-radius: 3px;
   border: 1px solid rgba(0, 0, 0, 0.4);
 }
@@ -182,6 +182,26 @@ function hexColor(color: number): string {
   return `#${color.toString(16).padStart(6, '0')}`;
 }
 
+/** The first goods every village handles; their chips are always on the bar. */
+const ALWAYS_SHOWN: ResourceType[] = ['drewno', 'glina', 'ryba'];
+
+/**
+ * Whether the village has met this good yet: some in the warehouse, a
+ * house or someone's hands, or a building (or site) that makes it. Chips
+ * for later goods join the bar as their chains get built, so the bar
+ * fits an iPad even with every good of the pyramid.
+ */
+function villageKnows(state: GameState, resource: ResourceType): boolean {
+  return (
+    ALWAYS_SHOWN.includes(resource) ||
+    warehouseAmount(state, resource) > 0 ||
+    state.buildings.some((b) => BUILDINGS[b.type].produces === resource) ||
+    state.sites.some((s) => BUILDINGS[s.type].produces === resource) ||
+    state.houses.some((h) => (h.goods[resource] ?? 0) > 0) ||
+    state.villagers.some((v) => v.carrying === resource)
+  );
+}
+
 export interface TopBar {
   refresh(state: GameState): void;
 }
@@ -254,7 +274,7 @@ export function mountTopBar(): TopBar {
     const { el, value } = chip(RESOURCE_COLOR[resource]);
     el.classList.add('resource');
     stack(el, value, STRINGS.zasoby[resource]);
-    return { resource, el, value };
+    return { resource, el, value, shown: false };
   });
   const ludzie = chip(null);
   ludzie.el.classList.add('stacked');
@@ -266,8 +286,11 @@ export function mountTopBar(): TopBar {
   (document.getElementById('top-band') ?? document.body).appendChild(topbar);
 
   function refresh(state: GameState): void {
-    for (const { resource, value } of resourceChips) {
-      value.textContent = String(warehouseAmount(state, resource));
+    for (const chip of resourceChips) {
+      // Once shown, a chip stays: it would be confusing to see it vanish at 0.
+      if (!chip.shown && villageKnows(state, chip.resource)) chip.shown = true;
+      chip.el.classList.toggle('hidden', !chip.shown);
+      chip.value.textContent = String(warehouseAmount(state, chip.resource));
     }
     const freeCount = state.villagers.filter((v) => v.job.kind === 'idle').length;
     ludzie.value.textContent = String(villagePopulation(state));

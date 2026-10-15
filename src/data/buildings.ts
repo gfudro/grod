@@ -1,6 +1,6 @@
 import type { ResourceType } from './resources';
 
-export type BuildingType = 'drwal' | 'rybak' | 'glinianka' | 'pole' | 'zarna' | 'studnia' | 'ziemianka' | 'obora' | 'serowarnia' | 'plac' | 'kontyna';
+export type BuildingType = 'drwal' | 'rybak' | 'glinianka' | 'pole' | 'zarna' | 'studnia' | 'ziemianka' | 'obora' | 'serowarnia' | 'plac' | 'kontyna' | 'owczarnia' | 'tkalnia';
 
 export type ResourceSearch = 'drzewo' | 'woda' | 'na-miejscu';
 
@@ -150,6 +150,27 @@ export const BUILDINGS: Record<BuildingType, BuildingDef> = {
     produces: 'ser',
     processTicks: 50,
   },
+  owczarnia: {
+    id: 'owczarnia',
+    name: 'OWCZARNIA',
+    kind: 'produkcja',
+    cost: { drewno: 4, glina: 1 },
+    buildTicks: 40,
+    produces: 'welna',
+    // The sheep live in the fold: shearing happens on the spot.
+    gatherTicks: 30,
+    resourceSearch: 'na-miejscu',
+  },
+  tkalnia: {
+    id: 'tkalnia',
+    name: 'TKALNIA',
+    kind: 'przetworstwo',
+    cost: { drewno: 3, glina: 3 },
+    buildTicks: 50,
+    consumes: 'welna',
+    produces: 'ubrania',
+    processTicks: 60,
+  },
   plac: {
     id: 'plac',
     name: 'PLAC WIECOWY',
@@ -164,7 +185,8 @@ export const BUILDINGS: Record<BuildingType, BuildingDef> = {
     kind: 'usluga',
     cost: { drewno: 4, glina: 2 },
     buildTicks: 40,
-    // Perun takes every bolt aimed at a house in this range (see data/storms.ts).
+    // Perun takes every bolt aimed at a house in this range (see data/storms.ts),
+    // and a zagroda needs it in this range to grow into a dwór.
     serviceRange: 4,
   },
   ziemianka: {
@@ -176,7 +198,7 @@ export const BUILDINGS: Record<BuildingType, BuildingDef> = {
   },
 };
 
-export const BUILDING_ORDER: BuildingType[] = ['drwal', 'rybak', 'glinianka', 'ziemianka', 'pole', 'zarna', 'studnia', 'obora', 'serowarnia', 'plac', 'kontyna'];
+export const BUILDING_ORDER: BuildingType[] = ['drwal', 'rybak', 'glinianka', 'ziemianka', 'pole', 'zarna', 'studnia', 'obora', 'serowarnia', 'plac', 'kontyna', 'owczarnia', 'tkalnia'];
 
 /** Starting warehouse stock, enough for one or two starter buildings. */
 export const STARTING_WAREHOUSE_STOCK: Partial<Record<ResourceType, number>> = {

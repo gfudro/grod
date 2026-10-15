@@ -1,0 +1,205 @@
+{
+  "saveVersion": 8,
+  "gameVersion": "0.14.0",
+  "savedAt": "2026-10-15T14:00:00.000Z",
+  "state": {
+    "tick": 600,
+    "rng": {
+      "seed": 1
+    },
+    "speed": 1,
+    "warehouse": {
+      "drewno": 40,
+      "glina": 20,
+      "ryba": 18,
+      "kasza": 10,
+      "ser": 5,
+      "ubrania": 1,
+      "welna": 0
+    },
+    "villagers": [
+      {
+        "id": "ludzik-1",
+        "from": {
+          "x": 8,
+          "y": 9
+        },
+        "to": {
+          "x": 8,
+          "y": 9
+        },
+        "segmentTicks": 0,
+        "path": [],
+        "motion": "waiting",
+        "facing": 1,
+        "job": {
+          "kind": "produce",
+          "buildingId": "budynek-90",
+          "stage": "toResource"
+        },
+        "carrying": null,
+        "workTicksRemaining": 0,
+        "waitingFor": null
+      },
+      {
+        "id": "ludzik-2",
+        "from": {
+          "x": 5,
+          "y": 7
+        },
+        "to": {
+          "x": 5,
+          "y": 7
+        },
+        "segmentTicks": 0,
+        "path": [],
+        "motion": "waiting",
+        "facing": -1,
+        "job": {
+          "kind": "process",
+          "buildingId": "budynek-91",
+          "stage": "toBuilding"
+        },
+        "carrying": null,
+        "workTicksRemaining": 0,
+        "waitingFor": "welna"
+      },
+      {
+        "id": "ludzik-3",
+        "from": {
+          "x": 6,
+          "y": 8
+        },
+        "to": {
+          "x": 7,
+          "y": 8
+        },
+        "segmentTicks": 5,
+        "path": [
+          {
+            "x": 7,
+            "y": 8
+          },
+          {
+            "x": 8,
+            "y": 8
+          },
+          {
+            "x": 8,
+            "y": 9
+          }
+        ],
+        "motion": "walking",
+        "facing": 1,
+        "job": {
+          "kind": "deliver",
+          "houseId": "dom-94",
+          "resource": "ryba",
+          "stage": "toWarehouse"
+        },
+        "carrying": null,
+        "workTicksRemaining": 0,
+        "waitingFor": null
+      }
+    ],
+    "sites": [],
+    "buildings": [
+      {
+        "id": "budynek-90",
+        "type": "owczarnia",
+        "tile": {
+          "x": 3,
+          "y": 7
+        },
+        "resourceTile": null,
+        "workerId": "ludzik-1",
+        "paused": false
+      },
+      {
+        "id": "budynek-91",
+        "type": "tkalnia",
+        "tile": {
+          "x": 5,
+          "y": 7
+        },
+        "resourceTile": null,
+        "workerId": "ludzik-2",
+        "paused": false
+      },
+      {
+        "id": "budynek-92",
+        "type": "kontyna",
+        "tile": {
+          "x": 7,
+          "y": 9
+        },
+        "resourceTile": null,
+        "workerId": null,
+        "paused": false
+      }
+    ],
+    "houses": [
+      {
+        "id": "dom-93",
+        "tile": {
+          "x": 3,
+          "y": 9
+        },
+        "tier": 3,
+        "residents": 12,
+        "goods": {
+          "ryba": 4,
+          "kasza": 2,
+          "ser": 2,
+          "ubrania": 3
+        },
+        "upgrade": null
+      },
+      {
+        "id": "dom-94",
+        "tile": {
+          "x": 5,
+          "y": 9
+        },
+        "tier": 2,
+        "residents": 8,
+        "goods": {
+          "ryba": 3,
+          "kasza": 2,
+          "ser": 2,
+          "ubrania": 3
+        },
+        "upgrade": null
+      }
+    ],
+    "nextEntityId": 4,
+    "name": "Owczy Gród",
+    "seasonLog": {
+      "settlers": 0,
+      "hungry": false,
+      "cold": false
+    },
+    "storms": [],
+    "lastStrike": null,
+    "roads": [
+      "0,8",
+      "1,8",
+      "2,8",
+      "3,8",
+      "4,8",
+      "5,8",
+      "6,8",
+      "7,8",
+      "8,8",
+      "9,8"
+    ]
+  },
+  "chronicle": [
+    {
+      "year": 1,
+      "season": "wiosna",
+      "kind": "zalozenie",
+      "params": {}
+    }
+  ]
+}
