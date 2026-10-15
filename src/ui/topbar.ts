@@ -8,13 +8,14 @@ import { STRINGS } from './strings';
 const TOPBAR_STYLE = `
 #topbar {
   display: flex;
-  flex-wrap: wrap;
+  flex-wrap: nowrap; /* one line always: a wrap would make the whole map jump */
   align-items: center;
-  gap: 10px;
-  padding: 6px 14px;
+  gap: 6px;
+  padding: 6px 8px;
   box-sizing: border-box;
   font-family: sans-serif;
   pointer-events: none;
+  overflow: hidden;
 }
 #topbar .chip {
   display: flex;
@@ -23,19 +24,23 @@ const TOPBAR_STYLE = `
   background: #3a2b1c;
   color: #f4e9d8;
   border-radius: 10px;
-  padding: 6px 12px;
-  font-size: 18px;
+  padding: 4px 9px;
+  font-size: 17px;
   font-weight: bold;
   min-height: 40px;
   box-sizing: border-box;
+  flex-shrink: 0;
+  white-space: nowrap;
+  /* Every digit the same width, so a chip doesn't twitch as numbers change. */
+  font-variant-numeric: tabular-nums;
 }
 #topbar .season {
-  gap: 10px;
-  padding: 4px 14px 4px 4px;
+  gap: 8px;
+  padding: 3px 10px 3px 3px;
 }
 #topbar .season .clock {
-  width: 64px;
-  height: 64px;
+  width: 58px;
+  height: 58px;
   flex-shrink: 0;
 }
 #topbar .warning .icon {
@@ -53,17 +58,28 @@ const TOPBAR_STYLE = `
   from { transform: scale(1); }
   to { transform: scale(1.06); }
 }
-#topbar .resource .amount {
+/* Room for three digits, so 99 → 100 doesn't push its neighbours. */
+#topbar .amount > span:first-child {
+  min-width: 3ch;
+}
+#topbar .resource .amount, #topbar .stacked .amount {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
   line-height: 1.05;
 }
-#topbar .resource .label {
+#topbar .resource .label, #topbar .stacked .label {
   font-size: 10px;
   font-weight: normal;
   letter-spacing: 0.04em;
   opacity: 0.65;
+}
+#topbar .season .label {
+  font-size: 12px;
+  opacity: 0.8;
+}
+#topbar .season .amount > span:first-child {
+  min-width: 0;
 }
 #topbar .swatch {
   width: 16px;
@@ -170,6 +186,18 @@ export function mountTopBar(): TopBar {
   const topbar = document.createElement('div');
   topbar.id = 'topbar';
 
+  /** Puts `value` over a small `label` inside the chip, e.g. 36 over DREWNO. */
+  function stack(el: HTMLElement, value: HTMLSpanElement, labelText: string): HTMLSpanElement {
+    const amount = document.createElement('div');
+    amount.className = 'amount';
+    const label = document.createElement('span');
+    label.className = 'label';
+    label.textContent = labelText;
+    el.replaceChild(amount, value);
+    amount.append(value, label);
+    return label;
+  }
+
   function chip(color: number | null): { el: HTMLDivElement; value: HTMLSpanElement } {
     const el = document.createElement('div');
     el.className = 'chip';
@@ -185,10 +213,12 @@ export function mountTopBar(): TopBar {
     return { el, value };
   }
 
+  // The season's name, with the year in small print under it.
   const season = chip(null);
-  season.el.classList.add('season');
+  season.el.classList.add('season', 'stacked');
+  const seasonYear = stack(season.el, season.value, '');
   const clock = buildSeasonClock();
-  season.el.insertBefore(clock.svg, season.value);
+  season.el.insertBefore(clock.svg, season.el.firstChild);
 
   // Before winter, while stores fall short: snowflake, days left, and a
   // swatch for each good that is missing.
@@ -208,17 +238,15 @@ export function mountTopBar(): TopBar {
   const resourceChips = RESOURCE_ORDER.map((resource) => {
     const { el, value } = chip(RESOURCE_COLOR[resource]);
     el.classList.add('resource');
-    const amount = document.createElement('div');
-    amount.className = 'amount';
-    const label = document.createElement('span');
-    label.className = 'label';
-    label.textContent = STRINGS.zasoby[resource];
-    el.replaceChild(amount, value);
-    amount.append(value, label);
+    stack(el, value, STRINGS.zasoby[resource]);
     return { resource, el, value };
   });
   const ludzie = chip(null);
+  ludzie.el.classList.add('stacked');
+  stack(ludzie.el, ludzie.value, STRINGS.ludzie);
   const wolni = chip(null);
+  wolni.el.classList.add('stacked');
+  stack(wolni.el, wolni.value, STRINGS.wolni);
 
   (document.getElementById('top-band') ?? document.body).appendChild(topbar);
 
@@ -227,11 +255,12 @@ export function mountTopBar(): TopBar {
       value.textContent = String(warehouseAmount(state, resource));
     }
     const freeCount = state.villagers.filter((v) => v.job.kind === 'idle').length;
-    ludzie.value.textContent = `${STRINGS.ludzie}: ${villagePopulation(state)}`;
-    wolni.value.textContent = `${STRINGS.wolni}: ${freeCount}`;
+    ludzie.value.textContent = String(villagePopulation(state));
+    wolni.value.textContent = String(freeCount);
 
     const now = currentSeason(state);
-    season.value.textContent = `${STRINGS.pory[now]} · ${STRINGS.rok} ${currentYear(state)}`;
+    season.value.textContent = STRINGS.pory[now];
+    seasonYear.textContent = `${STRINGS.rok} ${currentYear(state)}`;
     clock.setHand(yearProgress(state));
 
     const warn = winterWarning(state);

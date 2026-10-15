@@ -92,6 +92,7 @@ Poprawki z 0.12.1 (Greg, 2026-10-15):
 
 - **Osadnicy idą do pierwszego domu z wolnym miejscem, do którego prowadzi droga od krawędzi mapy.** Wcześniej gra sprawdzała tylko pierwszy dom z wolnym miejscem, a gdy ten nie miał drogi, nikt nie przychodził do żadnego.
 - **Wstrzymany budynek:** cały (także pole 2×2) wyszarzony w ciemne ukośne pasy, z czerwoną ramką i dużym czerwonym kołem z białym znakiem pauzy na górnej krawędzi. Litera budynku zostaje widoczna.
+- **Górny pasek zawsze w jednej linijce** (na iPadzie przeskakiwał do drugiej przy dużych liczbach i mapa skakała). Cyfry mają stałą szerokość, a pora roku, LUDZIE i WOLNI są jak surowce: liczba (nazwa pory), pod nią mały podpis (ROK 12). Najgorszy przypadek (ostrzeżenie przed zimą, czterocyfrowe liczby) zajmuje ok. 950 px, mieści się na najmniejszym iPadzie w poziomie (1024 px).
 - **Stuknięcie w budynek zawsze pokazuje budynek**, nawet gdy stoi w nim czekający ludzik (a panel mówi, na co czeka). Ludzika pokazuje stuknięcie w drogę lub trawę, na której stoi.
 
 ## Wizja i filary

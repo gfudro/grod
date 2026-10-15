@@ -124,6 +124,7 @@ Kolejność od 0.9.0 (Greg, 2026-10-14): najpierw mechanika, grafiki i dźwięki
 - [x] Osadnicy omijają dom bez drogi do krawędzi i idą do następnego
 - [x] Czytelniejszy znak wstrzymanego budynku
 - [x] Stuknięcie w budynek z czekającym ludzikiem otwiera panel budynku (da się go wstrzymać)
+- [x] Górny pasek w jednej linijce, bez skakania przy dużych liczbach (0.12.2)
 
 ## M9 · Burza i pożar
 
