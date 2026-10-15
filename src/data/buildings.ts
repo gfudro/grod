@@ -83,8 +83,10 @@ export interface BuildingDef {
 }
 
 /**
- * Costs and timings are starting placeholders for balancing after
- * playtests (see GDD "Otwarte pytania").
+ * Costs climb with the pyramid (Greg, 2026-10-15: later buildings were
+ * too cheap to be any challenge): the first tier stays cheap, each tier
+ * above costs clearly more, and the kopiec's chains need kamień too.
+ * Timings are placeholders for balancing after playtests.
  */
 export const BUILDINGS: Record<BuildingType, BuildingDef> = {
   drwal: {
@@ -123,7 +125,7 @@ export const BUILDINGS: Record<BuildingType, BuildingDef> = {
     id: 'pole',
     name: 'POLE',
     kind: 'pole',
-    cost: { drewno: 2 },
+    cost: { drewno: 4 },
     buildTicks: 30,
     footprint: { w: 2, h: 2 },
     produces: 'proso',
@@ -135,7 +137,7 @@ export const BUILDINGS: Record<BuildingType, BuildingDef> = {
     id: 'zarna',
     name: 'ŻARNA',
     kind: 'przetworstwo',
-    cost: { drewno: 2, glina: 2 },
+    cost: { drewno: 5, glina: 4 },
     buildTicks: 30,
     consumes: 'proso',
     produces: 'kasza',
@@ -145,7 +147,7 @@ export const BUILDINGS: Record<BuildingType, BuildingDef> = {
     id: 'studnia',
     name: 'STUDNIA',
     kind: 'usluga',
-    cost: { drewno: 1, glina: 2 },
+    cost: { drewno: 3, glina: 4 },
     buildTicks: 30,
     serviceRange: 3,
   },
@@ -153,7 +155,7 @@ export const BUILDINGS: Record<BuildingType, BuildingDef> = {
     id: 'obora',
     name: 'OBORA',
     kind: 'produkcja',
-    cost: { drewno: 4, glina: 1 },
+    cost: { drewno: 10, glina: 6 },
     buildTicks: 40,
     produces: 'mleko',
     // The cows live in the barn: milking happens on the spot.
@@ -164,7 +166,7 @@ export const BUILDINGS: Record<BuildingType, BuildingDef> = {
     id: 'serowarnia',
     name: 'SEROWARNIA',
     kind: 'przetworstwo',
-    cost: { drewno: 2, glina: 3 },
+    cost: { drewno: 8, glina: 8 },
     buildTicks: 40,
     consumes: 'mleko',
     produces: 'ser',
@@ -174,7 +176,7 @@ export const BUILDINGS: Record<BuildingType, BuildingDef> = {
     id: 'owczarnia',
     name: 'OWCZARNIA',
     kind: 'produkcja',
-    cost: { drewno: 4, glina: 1 },
+    cost: { drewno: 14, glina: 8 },
     buildTicks: 40,
     produces: 'welna',
     // The sheep live in the fold: shearing happens on the spot.
@@ -185,7 +187,7 @@ export const BUILDINGS: Record<BuildingType, BuildingDef> = {
     id: 'tkalnia',
     name: 'TKALNIA',
     kind: 'przetworstwo',
-    cost: { drewno: 3, glina: 3 },
+    cost: { drewno: 12, glina: 12 },
     buildTicks: 50,
     consumes: 'welna',
     produces: 'ubrania',
@@ -195,7 +197,7 @@ export const BUILDINGS: Record<BuildingType, BuildingDef> = {
     id: 'plac',
     name: 'PLAC WIECOWY',
     kind: 'usluga',
-    cost: { drewno: 3, glina: 1 },
+    cost: { drewno: 8, glina: 5 },
     buildTicks: 30,
     serviceRange: 3,
   },
@@ -203,7 +205,7 @@ export const BUILDINGS: Record<BuildingType, BuildingDef> = {
     id: 'kontyna',
     name: 'KONTYNA',
     kind: 'usluga',
-    cost: { drewno: 4, glina: 2 },
+    cost: { drewno: 12, glina: 8 },
     buildTicks: 40,
     // Perun takes every bolt aimed at a house in this range (see data/storms.ts),
     // and a zagroda needs it in this range to grow into a dwór.
@@ -213,7 +215,7 @@ export const BUILDINGS: Record<BuildingType, BuildingDef> = {
     id: 'kamieniarz',
     name: 'KAMIENIARZ',
     kind: 'produkcja',
-    cost: { drewno: 3 },
+    cost: { drewno: 10, glina: 4 },
     buildTicks: 30,
     produces: 'kamien',
     gatherTicks: 30,
@@ -224,7 +226,7 @@ export const BUILDINGS: Record<BuildingType, BuildingDef> = {
     id: 'rudnik',
     name: 'RUDNIK',
     kind: 'produkcja',
-    cost: { drewno: 3 },
+    cost: { drewno: 10, glina: 4 },
     buildTicks: 30,
     // Digs ruda darniowa (bog iron) out of the bagno.
     produces: 'ruda',
@@ -236,7 +238,7 @@ export const BUILDINGS: Record<BuildingType, BuildingDef> = {
     id: 'dymarka',
     name: 'DYMARKA',
     kind: 'przetworstwo',
-    cost: { drewno: 2, glina: 4 },
+    cost: { drewno: 8, glina: 10, kamien: 6 },
     buildTicks: 40,
     consumes: 'ruda',
     produces: 'zelazo',
@@ -246,7 +248,7 @@ export const BUILDINGS: Record<BuildingType, BuildingDef> = {
     id: 'kuznia',
     name: 'KUŹNIA',
     kind: 'przetworstwo',
-    cost: { drewno: 3, glina: 2, kamien: 2 },
+    cost: { drewno: 12, glina: 8, kamien: 10 },
     buildTicks: 50,
     consumes: 'zelazo',
     produces: 'lopaty',

@@ -157,6 +157,10 @@ Kolejność od 0.9.0 (Greg, 2026-10-14): najpierw mechanika, grafiki i dźwięki
 
 - [x] Przycisk GUMKA obok DROGA: przeciągnięcie palcem po drodze ją usuwa, COFNIJ przywraca (Greg, 2026-10-15)
 
+## Droższe wyższe piętra (0.15.2)
+
+- [x] Koszty budynków i przebudów rosną z piętrem, budynki łańcucha kopca wymagają kamienia, kopiec 80/100/25 (Greg, 2026-10-15)
+
 ## Grafiki i dźwięki (gdy Greg wrzuci pliki)
 
 - [ ] Skrypt przetwarzania grafik: usunięcie tła magenta, przycięcie, skalowanie

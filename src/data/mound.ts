@@ -7,7 +7,7 @@ import type { ResourceAmounts } from './resources';
  * has them, and the mound visibly grows layer by layer.
  */
 export const MOUND = {
-  cost: { drewno: 30, kamien: 40, lopaty: 10 } satisfies ResourceAmounts,
+  cost: { drewno: 80, kamien: 100, lopaty: 25 } satisfies ResourceAmounts,
   /** How many free villagers may carry for the mound at once. */
   maxBuilders: 4,
   /** Visible layers as it grows; the last one is the finished mound. */

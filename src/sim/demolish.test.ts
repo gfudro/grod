@@ -102,9 +102,9 @@ describe('demolish', () => {
 
     expect(demolish(state, 'dom-test')).toBe(true);
     expect(state.houses).toHaveLength(0);
-    // ziemianka 4 + upgrade to chata 3 + firewood 1, on top of the starting 6
-    expect(warehouseAmount(state, 'drewno')).toBe(6 + 4 + 3 + 1);
-    expect(warehouseAmount(state, 'glina')).toBe(2);
+    // ziemianka 4 + upgrade to chata 5 + firewood 1, on top of the starting 6
+    expect(warehouseAmount(state, 'drewno')).toBe(6 + 4 + 5 + 1);
+    expect(warehouseAmount(state, 'glina')).toBe(3);
     expect(warehouseAmount(state, 'ryba')).toBe(2);
     expect(villagePopulation(state)).toBe(people);
   });

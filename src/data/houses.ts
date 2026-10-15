@@ -39,7 +39,7 @@ export const HOUSE_TIERS: HouseTierDef[] = [
     goods: { ryba: 5, kasza: 3 },
     // Kasza here is only what it takes to grow — a ziemianka doesn't eat it.
     eatsEvery: { ryba: 300 },
-    upgrade: { cost: { drewno: 3, glina: 2 }, buildTicks: 40, service: 'studnia' },
+    upgrade: { cost: { drewno: 5, glina: 3 }, buildTicks: 40, service: 'studnia' },
   },
   {
     name: 'CHATA',
@@ -47,7 +47,7 @@ export const HOUSE_TIERS: HouseTierDef[] = [
     goods: { ryba: 5, kasza: 3, ser: 3 },
     // Ser here is only what it takes to grow — a chata doesn't eat it.
     eatsEvery: { ryba: 300, kasza: 600 },
-    upgrade: { cost: { drewno: 4, glina: 3 }, buildTicks: 50, service: 'plac' },
+    upgrade: { cost: { drewno: 10, glina: 8 }, buildTicks: 50, service: 'plac' },
   },
   {
     name: 'ZAGRODA',
@@ -55,7 +55,7 @@ export const HOUSE_TIERS: HouseTierDef[] = [
     goods: { ryba: 5, kasza: 3, ser: 3, ubrania: 3 },
     // Ubrania here are only what it takes to grow — a zagroda doesn't wear them out.
     eatsEvery: { ryba: 300, kasza: 600, ser: 600 },
-    upgrade: { cost: { drewno: 5, glina: 4 }, buildTicks: 60, service: 'kontyna' },
+    upgrade: { cost: { drewno: 15, glina: 12 }, buildTicks: 60, service: 'kontyna' },
   },
   {
     name: 'DWÓR',

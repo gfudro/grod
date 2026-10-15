@@ -44,12 +44,12 @@ function addChata(state: GameState, extra: Partial<House> = {}): House {
 describe('obora → serowarnia', () => {
   it('milks cows at the obora and turns the milk into ser at the serowarnia', () => {
     const state = withRoad();
-    state.warehouse.drewno = 20;
-    state.warehouse.glina = 10;
+    state.warehouse.drewno = 40;
+    state.warehouse.glina = 30;
     expect(tryPlaceConstructionSite(state, 'obora', OBORA_TILE)).toBe(true);
     expect(tryPlaceConstructionSite(state, 'serowarnia', SEROWARNIA_TILE)).toBe(true);
 
-    runTicks(state, 1500);
+    runTicks(state, 4000);
 
     expect(state.sites).toHaveLength(0);
     expect(warehouseAmount(state, 'ser')).toBeGreaterThan(0);
@@ -72,8 +72,8 @@ describe('obora → serowarnia', () => {
 
 describe('chata → zagroda', () => {
   function readyChata(state: GameState): House {
-    state.warehouse.drewno = 4;
-    state.warehouse.glina = 3;
+    state.warehouse.drewno = 10;
+    state.warehouse.glina = 8;
     return addChata(state, { goods: { ryba: 5, kasza: 3, ser: 3 } });
   }
 
@@ -98,7 +98,7 @@ describe('chata → zagroda', () => {
     expect(warehouseAmount(state, 'drewno')).toBe(0);
     expect(warehouseAmount(state, 'glina')).toBe(0);
 
-    runTicks(state, 1200);
+    runTicks(state, 3000);
     expect(house.tier).toBe(2);
     expect(houseCapacity(house)).toBe(8);
     expect(state.chronicle.some((e) => e.kind === 'pierwsza-zagroda')).toBe(true);
@@ -120,8 +120,8 @@ describe('chata → zagroda', () => {
 
   it('does not grow while ser is missing', () => {
     const state = withRoad();
-    state.warehouse.drewno = 4;
-    state.warehouse.glina = 3;
+    state.warehouse.drewno = 10;
+    state.warehouse.glina = 8;
     const house = addChata(state, { goods: { ryba: 5, kasza: 3 } });
     addBuilding(state, 'plac', PLAC_TILE);
 

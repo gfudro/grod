@@ -55,7 +55,7 @@ describe('pole prosa', () => {
     const state = withRoad();
     expect(tryPlaceConstructionSite(state, 'pole', FIELD_ANCHOR)).toBe(true);
 
-    runTicks(state, 300); // construction
+    runTicks(state, 600); // construction: 4 drewno, one trip each
     expect(state.sites).toHaveLength(0);
     const field = state.buildings.find((b) => b.type === 'pole')!;
     expect(field.plots).toHaveLength(4);
@@ -156,8 +156,8 @@ describe('tragarz with two goods', () => {
 
 describe('ziemianka → chata', () => {
   function readyHouse(state: GameState): House {
-    state.warehouse.drewno = 3;
-    state.warehouse.glina = 2;
+    state.warehouse.drewno = 5;
+    state.warehouse.glina = 3;
     return addHouse(state, { goods: { ryba: 5, kasza: 3 } });
   }
 
@@ -171,7 +171,7 @@ describe('ziemianka → chata', () => {
     expect(warehouseAmount(state, 'drewno')).toBe(0);
     expect(warehouseAmount(state, 'glina')).toBe(0);
 
-    runTicks(state, 1000); // builder carries 5 materials over one by one, then hammers
+    runTicks(state, 1600); // builder carries 8 materials over one by one, then hammers
     expect(house.tier).toBe(1);
     expect(house.upgrade).toBeNull();
     expect(houseCapacity(house)).toBe(5);
@@ -186,13 +186,13 @@ describe('ziemianka → chata', () => {
 
     expect(house.tier).toBe(0);
     expect(house.upgrade).toBeNull();
-    expect(warehouseAmount(state, 'drewno')).toBe(3);
+    expect(warehouseAmount(state, 'drewno')).toBe(5);
   });
 
   it('does not grow while kasza is missing', () => {
     const state = withRoad();
-    state.warehouse.drewno = 3;
-    state.warehouse.glina = 2;
+    state.warehouse.drewno = 5;
+    state.warehouse.glina = 3;
     const house = addHouse(state, { goods: { ryba: 5 } });
     addBuilding(state, 'studnia', STUDNIA_TILE);
 

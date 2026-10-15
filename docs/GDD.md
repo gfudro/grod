@@ -139,6 +139,34 @@ Decyzje z 0.15.1 (burzenie dróg, prośba Grega 2026-10-15):
 - Bez potwierdzenia i bez kosztu: drogi nic nie kosztują, a pomyłkę naprawia COFNIJ.
 - **Nikt nie utyka:** ludzik idący po usuniętym kafelku kończy krok i szuka nowej drogi. Ten, który stoi na trawie po usuniętej drodze, idzie przez trawę do najbliższej drogi. Budynek odcięty od drogi pokazuje znak „brak drogi”, tak jak dotąd.
 
+Decyzje z 0.15.2 (droższe wyższe piętra, Greg 2026-10-15: „późniejsze budynki muszą mieć wyraźnie wyższy koszt, bo aktualnie to jest pomijalne”):
+
+Te koszty zastępują liczby podane wyżej przy M4–M11. Pierwsze piętro zostaje tanie, a każde kolejne kosztuje wyraźnie więcej. Od łańcucha kopca budynki wymagają też kamienia.
+
+| Piętro | Budynek / przebudowa | Było | Jest |
+| --- | --- | --- | --- |
+| 1 | drwal, rybak, glinianka, ziemianka | 3 / 3 / 2 / 4 drewna | bez zmian |
+| 2 | pole | 2 drewna | 4 drewna |
+| 2 | żarna | 2 drewna, 2 gliny | 5 drewna, 4 gliny |
+| 2 | studnia | 1 drewno, 2 gliny | 3 drewna, 4 gliny |
+| 2 | ziemianka → chata | 3 drewna, 2 gliny | 5 drewna, 3 gliny |
+| 3 | obora | 4 drewna, 1 glina | 10 drewna, 6 gliny |
+| 3 | serowarnia | 2 drewna, 3 gliny | 8 drewna, 8 gliny |
+| 3 | plac wiecowy | 3 drewna, 1 glina | 8 drewna, 5 gliny |
+| 3 | chata → zagroda | 4 drewna, 3 gliny | 10 drewna, 8 gliny |
+| 4 | kontyna | 4 drewna, 2 gliny | 12 drewna, 8 gliny |
+| 4 | owczarnia | 4 drewna, 1 glina | 14 drewna, 8 gliny |
+| 4 | tkalnia | 3 drewna, 3 gliny | 12 drewna, 12 gliny |
+| 4 | zagroda → dwór | 5 drewna, 4 gliny | 15 drewna, 12 gliny |
+| 5 | kamieniarz, rudnik | 3 drewna | 10 drewna, 4 gliny |
+| 5 | dymarka | 2 drewna, 4 gliny | 8 drewna, 10 gliny, 6 kamienia |
+| 5 | kuźnia | 3 drewna, 2 gliny, 2 kamienia | 12 drewna, 8 gliny, 10 kamienia |
+| 5 | kopiec | 30 drewna, 40 kamienia, 10 łopat | 80 drewna, 100 kamienia, 25 łopat |
+
+- Odbudowa zgliszczy (4 drewna) zostaje tania, bo to kara za pożar, a nie postęp.
+- Zasady bez zmian: koszt schodzi z magazynu przy stawianiu, burzenie oddaje wszystko.
+- **Do obserwacji:** plac budowy nadal obsługuje jeden budowniczy, który nosi materiał po jednej sztuce. Przy drogich budynkach budowa trwa długo, szczególnie daleko od magazynu (kamieniarz za brodem: kilkanaście minut przy x1).
+
 ## Wizja i filary
 
 Gród to spokojna gra budowlana na iPada dla 6-letniego Artura: łańcuchy produkcji jak w Anno, przejrzystość jak w Warcraft 2, bez walki. Artur gra przy tacie, ale ma sobie radzić choć trochę samodzielnie.

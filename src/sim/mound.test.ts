@@ -66,7 +66,7 @@ describe('kopiec', () => {
     expect(moundBuilders(state).length).toBeLessThanOrEqual(MOUND.maxBuilders);
     const early = moundLayers(mound);
 
-    runTicks(state, 6000);
+    runTicks(state, 15000);
     expect(mound.done).toBe(true);
     expect(moundLayers(mound)).toBe(MOUND.layers);
     expect(moundLayers(mound)).toBeGreaterThan(early);
@@ -113,7 +113,7 @@ describe('kopiec', () => {
     const state = withDwor();
     stockAll(state);
     tryPlaceConstructionSite(state, 'kopiec', MOUND_TILE);
-    runTicks(state, 6000);
+    runTicks(state, 15000);
     expect(state.mound!.done).toBe(true);
 
     expect(demolish(state, MOUND_ID)).toBe(false);

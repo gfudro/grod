@@ -61,7 +61,6 @@ describe('the map for the kopiec', () => {
 
   it('a kamieniarz must stand near the rocks, a rudnik near the bog', () => {
     const state = createInitialState();
-    state.warehouse.drewno = 10;
     expect(canPlaceBuildingAt(state, 'kamieniarz', { x: 3, y: 9 })).toBe(false);
     expect(canPlaceBuildingAt(state, 'rudnik', { x: 3, y: 9 })).toBe(false);
     expect(canPlaceBuildingAt(state, 'kamieniarz', KAMIENIARZ_TILE)).toBe(true);
@@ -73,9 +72,9 @@ describe('rudnik → dymarka → kuźnia', () => {
   it('digs ruda in the bog, smelts it into żelazo and forges łopaty', () => {
     const state = createInitialState();
     roadTo(state, { x: 4, y: 18 });
-    state.warehouse.drewno = 20;
-    state.warehouse.glina = 10;
-    state.warehouse.kamien = 2;
+    state.warehouse.drewno = 40;
+    state.warehouse.glina = 30;
+    state.warehouse.kamien = 20;
     // Beside the end of the road, wherever the road left room.
     const rudnik = [{ x: 3, y: 18 }, { x: 5, y: 18 }, RUDNIK_TILE].find((t) => !state.roads.has(tileKey(t)))!;
     expect(tryPlaceConstructionSite(state, 'rudnik', rudnik)).toBe(true);
@@ -84,7 +83,7 @@ describe('rudnik → dymarka → kuźnia', () => {
     expect(tryPlaceConstructionSite(state, 'dymarka', { x: 6, y: 7 })).toBe(true);
     expect(tryPlaceConstructionSite(state, 'kuznia', { x: 8, y: 7 })).toBe(true);
 
-    runTicks(state, 4000);
+    runTicks(state, 9000);
 
     expect(state.sites).toHaveLength(0);
     expect(warehouseAmount(state, 'lopaty')).toBeGreaterThan(0);
@@ -108,10 +107,11 @@ describe('kamieniarz', () => {
     const state = createInitialState();
     roadTo(state, { x: KAMIENIARZ_TILE.x, y: KAMIENIARZ_TILE.y + 1 });
     expect(state.roads.has('24,20')).toBe(true); // the road goes through the bród
-    state.warehouse.drewno = 3;
+    state.warehouse.drewno = 10;
+    state.warehouse.glina = 4;
     expect(tryPlaceConstructionSite(state, 'kamieniarz', KAMIENIARZ_TILE)).toBe(true);
 
-    runTicks(state, 3000);
+    runTicks(state, 14000); // 14 materials carried over the ford, one by one
 
     expect(warehouseAmount(state, 'kamien')).toBeGreaterThan(0);
   });
