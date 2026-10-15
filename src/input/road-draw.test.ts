@@ -23,6 +23,10 @@ describe('canBuildRoadOn', () => {
     expect(canBuildRoadOn(findTile('woda'))).toBe(false);
   });
 
+  it('lets a road cross the river at the bród, the shallow ford', () => {
+    expect(canBuildRoadOn(findTile('brod'))).toBe(true);
+  });
+
   it('allows roads on plain grass', () => {
     expect(canBuildRoadOn(findTile('trawa'))).toBe(true);
   });

@@ -93,14 +93,15 @@ describe('settlers', () => {
     const state = createInitialState();
     buildHouse(state);
     connectToSouthEdge(state, 8);
-    // No fish ever enters the warehouse in this test, so ryby stays 0 and
-    // hunger should permanently cap the house below its full capacity.
+    // Someone already lives here, and no fish ever enters the warehouse in
+    // this test, so the house is hungry from the start: nobody new sets out.
+    state.houses[0].residents = 1;
 
-    runTicks(state, MAP_HEIGHT * 20); // long enough to settle completely
+    runTicks(state, MAP_HEIGHT * 20);
 
     expect(houseGood(state.houses[0], 'ryba')).toBe(0);
-    expect(state.houses[0].residents).toBeGreaterThanOrEqual(1);
-    expect(state.houses[0].residents).toBeLessThan(3); // hunger blocked the rest
+    expect(state.houses[0].residents).toBe(1);
+    expect(state.villagers.some((v) => v.job.kind === 'arriving')).toBe(false);
   });
 });
 

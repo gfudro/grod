@@ -18,9 +18,10 @@ export function canBuildRoadOn(tile: Vec2): boolean {
   if (tile.x < 0 || tile.y < 0 || tile.x >= MAP_WIDTH || tile.y >= MAP_HEIGHT) return false;
   // 'brzeg' (riverbank) is walkable ground — it's the only tile type that
   // ever touches 'woda', so without it a rybak could never be reached by
-  // road. Water itself stays unbuildable until bridges exist.
+  // road. Water itself stays unbuildable until bridges exist — except at
+  // the bród, a shallow ford where a road may cross to the other bank.
   const terrain = TERRAIN[tile.y][tile.x];
-  return terrain === 'trawa' || terrain === 'brzeg';
+  return terrain === 'trawa' || terrain === 'brzeg' || terrain === 'brod';
 }
 
 /**

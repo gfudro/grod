@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { createInitialState, houseGood, type Building, type GameState, type House } from './state';
-import { tick } from './tick';
+import { tick, TICKS_PER_TILE } from './tick';
 import { currentSeason, currentYear, daysUntilWinter, winterShortfall, winterWarning } from './seasons';
 import { SEASON_TICKS, DAYS_PER_SEASON } from '../data/seasons';
 import { FIREWOOD } from '../data/houses';
@@ -155,5 +155,31 @@ describe('winter warning', () => {
   it('is not shown outside autumn', () => {
     const { state } = withHouse();
     expect(winterWarning(state)).toBeNull();
+  });
+});
+
+describe('walking in winter', () => {
+  /** Ticks a free villager takes to walk one tile east along a road, starting at `startTick`. */
+  function ticksForOneTile(startTick: number): number {
+    const state = createInitialState();
+    state.tick = startTick;
+    for (let x = 8; x <= 12; x++) state.roads.add(tileKey({ x, y: 10 }));
+    const villager = state.villagers[0];
+    villager.from = { x: 8, y: 10 };
+    villager.to = { x: 9, y: 10 };
+    villager.path = [{ x: 9, y: 10 }];
+    villager.motion = 'walking';
+    villager.job = { kind: 'build', siteId: 'none', stage: 'toWarehouse' }; // keep runJob from steering
+    let ticks = 0;
+    while (villager.from.x === 8) {
+      tick(state);
+      ticks += 1;
+    }
+    return ticks;
+  }
+
+  it('is slower through the snow than in summer', () => {
+    expect(ticksForOneTile(SEASON_TICKS)).toBe(TICKS_PER_TILE); // summer
+    expect(ticksForOneTile(SEASON_TICKS * 3)).toBe(TICKS_PER_TILE * 1.5); // winter
   });
 });

@@ -3,7 +3,7 @@ import type { GameState } from '../sim/state';
 import { MIGRATIONS, type RawSave } from './migrations';
 
 /** Bump on every change to the shape of GameState, with a migration and a fixture. */
-export const SAVE_VERSION = 5;
+export const SAVE_VERSION = 6;
 
 /** GameState as JSON: the roads Set becomes a list; the chronicle sits outside. */
 type SerializedState = Omit<GameState, 'roads' | 'chronicle'> & { roads: string[] };

@@ -74,6 +74,14 @@ Decyzje z M8 (piętro 3: zagroda, 0.10.0):
 - Kronika zapisuje pierwszą zagrodę. Na pasku dochodzą MLEKO i SER.
 - **Zapis:** `SAVE_VERSION = 5`. Kształt stanu się nie zmienił; podbicie chroni zapis przed starą wersją gry z pamięci podręcznej, która nie zna nowych budynków.
 
+Decyzje z 0.11.0 (większa mapa i zima, prośba Grega i Artura 2026-10-15):
+
+- **Mapa 36×26 zamiast 20×14** (ponad 3 razy więcej miejsca), zapisana w `src/data/map.ts` jako rysunek z kropek i znaczków. Stara mapa to jej lewy górny róg, kafelek w kafelek, więc stare grody stoją tam, gdzie stały. Rzeka płynie dalej na południe i skręca na wschód, do prawej krawędzi. Doszły dwa lasy: na drugim brzegu (północny wschód) i brzezina na południu.
+- **Bród:** jedno płytkie miejsce na rzece (jasna woda z kamieniami), przez które można poprowadzić drogę. To pierwsza droga na drugi brzeg, zanim przyjdą mosty. Rybak nie łowi w brodzie, a budować na nim nie można.
+- **Zimą ludziki chodzą 1,5 raza wolniej** (brną przez śnieg). Zauważył to Artur. Widać przyczynę: śnieg na mapie.
+- **Zapis:** `SAVE_VERSION = 6`. Dawna dolna krawędź mapy jest teraz w środku. Jeśli osadnicy mogli wejść do grodu tylko drogą do tej krawędzi, migracja przedłuża tę drogę prosto na południe do nowej krawędzi, przez wolną łąkę.
+- Z dłuższą drogą od krawędzi kilku osadników bywa w drodze naraz. Głód nie zawraca tych, którzy już idą (bez zmian).
+
 ## Wizja i filary
 
 Gród to spokojna gra budowlana na iPada dla 6-letniego Artura: łańcuchy produkcji jak w Anno, przejrzystość jak w Warcraft 2, bez walki. Artur gra przy tacie, ale ma sobie radzić choć trochę samodzielnie.
@@ -152,7 +160,7 @@ Rok ma cztery pory roku, każda trwa 3–4 minuty przy prędkości x1. Wszystko,
 | Wiosna | Siew prosa | Roztopy zalewają budynki stojące tuż przy rzece |
 | Lato | Pola rosną | Burza: piorun podpala chatę (pierwsze zagrożenie do dodania) |
 | Jesień | Żniwa, szczyt produkcji | — |
-| Zima | Pola nie rodzą, domy zużywają opał (drewno), rybak łowi wolniej | Śnieżyca spowalnia ludzików na drogach |
+| Zima | Pola nie rodzą, domy zużywają opał (drewno), rybak łowi wolniej, ludziki chodzą wolniej po śniegu | Śnieżyca spowalnia ludzików na drogach |
 
 Zasady dla każdego zagrożenia:
 

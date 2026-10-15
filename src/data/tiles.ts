@@ -1,5 +1,6 @@
 import type { Season } from './seasons';
-export type TerrainType = 'trawa' | 'woda' | 'brzeg';
+/** brod: a shallow ford across the river — the one water tile a road may cross. */
+export type TerrainType = 'trawa' | 'woda' | 'brzeg' | 'brod';
 
 export const TILE_SIZE = 64;
 
@@ -7,6 +8,7 @@ export const TERRAIN_COLOR: Record<TerrainType, number> = {
   trawa: 0x6fa83f,
   woda: 0x3f7fa8,
   brzeg: 0xd9c08a,
+  brod: 0x7fb0c8,
 };
 
 export type TreeType = 'sosna' | 'brzoza' | 'dab';
@@ -22,10 +24,10 @@ export const TREE_COLOR: Record<TreeType, number> = {
  * map in code rather than with separate winter sprites (CLAUDE.md).
  */
 export const SEASON_TERRAIN_COLOR: Record<Season, Record<TerrainType, number>> = {
-  wiosna: { trawa: 0x7fb84a, woda: 0x3f7fa8, brzeg: 0xd9c08a },
+  wiosna: { trawa: 0x7fb84a, woda: 0x3f7fa8, brzeg: 0xd9c08a, brod: 0x7fb0c8 },
   lato: TERRAIN_COLOR,
-  jesien: { trawa: 0xa39a45, woda: 0x3a7195, brzeg: 0xd2b47c },
-  zima: { trawa: 0xe4ebf0, woda: 0x9cc3d9, brzeg: 0xdfe2e0 },
+  jesien: { trawa: 0xa39a45, woda: 0x3a7195, brzeg: 0xd2b47c, brod: 0x77a5bb },
+  zima: { trawa: 0xe4ebf0, woda: 0x9cc3d9, brzeg: 0xdfe2e0, brod: 0xc4dbe6 },
 };
 
 export const SEASON_TREE_COLOR: Record<Season, Record<TreeType, number>> = {

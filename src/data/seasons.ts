@@ -21,12 +21,14 @@ export interface SeasonDef {
   burnsFirewood: boolean;
   /** Gathering takes this many times longer, per producer (e.g. ice on the river). */
   gatherMultiplier: Partial<Record<BuildingType, number>>;
+  /** Crossing a tile takes this many times longer (wading through snow). */
+  walkMultiplier: number;
 }
 
-/** GDD "Pory roku": spring sowing, summer growth, autumn harvest, winter firewood. */
+/** GDD "Pory roku": spring sowing, summer growth, autumn harvest, winter firewood and slow walking in snow. */
 export const SEASONS: Record<Season, SeasonDef> = {
-  wiosna: { id: 'wiosna', sowing: true, stocksFirewood: false, burnsFirewood: false, gatherMultiplier: {} },
-  lato: { id: 'lato', sowing: false, stocksFirewood: false, burnsFirewood: false, gatherMultiplier: {} },
-  jesien: { id: 'jesien', sowing: false, stocksFirewood: true, burnsFirewood: false, gatherMultiplier: {} },
-  zima: { id: 'zima', sowing: false, stocksFirewood: true, burnsFirewood: true, gatherMultiplier: { rybak: 3 } },
+  wiosna: { id: 'wiosna', sowing: true, stocksFirewood: false, burnsFirewood: false, gatherMultiplier: {}, walkMultiplier: 1 },
+  lato: { id: 'lato', sowing: false, stocksFirewood: false, burnsFirewood: false, gatherMultiplier: {}, walkMultiplier: 1 },
+  jesien: { id: 'jesien', sowing: false, stocksFirewood: true, burnsFirewood: false, gatherMultiplier: {}, walkMultiplier: 1 },
+  zima: { id: 'zima', sowing: false, stocksFirewood: true, burnsFirewood: true, gatherMultiplier: { rybak: 3 }, walkMultiplier: 1.5 },
 };

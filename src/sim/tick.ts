@@ -36,6 +36,11 @@ import {
 /** Ticks to cross one tile: 1 tile per simulated second at the base 10 ticks/second rate. */
 export const TICKS_PER_TILE = 10;
 
+/** Ticks to cross one tile right now — slower in winter, through the snow. */
+export function ticksPerTile(state: GameState): number {
+  return Math.round(TICKS_PER_TILE * SEASONS[currentSeason(state)].walkMultiplier);
+}
+
 /** How often (in ticks) the village checks whether a settler should walk in. */
 export const SETTLER_CHECK_INTERVAL = 50;
 
@@ -64,7 +69,7 @@ function advanceVillager(state: GameState, villager: VillagerState): void {
   if (villager.motion !== 'walking') return;
 
   villager.segmentTicks += 1;
-  if (villager.segmentTicks < TICKS_PER_TILE) return;
+  if (villager.segmentTicks < ticksPerTile(state)) return;
 
   villager.segmentTicks = 0;
   villager.from = villager.to;

@@ -110,6 +110,11 @@ Kolejność od 0.9.0 (Greg, 2026-10-14): najpierw mechanika, grafiki i dźwięki
 
 **Gotowe, gdy:** Artur ma po chacie nowy cel i doprowadza pierwszą chatę do zagrody.
 
+## Większa mapa i zima (0.11.0)
+
+- [x] Mapa 36×26 wokół starej, rzeka skręca na wschód, bród na drugi brzeg, dwa nowe lasy
+- [x] Zimą ludziki chodzą wolniej po śniegu (uwaga Artura)
+
 ## M9 · Burza i pożar
 
 - [ ] Pierwsze zagrożenie: latem piorun podpala chatę, widać je zawczasu

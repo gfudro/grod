@@ -28,6 +28,7 @@ export function createTerrainLayer(initialSeason: Season): TerrainLayer {
     for (let y = 0; y < MAP_HEIGHT; y++) {
       for (let x = 0; x < MAP_WIDTH; x++) {
         tiles.rect(x * TILE_SIZE, y * TILE_SIZE, TILE_SIZE, TILE_SIZE).fill(terrainColor[TERRAIN[y][x]]);
+        if (TERRAIN[y][x] === 'brod') drawFordStones(tiles, x * TILE_SIZE, y * TILE_SIZE);
       }
     }
 
@@ -49,6 +50,16 @@ export function createTerrainLayer(initialSeason: Season): TerrainLayer {
 
   setSeason(initialSeason);
   return { container, setSeason };
+}
+
+/** Stepping stones across the shallow ford, so it reads as "you can cross here". */
+function drawFordStones(graphics: Graphics, px: number, py: number): void {
+  for (const [fx, fy] of [[0.25, 0.3], [0.6, 0.22], [0.4, 0.62], [0.75, 0.7]]) {
+    graphics
+      .ellipse(px + fx * TILE_SIZE, py + fy * TILE_SIZE, 9, 6)
+      .fill(0xb8b0a0)
+      .stroke({ color: 0x6b6258, width: 2 });
+  }
 }
 
 export const WORLD_PIXEL_WIDTH = MAP_WIDTH * TILE_SIZE;

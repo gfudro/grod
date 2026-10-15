@@ -46,4 +46,26 @@ export const MIGRATIONS: Record<number, (save: RawSave) => RawSave> = {
    * cached copy of the game from loading buildings it doesn't know.
    */
   4: (save) => ({ ...save, saveVersion: 5 }),
+  /**
+   * v6 (0.11.0): the map grew from 20×14 to 36×26, east and south around
+   * the old one, so every tile keeps its place. The old bottom edge (row
+   * 13) is now inland, though: if the gród's only way in for settlers was
+   * a road to that edge, it is carried straight on south to the new edge
+   * (rows 14–25 below the old grass, columns 0–8, are open grass).
+   */
+  5: (save) => {
+    const roads = Array.isArray(save.state.roads) ? (save.state.roads as string[]) : [];
+    const tiles = roads.map((key) => key.split(',').map(Number) as [number, number]);
+    // Grass on the edges of the old map, where settlers could walk in.
+    const onOldEdge = (x: number, y: number, edgeY: number) => y === edgeY && x >= 0 && x <= 8;
+    const reachesKeptEdge = tiles.some(([x, y]) => (y === 0 && x >= 0 && x <= 9) || (x === 0 && y >= 0 && y <= 13));
+    const bottom = tiles.filter(([x, y]) => onOldEdge(x, y, 13)).sort((a, b) => b[0] - a[0])[0];
+    if (reachesKeptEdge || !bottom) return { ...save, saveVersion: 6 };
+    const extended = [...roads];
+    for (let y = 14; y <= 25; y++) {
+      const key = `${bottom[0]},${y}`;
+      if (!extended.includes(key)) extended.push(key);
+    }
+    return { ...save, saveVersion: 6, state: { ...save.state, roads: extended } };
+  },
 };

@@ -22,7 +22,7 @@ import type { SpeedMultiplier } from './sim/state';
 import { inspectTile } from './sim/inspect';
 import { setBuildingPaused } from './sim/building-control';
 import { demolish } from './sim/demolish';
-import { tick } from './sim/tick';
+import { tick, ticksPerTile } from './sim/tick';
 import { currentSeason } from './sim/seasons';
 import { createSnowfall } from './render/snowfall';
 import { WAREHOUSE_TILE } from './data/waypoints';
@@ -204,12 +204,14 @@ async function start(): Promise<void> {
       }
       if (ticked) syncVillagerSprites();
       const alpha = accumulatorMs / tickMs;
+      const stepTicks = ticksPerTile(state);
       for (let i = 0; i < state.villagers.length; i++) {
-        villagerSprites[i].update(state.villagers[i], alpha);
+        villagerSprites[i].update(state.villagers[i], alpha, stepTicks);
       }
     } else {
+      const stepTicks = ticksPerTile(state);
       for (let i = 0; i < state.villagers.length; i++) {
-        villagerSprites[i].update(state.villagers[i], 0);
+        villagerSprites[i].update(state.villagers[i], 0, stepTicks);
       }
     }
     if (ticked) refreshWorldLayers();

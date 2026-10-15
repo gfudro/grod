@@ -4,6 +4,7 @@ import { tick } from '../sim/tick';
 import { tileKey } from '../data/types';
 import { loadSaveFile, SAVE_VERSION, toSaveFile } from './save-file';
 import { MIGRATIONS } from './migrations';
+import { MAP_HEIGHT, TERRAIN } from '../data/map';
 
 // Every file in tests/fixtures/saves/, picked up automatically: a new
 // fixture is tested the moment it is added.
@@ -108,6 +109,29 @@ describe('migrations v2 → v3 → v4 (tutorial added, then removed)', () => {
     expect('tutorialStep' in result.state).toBe(false);
     expect(result.state.name).toBe('Wiślanie');
     expect(result.state.buildings.map((b) => b.type)).toEqual(['drwal']);
+  });
+});
+
+describe('migration v5 → v6 (the map grew)', () => {
+  it('carries a road that reached the old bottom edge on south to the new edge, over open grass', () => {
+    const v4 = readFixture('v4-rok2-wiosna.json') as { state: { roads: string[] } };
+    expect(v4.state.roads).toContain('8,13');
+    const result = loadSaveFile(v4);
+    if (!result.ok) throw new Error(result.reason);
+    for (let y = 14; y < MAP_HEIGHT; y++) {
+      expect(result.state.roads.has(`8,${y}`)).toBe(true);
+      expect(TERRAIN[y][8]).toBe('trawa');
+    }
+    expect(MAP_HEIGHT).toBe(26);
+    // Every old road is still there.
+    for (const key of v4.state.roads) expect(result.state.roads.has(key)).toBe(true);
+  });
+
+  it('leaves the roads alone when nothing reached the old bottom edge', () => {
+    const v5 = readFixture('v5-rok1-lato-zagroda.json') as { state: { roads: string[] } };
+    const result = loadSaveFile(v5);
+    if (!result.ok) throw new Error(result.reason);
+    expect([...result.state.roads].sort()).toEqual([...v5.state.roads].sort());
   });
 });
 

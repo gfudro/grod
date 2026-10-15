@@ -2,7 +2,6 @@ import { Container, Graphics } from 'pixi.js';
 import { TILE_SIZE } from '../data/tiles';
 import { RESOURCE_COLOR } from '../data/resources';
 import type { Vec2 } from '../data/types';
-import { TICKS_PER_TILE } from '../sim/tick';
 import type { VillagerState } from '../sim/state';
 
 const BODY_COLOR = 0xd9a441;
@@ -11,7 +10,7 @@ const BOUNCE_HEIGHT = 5;
 
 export interface VillagerSprite {
   container: Container;
-  update(villager: VillagerState, tickAlpha: number): void;
+  update(villager: VillagerState, tickAlpha: number, ticksPerTile: number): void;
 }
 
 function tileTopLeftPixels(tile: Vec2): { x: number; y: number } {
@@ -60,13 +59,14 @@ export function createVillagerSprite(): VillagerSprite {
   bundle.visible = false;
   body.addChild(bundle);
 
-  function update(villager: VillagerState, tickAlpha: number): void {
+  /** `ticksPerTile`: how long one step takes right now (longer in winter snow). */
+  function update(villager: VillagerState, tickAlpha: number, ticksPerTile: number): void {
     const fromPx = tileTopLeftPixels(villager.from);
     const half = TILE_SIZE / 2;
 
     if (villager.motion === 'walking') {
       const toPx = tileTopLeftPixels(villager.to);
-      const progress = Math.min(1, (villager.segmentTicks + tickAlpha) / TICKS_PER_TILE);
+      const progress = Math.min(1, (villager.segmentTicks + tickAlpha) / ticksPerTile);
       container.position.set(
         fromPx.x + half + (toPx.x - fromPx.x) * progress,
         fromPx.y + half + (toPx.y - fromPx.y) * progress,
