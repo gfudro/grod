@@ -17,6 +17,8 @@ import { findPath, isAdjacentToRoad } from './pathfinding';
 import { findResourceTile, LAND_KEYS, manhattan } from './resource-tiles';
 import { consumeHouseGoods, currentSeason, houseShortages, startSeason } from './seasons';
 import { addChronicleFirst, closeSeasonLog } from './chronicle';
+import { RUINS_REBUILD, STORM } from '../data/storms';
+import { advanceStorms, completeRebuild, houseOutOfUse, planStorms, pourWater, servingWell } from './storms';
 import {
   addToWarehouse,
   houseGood,
@@ -49,7 +51,9 @@ export function tick(state: GameState): void {
   if (state.tick % SEASON_TICKS === 0) {
     closeSeasonLog(state);
     startSeason(state, currentSeason(state));
+    if (currentSeason(state) === 'lato') planStorms(state);
   }
+  advanceStorms(state);
   consumeHouseGoods(state);
   noteShortages(state);
   startReadyUpgrades(state);
@@ -110,6 +114,12 @@ function runJob(state: GameState, villager: VillagerState): void {
     case 'arriving':
       runArriving(state, villager);
       return;
+    case 'douse':
+      runDouse(state, villager);
+      return;
+    case 'rebuild':
+      runRebuild(state, villager);
+      return;
   }
 }
 
@@ -132,6 +142,16 @@ function runIdle(state: GameState, villager: VillagerState): void {
 }
 
 function tryAssignWork(state: GameState, villager: VillagerState): boolean {
+  // A fire comes first: free hands run with buckets if a studnia reaches the house.
+  for (const house of state.houses) {
+    if (!house.fire || !isAdjacentToRoad(house.tile, state.roads) || !servingWell(state, house)) continue;
+    const dousers = state.villagers.filter((v) => v.job.kind === 'douse' && v.job.houseId === house.id).length;
+    if (dousers < STORM.maxDousers) {
+      villager.job = { kind: 'douse', houseId: house.id, stage: 'toWell' };
+      return true;
+    }
+  }
+
   const site = state.sites.find((s) => s.assignedWorkerId === null);
   if (site) {
     site.assignedWorkerId = villager.id;
@@ -143,6 +163,13 @@ function tryAssignWork(state: GameState, villager: VillagerState): boolean {
   if (upgrading) {
     upgrading.upgrade!.assignedWorkerId = villager.id;
     villager.job = { kind: 'upgrade', houseId: upgrading.id, stage: 'toWarehouse' };
+    return true;
+  }
+
+  const ruins = state.houses.find((h) => h.rebuild && h.rebuild.assignedWorkerId === null);
+  if (ruins) {
+    ruins.rebuild!.assignedWorkerId = villager.id;
+    villager.job = { kind: 'rebuild', houseId: ruins.id, stage: 'toWarehouse' };
     return true;
   }
 
@@ -163,7 +190,7 @@ function tryAssignWork(state: GameState, villager: VillagerState): boolean {
   }
 
   for (const house of state.houses) {
-    if (!isAdjacentToRoad(house.tile, state.roads)) continue;
+    if (houseOutOfUse(house) || !isAdjacentToRoad(house.tile, state.roads)) continue;
     for (const resource of houseWantedGoods(house, season)) {
       if (warehouseAmount(state, resource) === 0) continue;
       // Count goods already claimed by other tragarze so we never assign
@@ -242,6 +269,54 @@ function runUpgrade(state: GameState, villager: VillagerState): void {
     delivered: house.upgrade.delivered,
     complete: () => completeUpgrade(state, house),
   });
+}
+
+function runRebuild(state: GameState, villager: VillagerState): void {
+  const job = villager.job as Extract<VillagerJob, { kind: 'rebuild' }>;
+  const house = state.houses.find((h) => h.id === job.houseId);
+  if (!house || !house.rebuild) {
+    villager.job = { kind: 'idle' };
+    return;
+  }
+  runConstruction(state, villager, job, {
+    tile: house.tile,
+    walkable: [],
+    cost: RUINS_REBUILD.cost,
+    buildTicks: RUINS_REBUILD.buildTicks,
+    delivered: house.rebuild.delivered,
+    complete: () => completeRebuild(state, house),
+  });
+}
+
+/**
+ * Bucket runner: studnia → burning house, again and again, until the
+ * fire is out (or the house burns down, or the well is gone).
+ */
+function runDouse(state: GameState, villager: VillagerState): void {
+  const job = villager.job as Extract<VillagerJob, { kind: 'douse' }>;
+  const house = state.houses.find((h) => h.id === job.houseId);
+  const well = house ? servingWell(state, house) : null;
+  if (!house || !house.fire || !well) {
+    villager.job = { kind: 'idle' };
+    villager.motion = 'idle';
+    return;
+  }
+  if (job.stage === 'toWell') {
+    if (!atTile(villager.from, well.tile)) {
+      beginWalk(state, villager, well.tile);
+      return;
+    }
+    job.stage = 'toHouse'; // the bucket is full
+    villager.motion = 'idle';
+    return;
+  }
+  if (!atTile(villager.from, house.tile)) {
+    beginWalk(state, villager, house.tile);
+    return;
+  }
+  pourWater(state, house);
+  job.stage = 'toWell';
+  villager.motion = 'idle';
 }
 
 /** Shared by new sites and house upgrades: carry paid-for materials over, then hammer. */
@@ -569,7 +644,7 @@ function runDeliver(state: GameState, villager: VillagerState): void {
 function runArriving(state: GameState, villager: VillagerState): void {
   const job = villager.job as Extract<VillagerJob, { kind: 'arriving' }>;
   const house = state.houses.find((h) => h.id === job.houseId);
-  if (!house || house.residents >= houseCapacity(house)) {
+  if (!house || houseOutOfUse(house) || house.residents >= houseCapacity(house)) {
     // Slot filled by someone else (or the house is gone) — join as idle.
     villager.job = { kind: 'idle' };
     villager.motion = 'idle';
@@ -660,6 +735,7 @@ function maybeSpawnSettler(state: GameState): void {
   let house: House | null = null;
   let spawnTile: Vec2 | null = null;
   for (const h of state.houses) {
+    if (houseOutOfUse(h)) continue;
     const enRoute = state.villagers.filter((v) => v.job.kind === 'arriving' && v.job.houseId === h.id).length;
     if (h.residents + enRoute >= houseCapacity(h)) continue;
     spawnTile = findReachableEdgeTile(state, h.tile);

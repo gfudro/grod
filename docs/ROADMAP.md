@@ -128,9 +128,9 @@ Kolejność od 0.9.0 (Greg, 2026-10-14): najpierw mechanika, grafiki i dźwięki
 
 ## M9 · Burza i pożar
 
-- [ ] Pierwsze zagrożenie: latem piorun podpala chatę, widać je zawczasu
-- [ ] Zgliszcza do odbudowy, nic nie znika na zawsze
-- [ ] Ochrona budynkiem (kontyna Peruna jako „piorunochron”)
+- [x] Pierwsze zagrożenie: latem piorun podpala dom, chmura wisi nad nim 5 dni wcześniej (0.13.0)
+- [x] Pożar gaszony wiadrami ze studni w zasięgu; bez niej zgliszcza, ODBUDUJ przywraca to samo piętro
+- [x] Ochrona budynkiem (kontyna Peruna jako „piorunochron”)
 
 **Gotowe, gdy:** Artur widzi, że idzie burza, i wie, co postawić, żeby chronić gród.
 
@@ -160,3 +160,5 @@ Kolejność od 0.9.0 (Greg, 2026-10-14): najpierw mechanika, grafiki i dźwięki
 ## Z testów
 
 Zadania z notatek w `docs/playtests/` trafiają tutaj, z datą testu.
+
+- [ ] Przeprojektować dolny pasek (Greg, 2026-10-15). Przy 11 budynkach i 7 prędkościach robi się ciasno, kolejne piętra dołożą przyciski. Do ustalenia z Gregiem, jak ma wyglądać.

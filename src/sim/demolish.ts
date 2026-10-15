@@ -5,7 +5,8 @@ import { tileKey, type Vec2 } from '../data/types';
 import { WAREHOUSE_TILE } from '../data/waypoints';
 import { footprintTiles } from './footprint';
 import { findPath } from './pathfinding';
-import { addToWarehouse, type GameState, type VillagerJob, type VillagerState } from './state';
+import { RUINS_REBUILD } from '../data/storms';
+import { addToWarehouse, type GameState, type House, type VillagerJob, type VillagerState } from './state';
 
 function refund(state: GameState, amounts: ResourceAmounts): void {
   for (const [resource, amount] of Object.entries(amounts) as [ResourceType, number][]) {
@@ -57,6 +58,17 @@ function unspent(cost: ResourceAmounts, carriedBack: VillagerState[]): ResourceA
 }
 
 /**
+ * Calls off a house's rebuild into the next tier: its builder goes back
+ * to the pool and every paid-for material returns to the warehouse.
+ */
+export function cancelHouseUpgrade(state: GameState, house: House): void {
+  if (!house.upgrade) return;
+  const upgraders = releaseWorkers(state, (j) => j.kind === 'upgrade' && j.houseId === house.id, [house.tile]);
+  refund(state, unspent(HOUSE_TIERS[house.tier].upgrade?.cost ?? {}, upgraders));
+  house.upgrade = null;
+}
+
+/**
  * Pulls down a construction site, building or house (never the warehouse).
  * Light punishment (CLAUDE.md rule 3): every material comes back to the
  * warehouse, nobody leaves the gród, the land is free to build on again.
@@ -85,13 +97,18 @@ export function demolish(state: GameState, id: string): boolean {
 
   const house = state.houses.find((h) => h.id === id);
   if (house) {
-    refund(state, BUILDINGS.ziemianka.cost);
-    for (let tier = 0; tier < house.tier; tier++) refund(state, HOUSE_TIERS[tier].upgrade?.cost ?? {});
-    const upgraders = releaseWorkers(state, (j) => j.kind === 'upgrade' && j.houseId === id, [house.tile]);
-    if (house.upgrade) refund(state, unspent(HOUSE_TIERS[house.tier].upgrade?.cost ?? {}, upgraders));
+    if (house.ruined) {
+      // What burned is gone; only a paid-for rebuild still comes back.
+      const rebuilders = releaseWorkers(state, (j) => j.kind === 'rebuild' && j.houseId === id, [house.tile]);
+      if (house.rebuild) refund(state, unspent(RUINS_REBUILD.cost, rebuilders));
+    } else {
+      refund(state, BUILDINGS.ziemianka.cost);
+      for (let tier = 0; tier < house.tier; tier++) refund(state, HOUSE_TIERS[tier].upgrade?.cost ?? {});
+    }
+    cancelHouseUpgrade(state, house);
     // Fish, kasza and firewood already stocked at the house go back too.
     refund(state, house.goods);
-    releaseWorkers(state, (j) => j.kind === 'deliver' && j.houseId === id, [house.tile]);
+    releaseWorkers(state, (j) => (j.kind === 'deliver' || j.kind === 'douse') && j.houseId === id, [house.tile]);
     // Its residents stay in the gród as free workers; settlers on their
     // way in find the house gone and join the pool too (runArriving).
     state.houses = state.houses.filter((h) => h !== house);

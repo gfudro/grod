@@ -25,6 +25,9 @@ export const STRINGS = {
   nowa: 'NOWA',
   naPewno: 'NA PEWNO?',
   zburz: 'ZBURZ',
+  odbuduj: 'ODBUDUJ',
+  zgliszcza: 'ZGLISZCZA',
+  burza: 'BURZA',
   zamknij: 'ZAMKNIJ',
   blad: 'BŁĄD',
   zasoby: {
@@ -77,6 +80,13 @@ function winterPhrase(cold: boolean, hungry: boolean): string {
   return 'gród przetrwał zimę w cieple i sytości';
 }
 
+/** The house's tier as the object of a sentence: "podpalił chatę". */
+const TIER_ACCUSATIVE = ['ziemiankę', 'chatę', 'zagrodę'];
+
+function tierAccusative(tier: unknown): string {
+  return TIER_ACCUSATIVE[Number(tier)] ?? 'dom';
+}
+
 function entryBody(entry: ChronicleEntry): string {
   const p = entry.params;
   switch (entry.kind) {
@@ -96,6 +106,14 @@ function entryBody(entry: ChronicleEntry): string {
       return settlersPhrase(Number(p.count));
     case 'zima':
       return winterPhrase(Boolean(p.cold), Boolean(p.hungry));
+    case 'pozar':
+      return `piorun podpalił ${tierAccusative(p.tier)} i zostały po niej zgliszcza`;
+    case 'ugaszony':
+      return `piorun podpalił ${tierAccusative(p.tier)}, ale ludzie ugasili ogień wodą ze studni`;
+    case 'piorun-kontyna':
+      return 'piorun uderzył w kontynę Peruna i nikomu nic się nie stało';
+    case 'odbudowa':
+      return `odbudowano spaloną ${tierAccusative(p.tier)}`;
     case 'dawny-grod':
       return p.name
         ? `pamiętano dawny gród „${String(p.name)}”, którego nie dało się już odbudować`

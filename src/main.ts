@@ -25,6 +25,8 @@ import { demolish } from './sim/demolish';
 import { tick, ticksPerTile } from './sim/tick';
 import { currentSeason } from './sim/seasons';
 import { createSnowfall } from './render/snowfall';
+import { createStormLayer } from './render/storm';
+import { startRebuild } from './sim/storms';
 import { WAREHOUSE_TILE } from './data/waypoints';
 import { TILE_SIZE } from './data/tiles';
 
@@ -89,6 +91,9 @@ async function start(): Promise<void> {
   const targetHighlight = createTargetHighlight();
   viewport.addChild(targetHighlight.container);
 
+  const stormLayer = createStormLayer();
+  viewport.addChild(stormLayer.container);
+
   const snowfall = createSnowfall();
   viewport.addChild(snowfall.container);
 
@@ -128,6 +133,13 @@ async function start(): Promise<void> {
       if (demolish(state, id)) {
         handleInspectResult(null);
         refreshWorldLayers();
+      }
+    },
+    (houseId) => {
+      if (startRebuild(state, houseId)) {
+        refreshWorldLayers();
+        const house = state.houses.find((h) => h.id === houseId);
+        if (house) handleInspectResult(inspectTile(state, house.tile));
       }
     },
   );
@@ -221,6 +233,7 @@ async function start(): Promise<void> {
       saveNow();
     }
     // Flakes speed up a little with the game, but never into a blur.
+    stormLayer.update(state, performance.now());
     snowfall.update(state.speed > 0 ? ticker.deltaMS * Math.min(state.speed, 3) : 0, currentSeason(state) === 'zima');
   });
 

@@ -68,4 +68,10 @@ export const MIGRATIONS: Record<number, (save: RawSave) => RawSave> = {
     }
     return { ...save, saveVersion: 6, state: { ...save.state, roads: extended } };
   },
+  /**
+   * v7 (0.13.0): summer storms, the kontyna Peruna, fires and ruins. No
+   * storm is under way in an older save; houses gain their fire/ruin
+   * fields lazily (absent = not burning, not burned).
+   */
+  6: (save) => ({ ...save, saveVersion: 7, state: { ...save.state, storms: [], lastStrike: null } }),
 };

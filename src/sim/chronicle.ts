@@ -15,6 +15,14 @@ export type ChronicleKind =
   | 'pierwsze-zniwa'
   | 'osadnicy'
   | 'zima'
+  /** Lightning set a house on fire and it burned down (params.tier). */
+  | 'pozar'
+  /** Lightning set a house on fire, but buckets from the studnia put it out. */
+  | 'ugaszony'
+  /** Lightning came down on the kontyna Peruna instead of a house. */
+  | 'piorun-kontyna'
+  /** Burned ruins were rebuilt (params.tier). */
+  | 'odbudowa'
   /** A save that could not be carried over: the old gród lives on as history. */
   | 'dawny-grod';
 

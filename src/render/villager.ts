@@ -7,6 +7,7 @@ import type { VillagerState } from '../sim/state';
 const BODY_COLOR = 0xd9a441;
 const WAITING_ICON_COLOR = 0xcc4433;
 const BOUNCE_HEIGHT = 5;
+const BUCKET_COLOR = 0x4f9fd8;
 
 export interface VillagerSprite {
   container: Container;
@@ -81,7 +82,11 @@ export function createVillagerSprite(): VillagerSprite {
       waitingIcon.tint = villager.waitingFor ? RESOURCE_COLOR[villager.waitingFor] : WAITING_ICON_COLOR;
     }
 
-    if (villager.carrying) {
+    if (villager.job.kind === 'douse' && villager.job.stage === 'toHouse') {
+      // A full bucket of water, on the way to the fire.
+      carryingIcon.visible = true;
+      carryingIcon.tint = BUCKET_COLOR;
+    } else if (villager.carrying) {
       carryingIcon.visible = true;
       carryingIcon.tint = RESOURCE_COLOR[villager.carrying];
     } else {

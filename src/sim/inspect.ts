@@ -16,6 +16,7 @@ import {
 } from './houses';
 import { isAdjacentToRoad } from './pathfinding';
 import { currentSeason, houseShortages } from './seasons';
+import { protectingKontyna, rebuildCostMissing, servingWell, stormDaysLeft } from './storms';
 import { houseGood, type GameState, type PlotStage, type VillagerState } from './state';
 
 export interface GoodCounter {
@@ -59,6 +60,18 @@ export type InspectInfo =
       shortages: ResourceType[];
       /** Range of the service building serving this house, so the player sees it covers the house. */
       rangeTiles: Vec2[] | null;
+      burning: boolean;
+      /** Burned down: zgliszcza waiting for ODBUDUJ. */
+      ruined: boolean;
+      rebuilding: boolean;
+      /** Materials the warehouse lacks for ODBUDUJ. */
+      rebuildMissing: ResourceType[];
+      /** A kontyna Peruna would take a bolt aimed at this house. */
+      shielded: boolean;
+      /** A studnia's buckets reach this house. */
+      hasWell: boolean;
+      /** Days until the bolt, while a storm cloud hangs over this house. */
+      stormDays: number | null;
     }
   | { kind: 'villager'; description: string; targetTile: Vec2 | null };
 
@@ -75,6 +88,8 @@ const JOB_DESCRIPTIONS: Record<string, string> = {
   process: 'przerabia',
   deliver: 'nosi',
   arriving: 'osadnik w drodze',
+  douse: 'gasi ogień',
+  rebuild: 'odbudowuje',
 };
 
 function describeVillager(villager: VillagerState): string {
@@ -117,6 +132,16 @@ function villagerTargetTile(state: GameState, villager: VillagerState): Vec2 | n
     case 'arriving': {
       const house = state.houses.find((h) => h.id === job.houseId);
       return house ? house.tile : null;
+    }
+    case 'douse': {
+      const house = state.houses.find((h) => h.id === job.houseId);
+      if (!house) return null;
+      return job.stage === 'toWell' ? (servingWell(state, house)?.tile ?? null) : house.tile;
+    }
+    case 'rebuild': {
+      const house = state.houses.find((h) => h.id === job.houseId);
+      if (!house) return null;
+      return job.stage === 'toWarehouse' ? WAREHOUSE_TILE : house.tile;
     }
     case 'idle':
       return WAREHOUSE_TILE;
@@ -174,6 +199,7 @@ function inspectStructure(state: GameState, tile: Vec2): InspectInfo | null {
     const upgrade = houseTier(house).upgrade;
     const serving = upgrade ? findServingBuilding(state, upgrade.service, house.tile) : null;
     const servingRange = serving ? BUILDINGS[serving.type].serviceRange ?? 0 : 0;
+    const storm = state.storms.find((s) => s.houseId === house.id);
     return {
       kind: 'house',
       id: house.id,
@@ -191,6 +217,13 @@ function inspectStructure(state: GameState, tile: Vec2): InspectInfo | null {
       upgrading: house.upgrade !== null,
       shortages: houseShortages(state, house),
       rangeTiles: serving ? serviceRangeTiles(serving.tile, servingRange) : null,
+      burning: Boolean(house.fire),
+      ruined: Boolean(house.ruined),
+      rebuilding: Boolean(house.rebuild),
+      rebuildMissing: rebuildCostMissing(state),
+      shielded: protectingKontyna(state, house) !== null,
+      hasWell: servingWell(state, house) !== null,
+      stormDays: storm ? stormDaysLeft(state, storm) : null,
     };
   }
 

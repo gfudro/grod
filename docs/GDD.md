@@ -95,6 +95,18 @@ Poprawki z 0.12.1 (Greg, 2026-10-15):
 - **Górny pasek zawsze w jednej linijce** (na iPadzie przeskakiwał do drugiej przy dużych liczbach i mapa skakała). Cyfry mają stałą szerokość, a pora roku, LUDZIE i WOLNI są jak surowce: liczba (nazwa pory), pod nią mały podpis (ROK 12). Najgorszy przypadek (ostrzeżenie przed zimą, czterocyfrowe liczby) zajmuje ok. 950 px, mieści się na najmniejszym iPadzie w poziomie (1024 px).
 - **Stuknięcie w budynek zawsze pokazuje budynek**, nawet gdy stoi w nim czekający ludzik (a panel mówi, na co czeka). Ludzika pokazuje stuknięcie w drogę lub trawę, na której stoi.
 
+Decyzje z M9 (burza i pożar, 0.13.0, Greg 2026-10-15):
+
+- **Burze przychodzą latem od roku 2, 2–3 na lato**, rozłożone po całej porze. Pierwszy rok jest spokojny.
+- **Widać je zawczasu:** ciemna chmura z deszczem nadciąga z zachodniej krawędzi mapy i przez 5 dni (30 s przy x1) wisi nad jednym domem. Na pasku jest znaczek ⚡ z liczbą dni do pioruna: czerwony i pulsujący nad domem bez ochrony, spokojny szary nad domem chronionym przez kontynę (chmura jest wtedy też jaśniejsza).
+- **Kontyna Peruna** (4 drewna, 2 gliny, bez pracownika, przy drodze, zasięg 9×9, czyli 4 kafelki w każdą stronę): piorun nad domem w jej zasięgu uderza w kontynę i nic się nie dzieje. W M10 ta sama kontyna będzie usługą dla dworu.
+- **Pożar:** piorun bez kontyny podpala dom. Dom płonie 50 s, a żółte kółko nad nim pokazuje, ile czasu zostało. Jeśli w zasięgu jest studnia, do 3 wolnych ludzików biega z wiadrami (niebieski kwadrat w rękach) od studni do domu, a 3 wiadra gaszą ogień. Gaszenie ma pierwszeństwo przed każdą inną pracą, ale biorą się do niego tylko wolni ludzie.
+- **Zgliszcza:** bez studni, albo gdy wiadra nie zdążą, dom zamienia się w zgliszcza (czarne belki, żarzące się węgielki, dym). Dom zachowuje piętro, mieszkańcy zostają w grodzie jako pracownicy, a towary leżące w domu czekają na odbudowę. W zgliszczach nikt nie je, nie przychodzą do nich osadnicy ani tragarze. Przebudowa w kolejne piętro, która trwała w chwili pożaru, zostaje odwołana z pełnym zwrotem materiałów.
+- **ODBUDUJ** w panelu zgliszczy (koszt na przycisku: 4 drewna, szary, gdy brakuje): koszt schodzi z magazynu od razu, wolny ludzik nosi materiał i odbudowuje dom na tym samym piętrze. ZBURZ na zgliszczach oddaje tylko towary z domu, bo to, co spłonęło, przepadło.
+- Burza nad domem, który zburzono albo który już się pali, przechodzi bokiem.
+- Kronika zapisuje każdy pożar, każde ugaszenie, każdy piorun w kontynę i każdą odbudowę.
+- **Zapis:** `SAVE_VERSION = 7` (w stanie burze, ostatni piorun, a w domach ogień i zgliszcza).
+
 ## Wizja i filary
 
 Gród to spokojna gra budowlana na iPada dla 6-letniego Artura: łańcuchy produkcji jak w Anno, przejrzystość jak w Warcraft 2, bez walki. Artur gra przy tacie, ale ma sobie radzić choć trochę samodzielnie.
@@ -171,7 +183,7 @@ Rok ma cztery pory roku, każda trwa 3–4 minuty przy prędkości x1. Wszystko,
 | Pora roku | Zmiana zasad | Zagrożenie (po pierwszej wersji) |
 | --- | --- | --- |
 | Wiosna | Siew prosa | Roztopy zalewają budynki stojące tuż przy rzece |
-| Lato | Pola rosną | Burza: piorun podpala chatę (pierwsze zagrożenie do dodania) |
+| Lato | Pola rosną | Burza: piorun podpala dom; chroni kontyna Peruna, gasi studnia (od 0.13.0) |
 | Jesień | Żniwa, szczyt produkcji | — |
 | Zima | Pola nie rodzą, domy zużywają opał (drewno), rybak łowi wolniej, ludziki chodzą wolniej po śniegu | Śnieżyca spowalnia ludzików na drogach |
 

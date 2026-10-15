@@ -1,4 +1,6 @@
 import { BUILDINGS } from '../data/buildings';
+import { RESOURCE_COLOR, type ResourceType } from '../data/resources';
+import { RUINS_REBUILD } from '../data/storms';
 import type { InspectInfo } from '../sim/inspect';
 import { STRINGS } from './strings';
 
@@ -46,6 +48,18 @@ const PANEL_STYLE = `
   background: #cc2211;
   border-color: #ffe14d;
 }
+#inspect-panel button.rebuild {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: #6fa83f;
+  color: #fff;
+}
+#inspect-panel button.rebuild .cost span {
+  padding: 1px 5px;
+  border-radius: 6px;
+  color: #fff;
+}
 #inspect-panel button.active {
   background: #6fa83f;
   color: #fff;
@@ -87,6 +101,15 @@ function describe(info: InspectInfo): string {
       return `${info.name} — ${road} — ${workerStatus}${plots}`;
     }
     case 'house': {
+      const guard = `${info.shielded ? 'kontyna chroni' : 'bez kontyny'}, ${info.hasWell ? 'studnia blisko' : 'bez studni'}`;
+      if (info.ruined) {
+        const status = info.rebuilding ? 'odbudowa trwa' : info.rebuildMissing.length > 0 ? `brak: ${info.rebuildMissing.join(', ')}` : 'można odbudować';
+        return `${STRINGS.zgliszcza} (${info.name}) — ${status} — ${guard}`;
+      }
+      if (info.burning) {
+        return `${info.name} — PALI SIĘ — ${info.hasWell ? 'ludzie gaszą wodą ze studni' : 'brak studni, nie ma czym gasić'}`;
+      }
+      const storm = info.stormDays !== null ? ` — burza za ${info.stormDays} dni (${guard})` : '';
       const goods = info.goods.map((g) => `${g.resource} ${g.have}/${g.target}`).join(', ');
       let growth = '';
       if (info.upgrading) {
@@ -101,7 +124,7 @@ function describe(info: InspectInfo): string {
         growth = ` — ${info.nextName}: ${missing.length > 0 ? `brak ${missing.join(', ')}` : 'zaraz'}`;
       }
       const need = info.shortages.length > 0 ? ` — brak: ${info.shortages.join(', ')}` : '';
-      return `${info.name} — ${info.connected ? 'droga OK' : 'brak drogi'} — mieszkańcy ${info.residents}/${info.capacity} — ${goods}${need}${growth}`;
+      return `${info.name} — ${info.connected ? 'droga OK' : 'brak drogi'} — mieszkańcy ${info.residents}/${info.capacity} — ${goods}${need}${growth}${storm}`;
     }
     case 'villager':
       return `LUDZIK — ${info.description}`;
@@ -110,10 +133,16 @@ function describe(info: InspectInfo): string {
 
 export type TogglePauseCallback = (buildingId: string, paused: boolean) => void;
 export type DemolishCallback = (id: string) => void;
+export type RebuildCallback = (houseId: string) => void;
+
+function hexColor(color: number): string {
+  return `#${color.toString(16).padStart(6, '0')}`;
+}
 
 export function mountInspectPanel(
   onTogglePause: TogglePauseCallback,
   onDemolish: DemolishCallback,
+  onRebuild: RebuildCallback,
 ): (info: InspectInfo | null) => void {
   injectStyle();
   const panel = document.createElement('div');
@@ -124,6 +153,22 @@ export function mountInspectPanel(
 
   const pauseButton = document.createElement('button');
   panel.appendChild(pauseButton);
+
+  // ODBUDUJ on burned ruins, with the cost on the button like the palette.
+  const rebuildButton = document.createElement('button');
+  rebuildButton.className = 'rebuild';
+  const rebuildLabel = document.createElement('span');
+  rebuildLabel.textContent = `🔨 ${STRINGS.odbuduj}`;
+  const rebuildCost = document.createElement('span');
+  rebuildCost.className = 'cost';
+  for (const [resource, amount] of Object.entries(RUINS_REBUILD.cost) as [ResourceType, number][]) {
+    const chip = document.createElement('span');
+    chip.textContent = String(amount);
+    chip.style.background = hexColor(RESOURCE_COLOR[resource]);
+    rebuildCost.appendChild(chip);
+  }
+  rebuildButton.append(rebuildLabel, rebuildCost);
+  panel.appendChild(rebuildButton);
 
   // Two taps, like NOWA in the chronicle: the first asks, the second pulls it down.
   const demolishButton = document.createElement('button');
@@ -163,6 +208,16 @@ export function mountInspectPanel(
     } else {
       pauseButton.style.display = 'none';
       pauseButton.onclick = null;
+    }
+
+    if (info.kind === 'house' && info.ruined && !info.rebuilding) {
+      rebuildButton.style.display = '';
+      rebuildButton.disabled = info.rebuildMissing.length > 0;
+      rebuildButton.style.opacity = info.rebuildMissing.length > 0 ? '0.4' : '';
+      rebuildButton.onclick = () => onRebuild(info.id);
+    } else {
+      rebuildButton.style.display = 'none';
+      rebuildButton.onclick = null;
     }
 
     const id = info.kind === 'site' || info.kind === 'building' || info.kind === 'house' ? info.id : null;

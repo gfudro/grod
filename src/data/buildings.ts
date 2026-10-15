@@ -1,6 +1,6 @@
 import type { ResourceType } from './resources';
 
-export type BuildingType = 'drwal' | 'rybak' | 'glinianka' | 'pole' | 'zarna' | 'studnia' | 'ziemianka' | 'obora' | 'serowarnia' | 'plac';
+export type BuildingType = 'drwal' | 'rybak' | 'glinianka' | 'pole' | 'zarna' | 'studnia' | 'ziemianka' | 'obora' | 'serowarnia' | 'plac' | 'kontyna';
 
 export type ResourceSearch = 'drzewo' | 'woda' | 'na-miejscu';
 
@@ -158,6 +158,15 @@ export const BUILDINGS: Record<BuildingType, BuildingDef> = {
     buildTicks: 30,
     serviceRange: 3,
   },
+  kontyna: {
+    id: 'kontyna',
+    name: 'KONTYNA',
+    kind: 'usluga',
+    cost: { drewno: 4, glina: 2 },
+    buildTicks: 40,
+    // Perun takes every bolt aimed at a house in this range (see data/storms.ts).
+    serviceRange: 4,
+  },
   ziemianka: {
     id: 'ziemianka',
     name: 'ZIEMIANKA',
@@ -167,7 +176,7 @@ export const BUILDINGS: Record<BuildingType, BuildingDef> = {
   },
 };
 
-export const BUILDING_ORDER: BuildingType[] = ['drwal', 'rybak', 'glinianka', 'ziemianka', 'pole', 'zarna', 'studnia', 'obora', 'serowarnia', 'plac'];
+export const BUILDING_ORDER: BuildingType[] = ['drwal', 'rybak', 'glinianka', 'ziemianka', 'pole', 'zarna', 'studnia', 'obora', 'serowarnia', 'plac', 'kontyna'];
 
 /** Starting warehouse stock, enough for one or two starter buildings. */
 export const STARTING_WAREHOUSE_STOCK: Partial<Record<ResourceType, number>> = {

@@ -22,7 +22,11 @@ export type VillagerJob =
   | { kind: 'farm'; buildingId: string; stage: 'toField' | 'sowing' | 'harvesting' | 'toWarehouse'; plot: number }
   | { kind: 'process'; buildingId: string; stage: 'toBuilding' | 'working' | 'toWarehouse' }
   | { kind: 'deliver'; houseId: string; resource: ResourceType; stage: 'toWarehouse' | 'toHouse' }
-  | { kind: 'arriving'; houseId: string };
+  | { kind: 'arriving'; houseId: string }
+  /** Runs buckets of water from the studnia to a burning house. */
+  | { kind: 'douse'; houseId: string; stage: 'toWell' | 'toHouse' }
+  /** Rebuilds burned ruins (after ODBUDUJ), like a construction site. */
+  | { kind: 'rebuild'; houseId: string; stage: BuildStage };
 
 export type BuildStage = 'toWarehouse' | 'toSite' | 'hammering';
 
@@ -92,8 +96,41 @@ export interface House {
   /** Goods delivered so far; targets come from HOUSE_TIERS[tier].goods. */
   goods: ResourceAmounts;
   upgrade: HouseUpgrade | null;
+  /** Burning after a lightning strike; null (or absent in older saves) = not on fire. */
+  fire?: HouseFire | null;
+  /**
+   * Burned down: zgliszcza on the map until ODBUDUJ. The house keeps its
+   * tier, its residents (they stay in the gród as workers) and its goods.
+   */
+  ruined?: boolean;
+  /** Ruins being rebuilt after ODBUDUJ — paid for, works like a construction site. */
+  rebuild?: HouseUpgrade | null;
 }
 
+export interface HouseFire {
+  /** Ticks until the house falls to ruins, unless the buckets win first. */
+  ticksLeft: number;
+  /** Buckets poured so far (STORM.bucketsToDouse puts it out). */
+  water: number;
+}
+
+/**
+ * A summer storm. Planned at the start of summer; at `appearTick` the
+ * cloud picks a house and hangs over it until `strikeTick`.
+ */
+export interface Storm {
+  appearTick: number;
+  strikeTick: number;
+  /** The house under the cloud; null until the cloud appears. */
+  houseId: string | null;
+}
+
+/** The last bolt, kept for a moment so it can be drawn. */
+export interface LightningStrike {
+  tick: number;
+  /** Where it came down: the burning house, or the kontyna that took it. */
+  tile: Vec2;
+}
 export interface GameState {
   tick: number;
   rng: RngState;
@@ -110,6 +147,9 @@ export interface GameState {
   /** Important moments, oldest first. Saved apart from the rest (see save/). */
   chronicle: ChronicleEntry[];
   seasonLog: SeasonLog;
+  /** This summer's storms still to come or hanging over a house, soonest first. */
+  storms: Storm[];
+  lastStrike: LightningStrike | null;
 }
 
 export function warehouseAmount(state: GameState, resource: ResourceType): number {
@@ -178,6 +218,8 @@ export function createInitialState(seed = 1): GameState {
     name: '',
     chronicle: [],
     seasonLog: emptySeasonLog(),
+    storms: [],
+    lastStrike: null,
   };
   addChronicleEntry(state, 'zalozenie');
   for (let i = 0; i < STARTING_WORKER_POOL; i++) {

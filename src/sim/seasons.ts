@@ -55,7 +55,7 @@ export function startSeason(state: GameState, season: Season): void {
 export function consumeHouseGoods(state: GameState): void {
   const burns = SEASONS[currentSeason(state)].burnsFirewood;
   for (const house of state.houses) {
-    if (house.residents === 0) continue;
+    if (house.residents === 0 || house.ruined) continue;
     const eatsEvery = HOUSE_TIERS[house.tier].eatsEvery;
     for (const [resource, every] of Object.entries(eatsEvery) as [ResourceType, number][]) {
       if (state.tick % every === 0) eatOne(house, resource);
@@ -74,7 +74,8 @@ function eatOne(house: House, resource: ResourceType): void {
  * winter, no firewood (cold). Shown over the house; blocks new settlers.
  */
 export function houseShortages(state: GameState, house: House): ResourceType[] {
-  if (house.residents === 0) return [];
+  // Burned ruins: nobody lives there until ODBUDUJ, so nothing is missing.
+  if (house.residents === 0 || house.ruined) return [];
   const missing: ResourceType[] = [];
   if (houseGood(house, 'ryba') === 0) missing.push('ryba');
   if (SEASONS[currentSeason(state)].burnsFirewood && houseGood(house, 'drewno') === 0) missing.push('drewno');
@@ -89,7 +90,7 @@ export function houseShortages(state: GameState, house: House): ResourceType[] {
 export function winterShortfall(state: GameState): ResourceType[] {
   const need: Partial<Record<ResourceType, number>> = {};
   for (const house of state.houses) {
-    if (house.residents === 0) continue;
+    if (house.residents === 0 || house.ruined) continue;
     const fishEvery = HOUSE_TIERS[house.tier].eatsEvery.ryba;
     if (fishEvery) need.ryba = (need.ryba ?? 0) + Math.ceil(SEASON_TICKS / fishEvery);
     need.drewno = (need.drewno ?? 0) + Math.ceil(SEASON_TICKS / FIREWOOD.burnEvery);

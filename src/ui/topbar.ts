@@ -3,6 +3,7 @@ import { villagePopulation, warehouseAmount } from '../sim/state';
 import { RESOURCE_COLOR, RESOURCE_ORDER } from '../data/resources';
 import { SEASON_ORDER, type Season } from '../data/seasons';
 import { currentSeason, currentYear, winterWarning, yearProgress } from '../sim/seasons';
+import { activeStorm, protectingKontyna, stormDaysLeft } from '../sim/storms';
 import { STRINGS } from './strings';
 
 const TOPBAR_STYLE = `
@@ -53,6 +54,11 @@ const TOPBAR_STYLE = `
 }
 #topbar .warning.hidden {
   display: none;
+}
+/* A storm over a house the kontyna guards: shown, but calm. */
+#topbar .warning.guarded {
+  background: #4a5160;
+  animation: none;
 }
 @keyframes winter-pulse {
   from { transform: scale(1); }
@@ -234,6 +240,15 @@ export function mountTopBar(): TopBar {
   warning.el.appendChild(warningSwatches);
   let shownMissing = '';
 
+  // A storm cloud over a house: lightning sign and days until the bolt.
+  // Red and pulsing over an unguarded house, calm grey under a kontyna.
+  const storm = chip(null);
+  storm.el.classList.add('warning', 'hidden');
+  const stormIcon = document.createElement('span');
+  stormIcon.className = 'icon';
+  stormIcon.textContent = '⚡';
+  storm.el.insertBefore(stormIcon, storm.value);
+
   // Swatch, the amount, and the resource's name in small print under it.
   const resourceChips = RESOURCE_ORDER.map((resource) => {
     const { el, value } = chip(RESOURCE_COLOR[resource]);
@@ -262,6 +277,14 @@ export function mountTopBar(): TopBar {
     season.value.textContent = STRINGS.pory[now];
     seasonYear.textContent = `${STRINGS.rok} ${currentYear(state)}`;
     clock.setHand(yearProgress(state));
+
+    const cloud = activeStorm(state);
+    const cloudHouse = cloud ? state.houses.find((h) => h.id === cloud.houseId) : undefined;
+    storm.el.classList.toggle('hidden', !cloud || !cloudHouse);
+    if (cloud && cloudHouse) {
+      storm.value.textContent = String(stormDaysLeft(state, cloud));
+      storm.el.classList.toggle('guarded', protectingKontyna(state, cloudHouse) !== null);
+    }
 
     const warn = winterWarning(state);
     warning.el.classList.toggle('hidden', warn === null);

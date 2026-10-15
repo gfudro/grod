@@ -112,7 +112,7 @@ export function upgradeReadiness(state: GameState, house: House): UpgradeReadine
  */
 export function startReadyUpgrades(state: GameState): void {
   for (const house of state.houses) {
-    if (house.upgrade) continue;
+    if (house.upgrade || house.ruined || house.fire) continue;
     const ready = upgradeReadiness(state, house);
     if (!ready.canGrow || !ready.goodsFull || !ready.serviceInRange || !ready.connected || !ready.canAffordCost) {
       continue;

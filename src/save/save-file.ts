@@ -3,7 +3,7 @@ import type { GameState } from '../sim/state';
 import { MIGRATIONS, type RawSave } from './migrations';
 
 /** Bump on every change to the shape of GameState, with a migration and a fixture. */
-export const SAVE_VERSION = 6;
+export const SAVE_VERSION = 7;
 
 /** GameState as JSON: the roads Set becomes a list; the chronicle sits outside. */
 type SerializedState = Omit<GameState, 'roads' | 'chronicle'> & { roads: string[] };
@@ -96,6 +96,8 @@ export function loadSaveFile(data: unknown): LoadResult {
     chronicle: rescueChronicle(save),
     seasonLog: s.seasonLog ?? emptySeasonLog(),
     name: typeof s.name === 'string' ? s.name : '',
+    storms: Array.isArray(s.storms) ? s.storms : [],
+    lastStrike: s.lastStrike ?? null,
   };
   return { ok: true, state, migratedFrom };
 }

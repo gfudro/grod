@@ -7,6 +7,7 @@ import { footprintTiles, footprintTouchesRoad } from '../sim/footprint';
 import { houseGoodTarget, houseTier, houseWantedGoods, upgradeReadiness } from '../sim/houses';
 import { isAdjacentToRoad } from '../sim/pathfinding';
 import { currentSeason, houseShortages } from '../sim/seasons';
+import { RUINS_REBUILD, STORM } from '../data/storms';
 import { houseGood, type FieldPlot, type GameState, type House, type PlotStage } from '../sim/state';
 
 const SITE_COLOR = 0x9b7a4a;
@@ -22,6 +23,7 @@ export const BUILDING_COLOR: Record<string, number> = {
   obora: 0x6b4a2e,
   serowarnia: 0xc08a2a,
   plac: 0xa0527a,
+  kontyna: 0x5a4f8a,
 };
 /** Placeholder labels where the first letter alone would clash (STUDNIA / SEROWARNIA). */
 const BUILDING_LABEL: Partial<Record<BuildingType, string>> = {
@@ -57,6 +59,14 @@ const SERVICE_ON_COLOR: Partial<Record<BuildingType, number>> = {
   plac: 0xd06aa0,
 };
 const SERVICE_OFF_COLOR = 0x6b6258;
+const ASH_COLOR = 0x3a3330;
+const CHAR_COLOR = 0x1a1412;
+const SMOKE_COLOR = 0x8a8580;
+const EMBER_COLOR = 0xd9531e;
+const FLAME_OUTER = 0xf07a1a;
+const FLAME_INNER = 0xffd23f;
+const FIRE_TIMER_COLOR = 0xffe14d;
+const WATER_COLOR = 0x4f9fd8;
 const COUNTER_BG_COLOR = 0x2b2016;
 /** Drewno's own colour is too dark to read on the counter background. */
 const FIREWOOD_TEXT_COLOR = 0xf2bf7e;
@@ -165,6 +175,10 @@ export function createBuildingsLayer(): BuildingsLayer {
     const { px, py } = tileTopLeft(house.tile.x, house.tile.y);
     const inset = TILE_SIZE * 0.1;
     const size = TILE_SIZE - inset * 2;
+    if (house.ruined) {
+      drawRuins(state, house, px, py, inset, size);
+      return;
+    }
     graphics
       .rect(px + inset, py + inset, size, size)
       .fill(HOUSE_TIER_COLOR[house.tier] ?? HOUSE_TIER_COLOR[0])
@@ -288,6 +302,38 @@ export function createBuildingsLayer(): BuildingsLayer {
     if (!isAdjacentToRoad(house.tile, state.roads)) {
       drawNoRoadIcon(graphics, px, py, inset);
     }
+    if (house.fire) drawFire(graphics, px, py, house.fire.ticksLeft, house.fire.water, state.tick);
+  }
+
+  /** Zgliszcza: charred beams on ash, a wisp of smoke, the old tier's name in grey. */
+  function drawRuins(state: GameState, house: House, px: number, py: number, inset: number, size: number): void {
+    graphics.rect(px + inset, py + inset, size, size).fill(ASH_COLOR);
+    graphics
+      .moveTo(px + inset + 6, py + inset + 10)
+      .lineTo(px + TILE_SIZE - inset - 8, py + TILE_SIZE - inset - 6)
+      .stroke({ color: CHAR_COLOR, width: 6 })
+      .moveTo(px + TILE_SIZE - inset - 6, py + inset + 8)
+      .lineTo(px + inset + 10, py + TILE_SIZE - inset - 8)
+      .stroke({ color: CHAR_COLOR, width: 6 })
+      .rect(px + inset + 4, py + TILE_SIZE - inset - 10, size - 8, 6)
+      .fill(CHAR_COLOR);
+    for (const [dx, dy] of [[0.3, 0.7], [0.65, 0.35], [0.5, 0.55]]) {
+      graphics.circle(px + TILE_SIZE * dx, py + TILE_SIZE * dy, 2.5).fill(EMBER_COLOR);
+    }
+    const rise = (state.tick % 20) / 20;
+    graphics.circle(px + TILE_SIZE * 0.55, py + inset - 2 - rise * 8, 6 + rise * 3).fill({ color: SMOKE_COLOR, alpha: 0.6 - rise * 0.4 });
+    addLabel(houseTier(house).name.slice(0, 3), px + TILE_SIZE / 2, py + TILE_SIZE / 2, 0x9a928a, 14);
+
+    if (house.rebuild) {
+      const worker = state.villagers.find((v) => v.id === house.rebuild!.assignedWorkerId);
+      if (worker && worker.job.kind === 'rebuild' && worker.job.stage === 'hammering') {
+        const filled = size * (1 - worker.workTicksRemaining / RUINS_REBUILD.buildTicks);
+        graphics.rect(px + inset, py + inset + (size - filled), size, filled).fill({ color: SITE_PROGRESS_COLOR, alpha: 0.7 });
+      }
+      graphics.rect(px + inset, py + inset, size, size).stroke({ color: SITE_PROGRESS_COLOR, width: 3 });
+    } else {
+      graphics.rect(px + inset, py + inset, size, size).stroke({ color: CHAR_COLOR, width: 3 });
+    }
   }
 
   return { container, redraw };
@@ -328,6 +374,39 @@ function drawPlot(graphics: Graphics, px: number, py: number, plot: FieldPlot, p
       }
     }
   }
+}
+
+/**
+ * Flames over a burning house, smaller with every bucket poured, and a
+ * yellow ring that empties as the time before it burns down runs out.
+ */
+function drawFire(graphics: Graphics, px: number, py: number, ticksLeft: number, water: number, tick: number): void {
+  // Never quite gone while it still burns, so the last bucket still has a fire to hit.
+  const strength = Math.max(0.35, 1 - water / STORM.bucketsToDouse);
+  const flicker = tick % 4 < 2 ? 1 : 0.85;
+  const cx = px + TILE_SIZE / 2;
+  const base = py + TILE_SIZE * 0.75;
+  for (const [dx, h] of [[-14, 0.8], [0, 1.15], [14, 0.9]]) {
+    const height = TILE_SIZE * 1.0 * h * strength * (dx === 0 ? flicker : 2 - flicker);
+    const x = cx + dx;
+    graphics.poly([x - 12, base, x, base - height, x + 12, base]).fill({ color: FLAME_OUTER, alpha: 0.92 });
+    graphics.poly([x - 6, base, x, base - height * 0.6, x + 6, base]).fill(FLAME_INNER);
+  }
+  // Bucket marks: a blue drop per bucket already poured.
+  for (let i = 0; i < water; i++) {
+    graphics.circle(px + 10 + i * 12, py + TILE_SIZE - 8, 5).fill(WATER_COLOR).stroke({ color: 0xffffff, width: 1.5 });
+  }
+  const left = Math.max(0, ticksLeft / STORM.fireTicks);
+  const ry = py - 18; // above the tallest flame
+  graphics.circle(cx, ry, 12).fill({ color: 0x2b2016, alpha: 0.85 });
+  if (left > 0) {
+    graphics
+      .moveTo(cx, ry)
+      .arc(cx, ry, 10, -Math.PI / 2, -Math.PI / 2 + left * Math.PI * 2)
+      .lineTo(cx, ry)
+      .fill(FIRE_TIMER_COLOR);
+  }
+  graphics.circle(cx, ry, 12).stroke({ color: FLAME_OUTER, width: 2.5 });
 }
 
 /** A little white cow with black patches in the corner of an obora. */
