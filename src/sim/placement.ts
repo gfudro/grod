@@ -58,7 +58,6 @@ export function tryPlaceConstructionSite(state: GameState, type: BuildingType, t
     type,
     tile: { ...tile },
     delivered: {},
-    assignedWorkerId: null,
   });
   return true;
 }

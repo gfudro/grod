@@ -84,7 +84,7 @@ function describe(info: InspectInfo): string {
     }
     case 'site':
       return `${info.name} (plac budowy) — dostarczono ${info.delivered} — ${
-        info.assignedWorkerId ? 'ktoś buduje' : 'czeka na robotnika'
+        info.builders > 0 ? `budują: ${info.builders}` : 'czeka na robotnika'
       }`;
     case 'building': {
       const road = info.connected ? 'droga OK' : 'brak drogi';

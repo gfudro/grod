@@ -150,6 +150,18 @@ describe('migration v8 → v9 (the kopiec)', () => {
   });
 });
 
+describe('migration v9 → v10 (several builders)', () => {
+  it('sites no longer name one assigned worker, and their builders keep building', () => {
+    const v9 = readFixture('v9-rok1-wiosna-kopiec.json') as { state: { sites: Record<string, unknown>[] } };
+    expect(v9.state.sites[0]).toHaveProperty('assignedWorkerId');
+    const result = loadSaveFile(v9);
+    if (!result.ok) throw new Error(result.reason);
+    expect(result.state.sites[0]).not.toHaveProperty('assignedWorkerId');
+    for (let i = 0; i < 8000; i++) tick(result.state);
+    expect(result.state.sites).toHaveLength(0);
+  });
+});
+
 describe('saves that cannot be loaded', () => {
   it('refuses a save from a newer version of the game, and rescues its chronicle', () => {
     const future = { ...(readFixture('v2-rok2-wiosna.json') as object), saveVersion: SAVE_VERSION + 1 };

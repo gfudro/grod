@@ -48,12 +48,12 @@ export interface VillagerState {
   waitingFor: ResourceType | null;
 }
 
+/** Builders on it are the villagers whose job points at it (see sim/construction.ts). */
 export interface ConstructionSite {
   id: string;
   type: BuildingType;
   tile: Vec2;
   delivered: ResourceAmounts;
-  assignedWorkerId: string | null;
 }
 
 export interface Building {
@@ -85,7 +85,6 @@ export interface FieldPlot {
 /** A house rebuilding into its next tier — works like a construction site. */
 export interface HouseUpgrade {
   delivered: ResourceAmounts;
-  assignedWorkerId: string | null;
 }
 
 export interface House {

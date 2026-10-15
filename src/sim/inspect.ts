@@ -20,6 +20,7 @@ import { protectingKontyna, rebuildCostMissing, servingWell, stormDaysLeft } fro
 import { houseGood, type GameState, type PlotStage, type VillagerState } from './state';
 import { MOUND } from '../data/mound';
 import { moundBuilders, moundMissing, moundTiles } from './mound';
+import { buildersOn } from './construction';
 
 export interface GoodCounter {
   resource: ResourceType;
@@ -29,7 +30,7 @@ export interface GoodCounter {
 
 export type InspectInfo =
   | { kind: 'warehouse'; connected: boolean; stock: Partial<Record<string, number>> }
-  | { kind: 'site'; id: string; name: string; delivered: string; assignedWorkerId: string | null }
+  | { kind: 'site'; id: string; name: string; delivered: string; builders: number }
   | {
       kind: 'building';
       id: string;
@@ -270,7 +271,7 @@ function inspectStructure(state: GameState, tile: Vec2): InspectInfo | null {
       id: site.id,
       name: def.name,
       delivered: `${have}/${need}`,
-      assignedWorkerId: site.assignedWorkerId,
+      builders: buildersOn(state, { kind: 'build', siteId: site.id }).length,
     };
   }
 

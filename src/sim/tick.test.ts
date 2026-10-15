@@ -30,7 +30,8 @@ describe('construction', () => {
     expect(placed).toBe(true);
     expect(warehouseAmount(state, 'drewno')).toBe(startingWood - 3); // paid upfront
 
-    runTicks(state, 300);
+    // Stop the moment it stands, before the new drwal brings in any wood.
+    for (let i = 0; i < 300 && state.sites.length > 0; i++) tick(state);
 
     expect(state.sites).toHaveLength(0);
     expect(state.buildings).toHaveLength(1);
@@ -49,13 +50,12 @@ describe('construction', () => {
       type: 'drwal',
       tile: SITE_TILE,
       delivered: {},
-      assignedWorkerId: null,
     });
 
     runTicks(state, 50);
 
     expect(state.sites).toHaveLength(1);
-    expect(state.sites[0].assignedWorkerId).toBeNull();
+    expect(state.sites[0].delivered).toEqual({});
   });
 });
 

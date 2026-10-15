@@ -125,7 +125,7 @@ export function startRebuild(state: GameState, houseId: string): boolean {
   for (const [resource, amount] of Object.entries(RUINS_REBUILD.cost) as [ResourceType, number][]) {
     takeFromWarehouse(state, resource, amount);
   }
-  house.rebuild = { delivered: {}, assignedWorkerId: null };
+  house.rebuild = { delivered: {} };
   return true;
 }
 

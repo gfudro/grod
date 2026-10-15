@@ -85,4 +85,28 @@ export const MIGRATIONS: Record<number, (save: RawSave) => RawSave> = {
    * kamień, ruda, żelazo and łopaty. No gród had a kopiec before.
    */
   8: (save) => ({ ...save, saveVersion: 9, state: { ...save.state, mound: null } }),
+  /**
+   * v10 (0.16.0): several builders share a site, so sites, house rebuilds
+   * and ruins no longer name one assigned worker — the builders are the
+   * villagers whose job points at them, as before.
+   */
+  9: (save) => {
+    const drop = (o: unknown): unknown => {
+      if (typeof o !== 'object' || o === null) return o;
+      const { assignedWorkerId: _dropped, ...rest } = o as Record<string, unknown>;
+      return rest;
+    };
+    const sites = Array.isArray(save.state.sites) ? save.state.sites.map(drop) : save.state.sites;
+    const houses = Array.isArray(save.state.houses)
+      ? save.state.houses.map((h) => {
+          const house = h as Record<string, unknown>;
+          return {
+            ...house,
+            ...(house.upgrade ? { upgrade: drop(house.upgrade) } : {}),
+            ...(house.rebuild ? { rebuild: drop(house.rebuild) } : {}),
+          };
+        })
+      : save.state.houses;
+    return { ...save, saveVersion: 10, state: { ...save.state, sites, houses } };
+  },
 };

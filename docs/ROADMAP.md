@@ -161,6 +161,10 @@ Kolejność od 0.9.0 (Greg, 2026-10-14): najpierw mechanika, grafiki i dźwięki
 
 - [x] Koszty budynków i przebudów rosną z piętrem, budynki łańcucha kopca wymagają kamienia, kopiec 80/100/25 (Greg, 2026-10-15)
 
+## Kilku budowniczych (0.16.0)
+
+- [x] Do 3 ludzików nosi materiał na jeden plac budowy, przebudowę i odbudowę; najpierw każdy plac dostaje jednego (Greg, 2026-10-15)
+
 ## Grafiki i dźwięki (gdy Greg wrzuci pliki)
 
 - [ ] Skrypt przetwarzania grafik: usunięcie tła magenta, przycięcie, skalowanie

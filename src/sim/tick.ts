@@ -20,6 +20,7 @@ import { addChronicleFirst, closeSeasonLog } from './chronicle';
 import { RUINS_REBUILD, STORM } from '../data/storms';
 import { advanceStorms, completeRebuild, houseOutOfUse, planStorms, pourWater, servingWell } from './storms';
 import { pathBackToRoad } from './roads';
+import { buildersOn, nextToCarry, wantsBuilder, type ConstructionRef } from './construction';
 import { deliverToMound, moundTileKeys, moundWantsBuilder, nextMoundResource } from './mound';
 import {
   addToWarehouse,
@@ -157,24 +158,11 @@ function tryAssignWork(state: GameState, villager: VillagerState): boolean {
     }
   }
 
-  const site = state.sites.find((s) => s.assignedWorkerId === null);
-  if (site) {
-    site.assignedWorkerId = villager.id;
-    villager.job = { kind: 'build', siteId: site.id, stage: 'toWarehouse' };
-    return true;
-  }
-
-  const upgrading = state.houses.find((h) => h.upgrade && h.upgrade.assignedWorkerId === null);
-  if (upgrading) {
-    upgrading.upgrade!.assignedWorkerId = villager.id;
-    villager.job = { kind: 'upgrade', houseId: upgrading.id, stage: 'toWarehouse' };
-    return true;
-  }
-
-  const ruins = state.houses.find((h) => h.rebuild && h.rebuild.assignedWorkerId === null);
-  if (ruins) {
-    ruins.rebuild!.assignedWorkerId = villager.id;
-    villager.job = { kind: 'rebuild', houseId: ruins.id, stage: 'toWarehouse' };
+  // Construction: several builders may share one site (MAX_BUILDERS),
+  // but every site gets its first builder before any gets a second.
+  const construction = constructionWanting(state);
+  if (construction) {
+    villager.job = { ...construction, stage: 'toWarehouse' };
     return true;
   }
 
@@ -218,6 +206,36 @@ function tryAssignWork(state: GameState, villager: VillagerState): boolean {
   return false;
 }
 
+/** The construction that most needs a hand: the one with the fewest builders, oldest first. */
+function constructionWanting(state: GameState): ConstructionRef | null {
+  const open: ConstructionRef[] = [];
+  for (const site of state.sites) {
+    const ref: ConstructionRef = { kind: 'build', siteId: site.id };
+    if (wantsBuilder(state, ref, BUILDINGS[site.type].cost, site.delivered)) open.push(ref);
+  }
+  for (const house of state.houses) {
+    const upgradeCost = houseTier(house).upgrade?.cost;
+    if (house.upgrade && upgradeCost) {
+      const ref: ConstructionRef = { kind: 'upgrade', houseId: house.id };
+      if (wantsBuilder(state, ref, upgradeCost, house.upgrade.delivered)) open.push(ref);
+    }
+    if (house.rebuild) {
+      const ref: ConstructionRef = { kind: 'rebuild', houseId: house.id };
+      if (wantsBuilder(state, ref, RUINS_REBUILD.cost, house.rebuild.delivered)) open.push(ref);
+    }
+  }
+  let best: ConstructionRef | null = null;
+  let fewest = Infinity;
+  for (const ref of open) {
+    const count = buildersOn(state, ref).length;
+    if (count < fewest) {
+      best = ref;
+      fewest = count;
+    }
+  }
+  return best;
+}
+
 function jobForBuilding(building: Building): VillagerJob {
   switch (BUILDINGS[building.type].kind) {
     case 'pole':
@@ -243,6 +261,8 @@ interface BuildTarget {
   cost: ResourceAmounts;
   buildTicks: number;
   delivered: ResourceAmounts;
+  /** Everyone else building the same thing. */
+  others: VillagerState[];
   complete(): void;
 }
 
@@ -260,6 +280,7 @@ function runBuild(state: GameState, villager: VillagerState): void {
     cost: def.cost,
     buildTicks: def.buildTicks,
     delivered: site.delivered,
+    others: buildersOn(state, job).filter((v) => v !== villager),
     complete: () => completeConstruction(state, site),
   });
 }
@@ -278,6 +299,7 @@ function runUpgrade(state: GameState, villager: VillagerState): void {
     cost: upgradeDef.cost,
     buildTicks: upgradeDef.buildTicks,
     delivered: house.upgrade.delivered,
+    others: buildersOn(state, job).filter((v) => v !== villager),
     complete: () => completeUpgrade(state, house),
   });
 }
@@ -295,6 +317,7 @@ function runRebuild(state: GameState, villager: VillagerState): void {
     cost: RUINS_REBUILD.cost,
     buildTicks: RUINS_REBUILD.buildTicks,
     delivered: house.rebuild.delivered,
+    others: buildersOn(state, job).filter((v) => v !== villager),
     complete: () => completeRebuild(state, house),
   });
 }
@@ -391,9 +414,14 @@ function runConstruction(
     // The materials were already paid for out of the warehouse when the
     // site/upgrade started (see sim/placement.ts, sim/houses.ts) — this
     // leg just carries them over, it does not deduct stock again.
-    const needed = nextNeededResource(target.cost, target.delivered);
+    const needed = nextToCarry(target.cost, target.delivered, target.others);
     if (!needed) {
-      job.stage = 'toSite';
+      // Everything is on site or in someone's hands: one builder hammers, the rest are free.
+      if (isFullyDelivered(target.cost, target.delivered) && !target.others.some(isHammering)) {
+        job.stage = 'toSite';
+      } else {
+        villager.job = { kind: 'idle' };
+      }
       villager.motion = 'idle';
       return;
     }
@@ -413,8 +441,12 @@ function runConstruction(
       villager.carrying = null;
     }
     if (isFullyDelivered(target.cost, target.delivered)) {
-      job.stage = 'hammering';
-      villager.workTicksRemaining = target.buildTicks;
+      if (target.others.some(isHammering)) {
+        villager.job = { kind: 'idle' }; // someone is already hammering it together
+      } else {
+        job.stage = 'hammering';
+        villager.workTicksRemaining = target.buildTicks;
+      }
     } else {
       job.stage = 'toWarehouse';
     }
@@ -818,11 +850,9 @@ function maybeSpawnSettler(state: GameState): void {
   });
 }
 
-function nextNeededResource(cost: ResourceAmounts, delivered: ResourceAmounts): ResourceType | null {
-  for (const [resource, amount] of Object.entries(cost) as [ResourceType, number][]) {
-    if ((delivered[resource] ?? 0) < amount) return resource;
-  }
-  return null;
+function isHammering(villager: VillagerState): boolean {
+  const job = villager.job;
+  return (job.kind === 'build' || job.kind === 'upgrade' || job.kind === 'rebuild') && job.stage === 'hammering';
 }
 
 function isFullyDelivered(cost: ResourceAmounts, delivered: ResourceAmounts): boolean {

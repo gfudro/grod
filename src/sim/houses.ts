@@ -121,7 +121,7 @@ export function startReadyUpgrades(state: GameState): void {
     for (const [resource, amount] of Object.entries(cost)) {
       takeFromWarehouse(state, resource as ResourceType, amount ?? 0);
     }
-    house.upgrade = { delivered: {}, assignedWorkerId: null };
+    house.upgrade = { delivered: {} };
   }
 }
 

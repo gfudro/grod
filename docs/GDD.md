@@ -165,7 +165,16 @@ Te koszty zastępują liczby podane wyżej przy M4–M11. Pierwsze piętro zosta
 
 - Odbudowa zgliszczy (4 drewna) zostaje tania, bo to kara za pożar, a nie postęp.
 - Zasady bez zmian: koszt schodzi z magazynu przy stawianiu, burzenie oddaje wszystko.
-- **Do obserwacji:** plac budowy nadal obsługuje jeden budowniczy, który nosi materiał po jednej sztuce. Przy drogich budynkach budowa trwa długo, szczególnie daleko od magazynu (kamieniarz za brodem: kilkanaście minut przy x1).
+- ~~Do obserwacji: plac budowy obsługuje jeden budowniczy~~ — od 0.16.0 do trzech (niżej).
+
+Decyzje z 0.16.0 (kilku budowniczych, Greg 2026-10-15):
+
+- **Do 3 wolnych ludzików** nosi materiał na jeden plac budowy, przebudowę domu albo odbudowę zgliszczy. Każdy niesie jedną sztukę; nikt nie bierze materiału, który już jest na placu albo w czyichś rękach, więc nic nie ginie ani nie zostaje.
+- **Najpierw każdy plac dostaje pierwszego budowniczego**, dopiero potem któryś dostaje drugiego. Kilka budów naraz posuwa się równo.
+- **Stuka jeden:** gdy cały materiał jest na miejscu, jeden budowniczy stuka młotkiem, a pozostali wracają do puli wolnych.
+- Panel placu budowy mówi, ilu ludzi buduje („budują: 3”).
+- **Kopiec** już wcześniej miał do 4 noszących. Gdy wygląda, jakby nosił jeden, to brakuje materiału w magazynie: każda nowa sztuka kamienia od razu idzie na kopiec. Nad kopcem widać wtedy kółko w kolorze brakującego materiału.
+- **Zapis:** `SAVE_VERSION = 10`. Plac budowy, przebudowa i odbudowa nie zapisują już jednego przypisanego budowniczego (budowniczowie to ludziki, których zadanie wskazuje na budowę).
 
 ## Wizja i filary
 

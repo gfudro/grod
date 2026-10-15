@@ -32,7 +32,10 @@ describe('demolish', () => {
   it('a construction site gives back every material, also the ones carried back by hand', () => {
     const state = withRoad();
     const tile = { x: 4, y: 7 };
-    expect(tryPlaceConstructionSite(state, 'drwal', tile)).toBe(true);
+    // A bigger building, so some planks lie on site while others are still carried.
+    state.warehouse.drewno = 10;
+    state.warehouse.glina = 6;
+    expect(tryPlaceConstructionSite(state, 'obora', tile)).toBe(true);
     // Run until a builder is on the way with a plank, and some lie on site.
     for (let i = 0; i < 400; i++) {
       tick(state);
@@ -46,10 +49,11 @@ describe('demolish', () => {
     expect(state.sites).toHaveLength(0);
     expect(builder!.job.kind).toBe('idle');
     // The plank in the builder's hands still counts, and is walked home.
-    expect(totalOf(state, 'drewno')).toBe(6);
+    expect(totalOf(state, 'drewno')).toBe(10);
     runTicks(state, 300);
     expect(builder!.carrying).toBeNull();
-    expect(warehouseAmount(state, 'drewno')).toBe(6);
+    expect(warehouseAmount(state, 'drewno')).toBe(10);
+    expect(warehouseAmount(state, 'glina')).toBe(6);
     expect(canPlaceBuildingAt(state, 'drwal', tile)).toBe(true);
   });
 

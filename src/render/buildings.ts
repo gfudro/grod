@@ -11,6 +11,7 @@ import { RUINS_REBUILD, STORM } from '../data/storms';
 import { houseGood, type FieldPlot, type GameState, type House, type Mound, type PlotStage } from '../sim/state';
 import { MOUND } from '../data/mound';
 import { moundLayers, moundMissing } from '../sim/mound';
+import { buildersOn } from '../sim/construction';
 
 const SITE_COLOR = 0x9b7a4a;
 const SITE_PROGRESS_COLOR = 0xd9b96a;
@@ -141,7 +142,7 @@ export function createBuildingsLayer(): BuildingsLayer {
         .rect(px + inset, py + inset, width, height)
         .stroke({ color: 0x3a2b16, width: 2 });
 
-      const worker = state.villagers.find((v) => v.id === site.assignedWorkerId);
+      const worker = buildersOn(state, { kind: 'build', siteId: site.id }).find((v) => 'stage' in v.job && v.job.stage === 'hammering');
       const def = BUILDINGS[site.type];
       let progress = 0;
       if (worker && worker.job.kind === 'build' && worker.job.stage === 'hammering') {
@@ -298,7 +299,7 @@ export function createBuildingsLayer(): BuildingsLayer {
 
     if (house.upgrade) {
       // Rebuild in progress: the same rising fill as a construction site.
-      const worker = state.villagers.find((v) => v.id === house.upgrade!.assignedWorkerId);
+      const worker = buildersOn(state, { kind: 'upgrade', houseId: house.id }).find((v) => 'stage' in v.job && v.job.stage === 'hammering');
       const buildTicks = houseTier(house).upgrade?.buildTicks ?? 1;
       if (worker && worker.job.kind === 'upgrade' && worker.job.stage === 'hammering') {
         const filled = size * (1 - worker.workTicksRemaining / buildTicks);
@@ -420,7 +421,7 @@ export function createBuildingsLayer(): BuildingsLayer {
     addLabel(houseTier(house).name.slice(0, 3), px + TILE_SIZE / 2, py + TILE_SIZE / 2, 0x9a928a, 14);
 
     if (house.rebuild) {
-      const worker = state.villagers.find((v) => v.id === house.rebuild!.assignedWorkerId);
+      const worker = buildersOn(state, { kind: 'rebuild', houseId: house.id }).find((v) => 'stage' in v.job && v.job.stage === 'hammering');
       if (worker && worker.job.kind === 'rebuild' && worker.job.stage === 'hammering') {
         const filled = size * (1 - worker.workTicksRemaining / RUINS_REBUILD.buildTicks);
         graphics.rect(px + inset, py + inset + (size - filled), size, filled).fill({ color: SITE_PROGRESS_COLOR, alpha: 0.7 });
