@@ -88,6 +88,12 @@ Decyzje z 0.12.0 (prośba Grega 2026-10-15):
 - **Zasięg 6 kafelków liczy się pieszo po ziemi**, a nie w linii prostej. Drwal na drugim brzegu nie celuje w las za rzeką, tylko w najbliższe drzewo, do którego da się dojść.
 - Na przełaj można przejść przez każdy kawałek lądu (także przez pola i budynki), ale nie przez rzekę. Bród liczy się jako ląd.
 
+Poprawki z 0.12.1 (Greg, 2026-10-15):
+
+- **Osadnicy idą do pierwszego domu z wolnym miejscem, do którego prowadzi droga od krawędzi mapy.** Wcześniej gra sprawdzała tylko pierwszy dom z wolnym miejscem, a gdy ten nie miał drogi, nikt nie przychodził do żadnego.
+- **Wstrzymany budynek:** cały (także pole 2×2) wyszarzony w ciemne ukośne pasy, z czerwoną ramką i dużym czerwonym kołem z białym znakiem pauzy na górnej krawędzi. Litera budynku zostaje widoczna.
+- **Stuknięcie w budynek zawsze pokazuje budynek**, nawet gdy stoi w nim czekający ludzik (a panel mówi, na co czeka). Ludzika pokazuje stuknięcie w drogę lub trawę, na której stoi.
+
 ## Wizja i filary
 
 Gród to spokojna gra budowlana na iPada dla 6-letniego Artura: łańcuchy produkcji jak w Anno, przejrzystość jak w Warcraft 2, bez walki. Artur gra przy tacie, ale ma sobie radzić choć trochę samodzielnie.

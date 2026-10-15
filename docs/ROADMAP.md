@@ -119,6 +119,12 @@ Kolejność od 0.9.0 (Greg, 2026-10-14): najpierw mechanika, grafiki i dźwięki
 
 - [x] Droga tylko do budynku drwala/rybaka; do drzewa i wody idą na przełaj, zasięg liczony pieszo
 
+## Poprawki (0.12.1)
+
+- [x] Osadnicy omijają dom bez drogi do krawędzi i idą do następnego
+- [x] Czytelniejszy znak wstrzymanego budynku
+- [x] Stuknięcie w budynek z czekającym ludzikiem otwiera panel budynku (da się go wstrzymać)
+
 ## M9 · Burza i pożar
 
 - [ ] Pierwsze zagrożenie: latem piorun podpala chatę, widać je zawczasu

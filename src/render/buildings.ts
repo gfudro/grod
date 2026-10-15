@@ -47,8 +47,10 @@ const SNOW_COLOR = 0xf4f7fb;
 const STUBBLE_COLOR = 0x9a8350;
 const FURROW_COLOR = 0x5e3f22;
 const NO_ROAD_COLOR = 0xcc4433;
-const PAUSED_OVERLAY_COLOR = 0x2b2016;
-const PAUSED_ICON_COLOR = 0xf4e9d8;
+const PAUSED_OVERLAY_COLOR = 0x3a3a3a;
+const PAUSED_STRIPE_COLOR = 0x1e1e1e;
+const PAUSED_BADGE_COLOR = 0xd2321e;
+const PAUSED_ICON_COLOR = 0xffffff;
 /** The service marker on a house is lit in the colour of the service it needs. */
 const SERVICE_ON_COLOR: Partial<Record<BuildingType, number>> = {
   studnia: 0x4f9fd8,
@@ -147,7 +149,8 @@ export function createBuildingsLayer(): BuildingsLayer {
       }
 
       if (building.paused) {
-        drawPausedOverlay(graphics, px, py, TILE_SIZE - inset * 2, inset);
+        const { w, h } = footprintSize(building.type);
+        drawPausedOverlay(graphics, px, py, w * TILE_SIZE, h * TILE_SIZE, inset);
       } else if (!footprintTouchesRoad(building.type, building.tile, state.roads)) {
         drawNoRoadIcon(graphics, px, py, inset);
       }
@@ -355,17 +358,40 @@ function drawNoRoadIcon(graphics: Graphics, px: number, py: number, inset: numbe
     .stroke({ color: 0x5a1a12, width: 2 });
 }
 
-/** Dims a paused building and draws a two-bar pause icon over it. */
-function drawPausedOverlay(graphics: Graphics, px: number, py: number, size: number, inset: number): void {
-  graphics.rect(px + inset, py + inset, size, size).fill({ color: PAUSED_OVERLAY_COLOR, alpha: 0.55 });
-  const cx = px + TILE_SIZE / 2;
-  const cy = py + TILE_SIZE / 2;
-  const barWidth = 5;
-  const barHeight = 18;
-  const gap = 5;
+/**
+ * A paused building, readable at a glance: the whole footprint greyed out
+ * under dark diagonal stripes, with a big red pause badge hung on its top
+ * edge (where the no-road sign goes) so the building's letter stays readable.
+ */
+function drawPausedOverlay(graphics: Graphics, px: number, py: number, width: number, height: number, inset: number): void {
+  const x0 = px + inset;
+  const y0 = py + inset;
+  const w = width - inset * 2;
+  const h = height - inset * 2;
+  graphics.rect(x0, y0, w, h).fill({ color: PAUSED_OVERLAY_COLOR, alpha: 0.6 });
+  // Diagonal stripes, clipped to the footprint by hand (Graphics has no clip).
+  const gap = 12;
+  for (let d = gap; d < w + h; d += gap) {
+    const start = { x: x0 + Math.min(d, w), y: y0 + Math.max(0, d - w) };
+    const end = { x: x0 + Math.max(0, d - h), y: y0 + Math.min(d, h) };
+    graphics.moveTo(start.x, start.y).lineTo(end.x, end.y).stroke({ color: PAUSED_STRIPE_COLOR, width: 3, alpha: 0.7 });
+  }
+  graphics.rect(x0, y0, w, h).stroke({ color: PAUSED_BADGE_COLOR, width: 3 });
+
+  const cx = px + width / 2;
+  const cy = py + inset - 2;
+  const radius = 15;
   graphics
-    .rect(cx - gap / 2 - barWidth, cy - barHeight / 2, barWidth, barHeight)
+    .circle(cx, cy, radius)
+    .fill(PAUSED_BADGE_COLOR)
+    .circle(cx, cy, radius)
+    .stroke({ color: PAUSED_ICON_COLOR, width: 3 });
+  const barWidth = 5;
+  const barHeight = 14;
+  const barGap = 4;
+  graphics
+    .rect(cx - barGap / 2 - barWidth, cy - barHeight / 2, barWidth, barHeight)
     .fill(PAUSED_ICON_COLOR)
-    .rect(cx + gap / 2, cy - barHeight / 2, barWidth, barHeight)
+    .rect(cx + barGap / 2, cy - barHeight / 2, barWidth, barHeight)
     .fill(PAUSED_ICON_COLOR);
 }

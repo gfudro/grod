@@ -123,16 +123,28 @@ function villagerTargetTile(state: GameState, villager: VillagerState): Vec2 | n
   }
 }
 
+/**
+ * What a tap on this tile shows. Buildings, houses, sites and the warehouse
+ * come first: a worker waiting inside a building must never cover it up,
+ * or the player could not tap the building to pause it and free them (its
+ * panel says what the worker waits for anyway). A villager is shown when
+ * tapped on a road or open ground.
+ */
 export function inspectTile(state: GameState, tile: Vec2): InspectInfo | null {
-  const villager = state.villagers.find((v) => atTile(v.from, tile) && v.motion !== 'walking');
-  if (villager) {
-    return {
-      kind: 'villager',
-      description: describeVillager(villager),
-      targetTile: villagerTargetTile(state, villager),
-    };
-  }
+  return inspectStructure(state, tile) ?? inspectVillager(state, tile);
+}
 
+function inspectVillager(state: GameState, tile: Vec2): InspectInfo | null {
+  const villager = state.villagers.find((v) => atTile(v.from, tile) && v.motion !== 'walking');
+  if (!villager) return null;
+  return {
+    kind: 'villager',
+    description: describeVillager(villager),
+    targetTile: villagerTargetTile(state, villager),
+  };
+}
+
+function inspectStructure(state: GameState, tile: Vec2): InspectInfo | null {
   if (atTile(tile, WAREHOUSE_TILE)) {
     return { kind: 'warehouse', connected: isAdjacentToRoad(tile, state.roads), stock: { ...state.warehouse } };
   }

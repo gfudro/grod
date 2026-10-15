@@ -653,17 +653,22 @@ function findReachableEdgeTile(state: GameState, target: Vec2): Vec2 | null {
 }
 
 function maybeSpawnSettler(state: GameState): void {
-  const house = state.houses.find((h) => {
-    const enRoute = state.villagers.filter(
-      (v) => v.job.kind === 'arriving' && v.job.houseId === h.id,
-    ).length;
-    return h.residents + enRoute < houseCapacity(h);
-  });
-  if (!house) return;
   if (hasHungerOrCold(state)) return;
 
-  const spawnTile = findReachableEdgeTile(state, house.tile);
-  if (!spawnTile) return; // no road reaches the map edge yet
+  // The first house with room that a road links to the map edge. A house
+  // with no such road is skipped rather than holding up all the others.
+  let house: House | null = null;
+  let spawnTile: Vec2 | null = null;
+  for (const h of state.houses) {
+    const enRoute = state.villagers.filter((v) => v.job.kind === 'arriving' && v.job.houseId === h.id).length;
+    if (h.residents + enRoute >= houseCapacity(h)) continue;
+    spawnTile = findReachableEdgeTile(state, h.tile);
+    if (spawnTile) {
+      house = h;
+      break;
+    }
+  }
+  if (!house || !spawnTile) return; // no vacant house is reachable from the map edge yet
 
   state.villagers.push({
     id: nextEntityId(state, 'osadnik'),

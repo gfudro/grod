@@ -89,6 +89,21 @@ describe('settlers', () => {
     expect(state.houses[0].residents).toBe(0);
   });
 
+  it('skips a vacant house with no road to the edge and fills the next one', () => {
+    const state = createInitialState();
+    // An unconnected ziemianka built first, far from any road…
+    state.houses.push({ id: 'dom-bez-drogi', tile: { x: 2, y: 12 }, tier: 0, residents: 0, goods: {}, upgrade: null });
+    // …must not hold up the one that is connected.
+    buildHouse(state);
+    connectToSouthEdge(state, 8);
+
+    runTicks(state, SETTLER_CHECK_INTERVAL);
+
+    const settler = state.villagers.find((v) => v.job.kind === 'arriving');
+    expect(settler).toBeDefined();
+    expect(settler!.job).toMatchObject({ houseId: state.houses[1].id });
+  });
+
   it('stops filling a house once it has residents but zero fish (hunger)', () => {
     const state = createInitialState();
     buildHouse(state);
