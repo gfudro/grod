@@ -8,6 +8,8 @@ import { createWarehouseMarker } from './render/markers';
 import { createVillagerSprite } from './render/villager';
 import { APP_VERSION, mountVersionLabel } from './ui/version';
 import { mountChronicleScreen } from './ui/chronicle-screen';
+import { mountVictoryScreen } from './ui/victory-screen';
+import { nameMound } from './sim/mound';
 import { bootGame, exportSave, importSave, saveGame, startNewGame } from './save/game-save';
 import { requestPersistentStorage } from './save/storage';
 import { nameVillage } from './sim/chronicle';
@@ -142,6 +144,7 @@ async function start(): Promise<void> {
         if (house) handleInspectResult(inspectTile(state, house.tile));
       }
     },
+    () => victory.open(),
   );
 
   createInspectController(
@@ -172,7 +175,18 @@ async function start(): Promise<void> {
     location.reload();
   }
 
-  let speedBeforeChronicle: SpeedMultiplier = 1;
+  // Chronicle and victory screen both stop the game while they are open.
+  let speedBeforeOverlay: SpeedMultiplier = 1;
+  function pauseForOverlay(open: boolean): void {
+    if (open) {
+      speedBeforeOverlay = state.speed;
+      state.speed = 0;
+    } else {
+      state.speed = speedBeforeOverlay;
+    }
+    hud.refresh();
+  }
+
   mountChronicleScreen({
     getState: () => state,
     buttonSlot: hud.extraSlot,
@@ -190,18 +204,31 @@ async function start(): Promise<void> {
       return true;
     },
     onNewGame: () => void restartWith(startNewGame),
-    onOpenChange: (open) => {
-      // The game waits while dad reads the chronicle.
-      if (open) {
-        speedBeforeChronicle = state.speed;
-        state.speed = 0;
-      } else {
-        state.speed = speedBeforeChronicle;
-      }
-      hud.refresh();
-    },
+    // The game waits while dad reads the chronicle.
+    onOpenChange: pauseForOverlay,
   });
+
+  const victory = mountVictoryScreen({
+    getState: () => state,
+    onNameMound: (name) => {
+      if (nameMound(state, name)) {
+        saveNow();
+        refreshWorldLayers();
+      }
+    },
+    onNewGame: () => void restartWith(startNewGame),
+    onOpenChange: pauseForOverlay,
+  });
+
+  /** The last material reached the kopiec: the end of the game, celebrated once. */
+  function celebrateMound(): void {
+    if (!state.mound?.done || state.mound.celebrated) return;
+    state.mound.celebrated = true;
+    victory.open();
+    saveNow();
+  }
   refreshWorldLayers();
+  celebrateMound(); // finished in a save from before the screen was seen
 
   let accumulatorMs = 0;
   app.ticker.add((ticker) => {
@@ -226,7 +253,10 @@ async function start(): Promise<void> {
         villagerSprites[i].update(state.villagers[i], 0, stepTicks);
       }
     }
-    if (ticked) refreshWorldLayers();
+    if (ticked) {
+      refreshWorldLayers();
+      celebrateMound();
+    }
     const season = Math.floor(state.tick / SEASON_TICKS);
     if (season !== savedSeason) {
       savedSeason = season;
@@ -245,6 +275,7 @@ async function start(): Promise<void> {
       for (let i = 0; i < ticks; i++) tick(state);
       syncVillagerSprites();
       refreshWorldLayers();
+      celebrateMound();
     };
     (window as unknown as { grod: unknown }).grod = { state, refresh: refreshWorldLayers, advance };
   }

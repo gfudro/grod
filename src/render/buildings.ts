@@ -8,7 +8,9 @@ import { houseGoodTarget, houseTier, houseWantedGoods, upgradeReadiness } from '
 import { isAdjacentToRoad } from '../sim/pathfinding';
 import { currentSeason, houseShortages } from '../sim/seasons';
 import { RUINS_REBUILD, STORM } from '../data/storms';
-import { houseGood, type FieldPlot, type GameState, type House, type PlotStage } from '../sim/state';
+import { houseGood, type FieldPlot, type GameState, type House, type Mound, type PlotStage } from '../sim/state';
+import { MOUND } from '../data/mound';
+import { moundLayers, moundMissing } from '../sim/mound';
 
 const SITE_COLOR = 0x9b7a4a;
 const SITE_PROGRESS_COLOR = 0xd9b96a;
@@ -26,12 +28,22 @@ export const BUILDING_COLOR: Record<string, number> = {
   kontyna: 0x5a4f8a,
   owczarnia: 0x7a6a52,
   tkalnia: 0x7a4a8a,
+  kamieniarz: 0x6b7075,
+  rudnik: 0x5a4a2a,
+  dymarka: 0x8a3a24,
+  kuznia: 0x3a3f46,
+  kopiec: 0x7a9a4a,
 };
 /** Placeholder labels where the first letter alone would clash (STUDNIA / SEROWARNIA, OBORA / OWCZARNIA). */
 const BUILDING_LABEL: Partial<Record<BuildingType, string>> = {
   serowarnia: 'SER',
   plac: 'WIEC',
   owczarnia: 'OWCE',
+  // KAMIENIARZ / KUŹNIA / KOPIEC, RUDNIK / RYBAK, DYMARKA / DRWAL
+  kamieniarz: 'KAM',
+  kuznia: 'KUŹ',
+  rudnik: 'RUDA',
+  dymarka: 'DYM',
 };
 /** Body colour per house tier (HOUSE_TIERS index). */
 const HOUSE_TIER_COLOR = [0x8a6a42, 0xb48a52, 0xc79a5e, 0xd8b47a];
@@ -75,6 +87,12 @@ const FLAME_INNER = 0xffd23f;
 const FIRE_TIMER_COLOR = 0xffe14d;
 const WATER_COLOR = 0x4f9fd8;
 const COUNTER_BG_COLOR = 0x2b2016;
+const MOUND_EARTH = 0x8a6a42;
+const MOUND_RIM = 0x4a3218;
+/** Raw earth layers while it's being heaped up, alternating so each is visible. */
+const MOUND_LAYER = [0x9b7a4a, 0xb08a52];
+/** Grassed over once it's finished. */
+const MOUND_GRASS = [0x5f9a3a, 0x6fae44];
 /** Drewno's own colour is too dark to read on the counter background. */
 const FIREWOOD_TEXT_COLOR = 0xf2bf7e;
 
@@ -177,6 +195,68 @@ export function createBuildingsLayer(): BuildingsLayer {
     for (const house of state.houses) {
       drawHouse(state, house, winter);
     }
+
+    if (state.mound) drawMound(state, state.mound, winter);
+  }
+
+  /**
+   * The kopiec: a ring of marked-out earth that fills with layers as the
+   * materials arrive, each one smaller and higher, until a green mound
+   * with a post on top stands there. Counters under it say what's left.
+   */
+  function drawMound(state: GameState, mound: Mound, winter: boolean): void {
+    const { px, py } = tileTopLeft(mound.tile.x, mound.tile.y);
+    const size = 3 * TILE_SIZE;
+    const cx = px + size / 2;
+    const cy = py + size / 2 + 6;
+    const layers = moundLayers(mound);
+
+    // The marked-out ground: stakes at the corners, a ring of dug earth.
+    graphics.ellipse(cx, cy, size * 0.46, size * 0.4).fill({ color: MOUND_EARTH, alpha: 0.55 });
+    graphics.ellipse(cx, cy, size * 0.46, size * 0.4).stroke({ color: MOUND_RIM, width: 3 });
+    for (const [sx, sy] of [[0.08, 0.08], [0.92, 0.08], [0.08, 0.92], [0.92, 0.92]]) {
+      graphics.rect(px + size * sx - 3, py + size * sy - 8, 6, 14).fill(FENCE_COLOR);
+    }
+
+    for (let layer = 0; layer < layers; layer++) {
+      const t = layer / MOUND.layers;
+      const rx = size * 0.44 * (1 - t * 0.75);
+      const ry = size * 0.38 * (1 - t * 0.75);
+      const lift = layer * 10;
+      const fill = mound.done ? (winter ? SNOW_COLOR : MOUND_GRASS[layer % 2]) : MOUND_LAYER[layer % 2];
+      graphics.ellipse(cx, cy - lift, rx, ry).fill(fill).stroke({ color: MOUND_RIM, width: 2 });
+    }
+
+    if (mound.done) {
+      // A tall post with a pennant on the top.
+      const top = cy - (MOUND.layers - 1) * 10;
+      graphics.rect(cx - 3, top - 54, 6, 54).fill(FENCE_COLOR);
+      graphics.poly([cx + 3, top - 54, cx + 34, top - 46, cx + 3, top - 36]).fill(0xd2321e).stroke({ color: 0x5a1a12, width: 2 });
+      addLabel(mound.name || 'KOPIEC', cx, py + size - 14, 0xf4e9d8, 18);
+      return;
+    }
+
+    // Counters along the bottom, like the ones under a house.
+    const goods = Object.entries(MOUND.cost) as [keyof typeof MOUND.cost, number][];
+    const slot = (size - 24) / goods.length;
+    graphics.roundRect(px + 12, py + size - 26, size - 24, 22, 6).fill({ color: COUNTER_BG_COLOR, alpha: 0.9 });
+    goods.forEach(([resource, target], i) => {
+      addLabel(
+        `${mound.delivered[resource] ?? 0}/${target}`,
+        px + 12 + slot * i + slot / 2,
+        py + size - 15,
+        resource === 'drewno' ? FIREWOOD_TEXT_COLOR : RESOURCE_COLOR[resource],
+        15,
+      );
+    });
+    addLabel('KOPIEC', cx, py + 14, 0xf4e9d8, 16);
+
+    // What the mound is waiting for, in that material's colour (white rim, like a house waiting to grow).
+    moundMissing(state).forEach((resource, i) => {
+      const bx = cx - 10 * (moundMissing(state).length - 1) + i * 20;
+      graphics.circle(bx, py + 36, 9).fill(RESOURCE_COLOR[resource]).circle(bx, py + 36, 9).stroke({ color: 0xffffff, width: 3 });
+    });
+    if (!footprintTouchesRoad('kopiec', mound.tile, state.roads)) drawNoRoadIcon(graphics, px + TILE_SIZE, py, TILE_SIZE * 0.1);
   }
 
   function drawHouse(state: GameState, house: House, winter: boolean): void {

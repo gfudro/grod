@@ -30,6 +30,8 @@ export const STRINGS = {
   burza: 'BURZA',
   zamknij: 'ZAMKNIJ',
   blad: 'BŁĄD',
+  kopiec: 'KOPIEC',
+  grajDalej: 'GRAJ DALEJ',
   zasoby: {
     drewno: 'DREWNO',
     glina: 'GLINA',
@@ -40,6 +42,10 @@ export const STRINGS = {
     ser: 'SER',
     welna: 'WEŁNA',
     ubrania: 'UBRANIA',
+    kamien: 'KAMIEŃ',
+    ruda: 'RUDA',
+    zelazo: 'ŻELAZO',
+    lopaty: 'ŁOPATY',
   },
 } as const;
 
@@ -118,6 +124,12 @@ function entryBody(entry: ChronicleEntry): string {
       return 'piorun uderzył w kontynę Peruna i nikomu nic się nie stało';
     case 'odbudowa':
       return `odbudowano spaloną ${tierAccusative(p.tier)}`;
+    case 'kopiec-zaczety':
+      return 'plemię zaczęło sypać kopiec';
+    case 'kopiec-usypany':
+      return 'plemię usypało kopiec — wielkie dzieło całego grodu';
+    case 'kopiec-nazwa':
+      return `kopiec nazwano „${String(p.name)}”`;
     case 'dawny-grod':
       return p.name
         ? `pamiętano dawny gród „${String(p.name)}”, którego nie dało się już odbudować`

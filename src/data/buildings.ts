@@ -1,8 +1,26 @@
 import type { ResourceType } from './resources';
 
-export type BuildingType = 'drwal' | 'rybak' | 'glinianka' | 'pole' | 'zarna' | 'studnia' | 'ziemianka' | 'obora' | 'serowarnia' | 'plac' | 'kontyna' | 'owczarnia' | 'tkalnia';
+export type BuildingType =
+  | 'drwal'
+  | 'rybak'
+  | 'glinianka'
+  | 'pole'
+  | 'zarna'
+  | 'studnia'
+  | 'ziemianka'
+  | 'obora'
+  | 'serowarnia'
+  | 'plac'
+  | 'kontyna'
+  | 'owczarnia'
+  | 'tkalnia'
+  | 'kamieniarz'
+  | 'rudnik'
+  | 'dymarka'
+  | 'kuznia'
+  | 'kopiec';
 
-export type ResourceSearch = 'drzewo' | 'woda' | 'na-miejscu';
+export type ResourceSearch = 'drzewo' | 'woda' | 'skala' | 'bagno' | 'na-miejscu';
 
 /**
  * - produkcja: worker gathers a resource and carries it to the warehouse
@@ -11,8 +29,10 @@ export type ResourceSearch = 'drzewo' | 'woda' | 'na-miejscu';
  *   at the building and carries the output back
  * - usluga: no worker; serves houses within range while road-connected
  * - dom: a house (tier 0 of HOUSE_TIERS)
+ * - kopiec: the mound, the goal of the game (data/mound.ts, sim/mound.ts) —
+ *   never a construction site or a building, it lives in state.mound
  */
-export type BuildingKind = 'produkcja' | 'pole' | 'przetworstwo' | 'usluga' | 'dom';
+export type BuildingKind = 'produkcja' | 'pole' | 'przetworstwo' | 'usluga' | 'dom' | 'kopiec';
 
 export interface Footprint {
   w: number;
@@ -189,6 +209,58 @@ export const BUILDINGS: Record<BuildingType, BuildingDef> = {
     // and a zagroda needs it in this range to grow into a dwór.
     serviceRange: 4,
   },
+  kamieniarz: {
+    id: 'kamieniarz',
+    name: 'KAMIENIARZ',
+    kind: 'produkcja',
+    cost: { drewno: 3 },
+    buildTicks: 30,
+    produces: 'kamien',
+    gatherTicks: 30,
+    resourceSearch: 'skala',
+    maxResourceRange: 6,
+  },
+  rudnik: {
+    id: 'rudnik',
+    name: 'RUDNIK',
+    kind: 'produkcja',
+    cost: { drewno: 3 },
+    buildTicks: 30,
+    // Digs ruda darniowa (bog iron) out of the bagno.
+    produces: 'ruda',
+    gatherTicks: 30,
+    resourceSearch: 'bagno',
+    maxResourceRange: 6,
+  },
+  dymarka: {
+    id: 'dymarka',
+    name: 'DYMARKA',
+    kind: 'przetworstwo',
+    cost: { drewno: 2, glina: 4 },
+    buildTicks: 40,
+    consumes: 'ruda',
+    produces: 'zelazo',
+    processTicks: 60,
+  },
+  kuznia: {
+    id: 'kuznia',
+    name: 'KUŹNIA',
+    kind: 'przetworstwo',
+    cost: { drewno: 3, glina: 2, kamien: 2 },
+    buildTicks: 50,
+    consumes: 'zelazo',
+    produces: 'lopaty',
+    processTicks: 60,
+  },
+  kopiec: {
+    id: 'kopiec',
+    name: 'KOPIEC',
+    kind: 'kopiec',
+    // Nothing is paid up front: builders carry MOUND.cost over bit by bit.
+    cost: {},
+    buildTicks: 0,
+    footprint: { w: 3, h: 3 },
+  },
   ziemianka: {
     id: 'ziemianka',
     name: 'ZIEMIANKA',
@@ -198,7 +270,7 @@ export const BUILDINGS: Record<BuildingType, BuildingDef> = {
   },
 };
 
-export const BUILDING_ORDER: BuildingType[] = ['drwal', 'rybak', 'glinianka', 'ziemianka', 'pole', 'zarna', 'studnia', 'obora', 'serowarnia', 'plac', 'kontyna', 'owczarnia', 'tkalnia'];
+export const BUILDING_ORDER: BuildingType[] = ['drwal', 'rybak', 'glinianka', 'ziemianka', 'pole', 'zarna', 'studnia', 'obora', 'serowarnia', 'plac', 'kontyna', 'owczarnia', 'tkalnia', 'kamieniarz', 'rudnik', 'dymarka', 'kuznia', 'kopiec'];
 
 /** Starting warehouse stock, enough for one or two starter buildings. */
 export const STARTING_WAREHOUSE_STOCK: Partial<Record<ResourceType, number>> = {

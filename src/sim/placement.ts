@@ -3,10 +3,13 @@ import { FOREST, MAP_HEIGHT, MAP_WIDTH, TERRAIN } from '../data/map';
 import type { ResourceType } from '../data/resources';
 import { tileKey, type Vec2 } from '../data/types';
 import { footprintTiles, occupiedTileKeys } from './footprint';
-import { findResource } from './resource-tiles';
+import { canStartMound, startMound } from './mound';
+import { findResource, ROCK_KEYS } from './resource-tiles';
 import { nextEntityId, takeFromWarehouse, warehouseAmount, type GameState } from './state';
 
 export function canAfford(state: GameState, type: BuildingType): boolean {
+  // The kopiec costs nothing up front; it waits for a dwór instead.
+  if (BUILDINGS[type].kind === 'kopiec') return canStartMound(state);
   const cost = BUILDINGS[type].cost;
   return Object.entries(cost).every(
     ([resource, amount]) => warehouseAmount(state, resource as ResourceType) >= (amount ?? 0),
@@ -19,6 +22,7 @@ export function canPlaceBuildingAt(state: GameState, type: BuildingType, tile: V
     if (t.x < 0 || t.y < 0 || t.x >= MAP_WIDTH || t.y >= MAP_HEIGHT) return false;
     if (TERRAIN[t.y][t.x] !== 'trawa') return false;
     if (FOREST.some((tree) => tree.x === t.x && tree.y === t.y)) return false;
+    if (ROCK_KEYS.has(tileKey(t))) return false;
     if (state.roads.has(tileKey(t))) return false;
     if (occupied.has(tileKey(t))) return false;
   }
@@ -38,6 +42,11 @@ export function canPlaceBuildingAt(state: GameState, type: BuildingType, tile: V
 export function tryPlaceConstructionSite(state: GameState, type: BuildingType, tile: Vec2): boolean {
   if (!canAfford(state, type)) return false;
   if (!canPlaceBuildingAt(state, type, tile)) return false;
+
+  if (BUILDINGS[type].kind === 'kopiec') {
+    startMound(state, tile);
+    return true;
+  }
 
   const cost = BUILDINGS[type].cost;
   for (const [resource, amount] of Object.entries(cost)) {

@@ -18,6 +18,8 @@ import { isAdjacentToRoad } from './pathfinding';
 import { currentSeason, houseShortages } from './seasons';
 import { protectingKontyna, rebuildCostMissing, servingWell, stormDaysLeft } from './storms';
 import { houseGood, type GameState, type PlotStage, type VillagerState } from './state';
+import { MOUND } from '../data/mound';
+import { moundBuilders, moundMissing, moundTiles } from './mound';
 
 export interface GoodCounter {
   resource: ResourceType;
@@ -73,6 +75,16 @@ export type InspectInfo =
       /** Days until the bolt, while a storm cloud hangs over this house. */
       stormDays: number | null;
     }
+  | {
+      kind: 'mound';
+      name: string;
+      done: boolean;
+      connected: boolean;
+      goods: GoodCounter[];
+      builders: number;
+      /** Materials still needed that the warehouse has none of. */
+      missing: ResourceType[];
+    }
   | { kind: 'villager'; description: string; targetTile: Vec2 | null };
 
 function atTile(tile: Vec2, target: Vec2): boolean {
@@ -90,6 +102,7 @@ const JOB_DESCRIPTIONS: Record<string, string> = {
   arriving: 'osadnik w drodze',
   douse: 'gasi ogień',
   rebuild: 'odbudowuje',
+  mound: 'sypie kopiec',
 };
 
 function describeVillager(villager: VillagerState): string {
@@ -143,6 +156,9 @@ function villagerTargetTile(state: GameState, villager: VillagerState): Vec2 | n
       if (!house) return null;
       return job.stage === 'toWarehouse' ? WAREHOUSE_TILE : house.tile;
     }
+    case 'mound':
+      if (!state.mound) return null;
+      return job.stage === 'toWarehouse' ? WAREHOUSE_TILE : state.mound.tile;
     case 'idle':
       return WAREHOUSE_TILE;
   }
@@ -224,6 +240,23 @@ function inspectStructure(state: GameState, tile: Vec2): InspectInfo | null {
       shielded: protectingKontyna(state, house) !== null,
       hasWell: servingWell(state, house) !== null,
       stormDays: storm ? stormDaysLeft(state, storm) : null,
+    };
+  }
+
+  const mound = state.mound;
+  if (mound && moundTiles(mound).some((t) => atTile(t, tile))) {
+    return {
+      kind: 'mound',
+      name: mound.name,
+      done: mound.done,
+      connected: footprintTouchesRoad('kopiec', mound.tile, state.roads),
+      goods: (Object.entries(MOUND.cost) as [ResourceType, number][]).map(([resource, target]) => ({
+        resource,
+        have: mound.delivered[resource] ?? 0,
+        target,
+      })),
+      builders: moundBuilders(state).length,
+      missing: mound.done ? [] : moundMissing(state),
     };
   }
 

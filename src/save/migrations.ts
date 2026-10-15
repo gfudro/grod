@@ -80,4 +80,9 @@ export const MIGRATIONS: Record<number, (save: RawSave) => RawSave> = {
    * the game from loading buildings it doesn't know.
    */
   7: (save) => ({ ...save, saveVersion: 8 }),
+  /**
+   * v9 (0.15.0): the kopiec, kamieniarz, rudnik, dymarka and kuźnia, with
+   * kamień, ruda, żelazo and łopaty. No gród had a kopiec before.
+   */
+  8: (save) => ({ ...save, saveVersion: 9, state: { ...save.state, mound: null } }),
 };

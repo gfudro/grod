@@ -20,6 +20,7 @@ export function canBuildRoadOn(tile: Vec2): boolean {
   // ever touches 'woda', so without it a rybak could never be reached by
   // road. Water itself stays unbuildable until bridges exist — except at
   // the bród, a shallow ford where a road may cross to the other bank.
+  // The bagno is too soft for a road: a rudnik's digger wades in on foot.
   const terrain = TERRAIN[tile.y][tile.x];
   return terrain === 'trawa' || terrain === 'brzeg' || terrain === 'brod';
 }

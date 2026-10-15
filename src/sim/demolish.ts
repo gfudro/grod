@@ -68,8 +68,12 @@ export function cancelHouseUpgrade(state: GameState, house: House): void {
   house.upgrade = null;
 }
 
+/** The id ZBURZ uses for the kopiec — there is only ever one. */
+export const MOUND_ID = 'kopiec';
+
 /**
- * Pulls down a construction site, building or house (never the warehouse).
+ * Pulls down a construction site, building, house or an unfinished
+ * kopiec (never the warehouse, never a finished kopiec).
  * Light punishment (CLAUDE.md rule 3): every material comes back to the
  * warehouse, nobody leaves the gród, the land is free to build on again.
  */
@@ -92,6 +96,16 @@ export function demolish(state: GameState, id: string): boolean {
     releaseWorkers(state, (j) => 'buildingId' in j && j.buildingId === id, footprintTiles(building.type, building.tile));
     refund(state, BUILDINGS[building.type].cost);
     state.buildings = state.buildings.filter((b) => b !== building);
+    return true;
+  }
+
+  if (id === MOUND_ID && state.mound && !state.mound.done) {
+    // Builders on their way drop what they carry back at the warehouse
+    // (runIdle); what already lies on the mound comes back too.
+    const mound = state.mound;
+    releaseWorkers(state, (j) => j.kind === 'mound', footprintTiles('kopiec', mound.tile));
+    refund(state, mound.delivered);
+    state.mound = null;
     return true;
   }
 

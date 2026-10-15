@@ -1,4 +1,4 @@
-import { FOREST, MAP_HEIGHT, MAP_WIDTH, TERRAIN } from '../data/map';
+import { FOREST, MAP_HEIGHT, MAP_WIDTH, ROCKS, TERRAIN } from '../data/map';
 import type { ResourceSearch } from '../data/buildings';
 import { tileKey, type Vec2 } from '../data/types';
 
@@ -28,6 +28,20 @@ export const LAND_KEYS: ReadonlySet<string> = (() => {
 })();
 
 const TREE_KEYS: ReadonlySet<string> = new Set(FOREST.map((tree) => tileKey(tree)));
+export const ROCK_KEYS: ReadonlySet<string> = new Set(ROCKS.map((rock) => tileKey(rock)));
+
+function isGoal(tile: Vec2, search: ResourceSearch): boolean {
+  switch (search) {
+    case 'drzewo':
+      return TREE_KEYS.has(tileKey(tile));
+    case 'skala':
+      return ROCK_KEYS.has(tileKey(tile));
+    case 'bagno':
+      return TERRAIN[tile.y][tile.x] === 'bagno';
+    default:
+      return false;
+  }
+}
 
 const STEPS: Vec2[] = [
   { x: 1, y: 0 },
@@ -43,7 +57,7 @@ export interface FoundResource {
 }
 
 /**
- * The tree or water nearest on foot from the building (breadth-first over
+ * The tree, rock, bog or water nearest on foot from the building (breadth-first over
  * land), so a drwal never picks a tree that is close as the crow flies
  * but on the far side of the river.
  */
@@ -54,7 +68,7 @@ export function findResource(buildingTile: Vec2, search: ResourceSearch): FoundR
   for (let distance = 0; frontier.length > 0; distance++) {
     const next: Vec2[] = [];
     for (const tile of frontier) {
-      if (search === 'drzewo' && TREE_KEYS.has(tileKey(tile))) return { tile, distance };
+      if (isGoal(tile, search)) return { tile, distance };
       for (const step of STEPS) {
         const neighbor = { x: tile.x + step.x, y: tile.y + step.y };
         const key = tileKey(neighbor);

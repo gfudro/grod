@@ -145,7 +145,13 @@ Kolejność od 0.9.0 (Greg, 2026-10-14): najpierw mechanika, grafiki i dźwięki
 
 ## M11 · Kopiec
 
-- [ ] Bagno z rudą, dymarka, kuźnia (łopaty), kamień; wspólna budowa kopca jako cel gry
+- [x] Bagno z rudą darniową: rudnik → magazyn → dymarka (żelazo) → magazyn → kuźnia (łopaty) (0.15.0)
+- [x] Skały za brodem i kamieniarz (kamień)
+- [x] Kopiec 3×3 po pierwszym dworze: wolni ludzie noszą drewno, kamień i łopaty, kopiec rośnie warstwami
+- [x] Ekran zwycięstwa: nazwa kopca od Artura, kronika, GRAJ DALEJ albo NOWA
+- [x] Górny pasek sam się zmniejsza, gdy 13 towarów się nie mieści
+
+**Gotowe, gdy:** Artur usypuje kopiec i nadaje mu nazwę.
 
 ## Grafiki i dźwięki (gdy Greg wrzuci pliki)
 
@@ -166,4 +172,4 @@ Kolejność od 0.9.0 (Greg, 2026-10-14): najpierw mechanika, grafiki i dźwięki
 
 Zadania z notatek w `docs/playtests/` trafiają tutaj, z datą testu.
 
-- [ ] Przeprojektować dolny pasek (Greg, 2026-10-15). Przy 11 budynkach i 7 prędkościach robi się ciasno, kolejne piętra dołożą przyciski. Od 0.14.0 (13 budynków) pasek budynków przesuwa się palcem w bok, to tymczasowe. Do ustalenia z Gregiem, jak ma wyglądać.
+- [ ] Przeprojektować dolny pasek (Greg, 2026-10-15). Przy 11 budynkach i 7 prędkościach robi się ciasno, kolejne piętra dołożą przyciski. Od 0.14.0 (13 budynków) pasek budynków przesuwa się palcem w bok, to tymczasowe. Od 0.15.0 jest 17 budynków + KOPIEC, a górny pasek przy 13 towarach zmniejsza czcionkę. Do ustalenia z Gregiem, jak ma wyglądać.

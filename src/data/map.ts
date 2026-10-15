@@ -1,13 +1,16 @@
 import { type TerrainType, type TreeType } from './tiles';
+import type { Vec2 } from './types';
 
 /**
  * The hand-made map (GDD "Zakres pierwszej wersji"), drawn as text:
  *   .  trawa (grass)        :  brzeg (riverbank)     ~  woda (river)
  *   =  bród (ford — a road may cross the river here) T  tree on grass
+ *   b  bagno (bog with ruda darniowa)                R  rock on grass
  *
  * The top-left 20×14 is the original map of 0.1–0.10, tile for tile, so
  * older saves keep their gród exactly where it stood (0.11.0 grew the map
- * east and south around it).
+ * east and south around it). 0.15.0 added the bog and the rocky hill
+ * past the ford for the kopiec's chains.
  */
 const MAP_ROWS: readonly string[] = [
   'T.T.T.....:~~:......................',
@@ -21,19 +24,19 @@ const MAP_ROWS: readonly string[] = [
   '...........:~~:.....................',
   '..........:~~:......................',
   '..........:~~:......................',
-  '.........:~~:.......................',
-  '.........:~~:.......................',
-  '.........:~~:.......................',
-  '.........:~~:.......................',
+  '.........:~~:............R.R.R......',
+  '.........:~~:...........R.R.R.R.....',
+  '.........:~~:............R.R.R......',
+  '.........:~~:.............R.R.......',
   '.........:~~:.......................',
   '.........:~~~::::...................',
   '..........:~~~~~~:::................',
   '...........::~~~~~~~::::............',
-  '.............::::~~~~~~~::::........',
-  '.................::::~~~=~~~::::....',
-  '..............T.T.T..::::~~~~~~~::::',
-  '.............T.T.T.T.....::::~~~~~~~',
-  '..............T.T.T..........::::~~~',
+  '...bbb.......::::~~~~~~~::::........',
+  '..bbbbb..........::::~~~=~~~::::....',
+  '.bbbbbbb......T.T.T..::::~~~~~~~::::',
+  '..bbbbb......T.T.T.T.....::::~~~~~~~',
+  '...bb.........T.T.T..........::::~~~',
   '.............T.T.T.T.............:::',
   '....................................',
 ];
@@ -53,6 +56,8 @@ const TERRAIN_CHAR: Record<string, TerrainType> = {
   ':': 'brzeg',
   '~': 'woda',
   '=': 'brod',
+  R: 'trawa',
+  b: 'bagno',
 };
 
 function buildTerrain(): TerrainType[][] {
@@ -70,5 +75,17 @@ function buildForest(): TreePlacement[] {
   return trees;
 }
 
+function buildRocks(): Vec2[] {
+  const rocks: Vec2[] = [];
+  MAP_ROWS.forEach((row, y) => {
+    [...row].forEach((ch, x) => {
+      if (ch === 'R') rocks.push({ x, y });
+    });
+  });
+  return rocks;
+}
+
 export const TERRAIN: TerrainType[][] = buildTerrain();
 export const FOREST: TreePlacement[] = buildForest();
+/** Boulders a kamieniarz breaks stone from (GDD M11). */
+export const ROCKS: Vec2[] = buildRocks();

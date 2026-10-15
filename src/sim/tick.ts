@@ -19,6 +19,7 @@ import { consumeHouseGoods, currentSeason, houseShortages, startSeason } from '.
 import { addChronicleFirst, closeSeasonLog } from './chronicle';
 import { RUINS_REBUILD, STORM } from '../data/storms';
 import { advanceStorms, completeRebuild, houseOutOfUse, planStorms, pourWater, servingWell } from './storms';
+import { deliverToMound, moundTileKeys, moundWantsBuilder, nextMoundResource } from './mound';
 import {
   addToWarehouse,
   houseGood,
@@ -120,6 +121,9 @@ function runJob(state: GameState, villager: VillagerState): void {
     case 'rebuild':
       runRebuild(state, villager);
       return;
+    case 'mound':
+      runMound(state, villager);
+      return;
   }
 }
 
@@ -202,6 +206,12 @@ function tryAssignWork(state: GameState, villager: VillagerState): boolean {
         return true;
       }
     }
+  }
+
+  // Last of all, free hands help heap up the kopiec.
+  if (moundWantsBuilder(state)) {
+    villager.job = { kind: 'mound', stage: 'toWarehouse' };
+    return true;
   }
 
   return false;
@@ -316,6 +326,52 @@ function runDouse(state: GameState, villager: VillagerState): void {
   }
   pourWater(state, house);
   job.stage = 'toWell';
+  villager.motion = 'idle';
+}
+
+/**
+ * Kopiec builder: picks up one unit of whatever the mound still needs
+ * and the warehouse has, carries it onto the mound, and goes back for
+ * more. With nothing left to carry they go back to the free pool, so
+ * a mound waiting for stone never holds anyone up.
+ */
+function runMound(state: GameState, villager: VillagerState): void {
+  const job = villager.job as Extract<VillagerJob, { kind: 'mound' }>;
+  const mound = state.mound;
+  if (!mound || mound.done) {
+    villager.job = { kind: 'idle' }; // anything in hand goes back to the warehouse
+    villager.motion = 'idle';
+    return;
+  }
+  const walkable = moundTileKeys(mound);
+
+  if (job.stage === 'toWarehouse') {
+    if (!atTile(villager.from, WAREHOUSE_TILE)) {
+      beginWalk(state, villager, WAREHOUSE_TILE);
+      return;
+    }
+    const resource = nextMoundResource(state, villager);
+    if (!resource || !takeFromWarehouse(state, resource, 1)) {
+      villager.job = { kind: 'idle' };
+      villager.motion = 'idle';
+      return;
+    }
+    villager.carrying = resource;
+    job.stage = 'toMound';
+    beginWalk(state, villager, mound.tile, walkable);
+    return;
+  }
+
+  // job.stage === 'toMound'
+  if (!atTile(villager.from, mound.tile)) {
+    beginWalk(state, villager, mound.tile, walkable);
+    return;
+  }
+  if (villager.carrying) {
+    deliverToMound(state, villager.carrying);
+    villager.carrying = null;
+  }
+  job.stage = 'toWarehouse';
   villager.motion = 'idle';
 }
 
@@ -811,6 +867,10 @@ function beginWalk(
 }
 
 function footprintKeysAt(state: GameState, tile: Vec2): string[] {
+  if (state.mound) {
+    const keys = moundTileKeys(state.mound);
+    if (keys.includes(tileKey(tile))) return keys;
+  }
   const owner =
     state.buildings.find((b) => footprintContains(b.type, b.tile, tile)) ??
     state.sites.find((s) => footprintContains(s.type, s.tile, tile));

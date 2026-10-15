@@ -93,6 +93,17 @@ const TOPBAR_STYLE = `
   border-radius: 3px;
   border: 1px solid rgba(0, 0, 0, 0.4);
 }
+/* With the kopiec's goods all 13 chips can be on the bar: when it no
+   longer fits, everything gets a little smaller rather than wrapping. */
+#topbar.tight { gap: 3px; padding: 4px; }
+#topbar.tight .chip { font-size: 15px; padding: 3px 4px; gap: 3px; }
+#topbar.tight .resource .label, #topbar.tight .stacked .label { font-size: 9px; }
+#topbar.tight .amount > span:first-child { min-width: 2.4ch; }
+#topbar.tight .swatch { width: 10px; height: 10px; }
+#topbar.tight .season .clock { width: 50px; height: 50px; }
+#topbar.tighter .chip { font-size: 13px; padding: 2px 3px; }
+#topbar.tighter .resource .label, #topbar.tighter .stacked .label { font-size: 8px; }
+#topbar.tighter .season .clock { width: 42px; height: 42px; }
 `;
 
 /** Placeholder season icons until ui/wiosna.png etc. arrive (docs/ASSETS.md). */
@@ -285,6 +296,19 @@ export function mountTopBar(): TopBar {
 
   (document.getElementById('top-band') ?? document.body).appendChild(topbar);
 
+  /** Shrinks the bar a step at a time until it fits in one line again. */
+  function fit(): void {
+    topbar.classList.remove('tight', 'tighter');
+    if (topbar.scrollWidth <= topbar.clientWidth) return;
+    topbar.classList.add('tight');
+    if (topbar.scrollWidth <= topbar.clientWidth) return;
+    topbar.classList.add('tighter');
+  }
+  let layoutKey = '';
+  window.addEventListener('resize', () => {
+    layoutKey = '';
+  });
+
   function refresh(state: GameState): void {
     for (const chip of resourceChips) {
       // Once shown, a chip stays: it would be confusing to see it vanish at 0.
@@ -325,6 +349,17 @@ export function mountTopBar(): TopBar {
           }),
         );
       }
+    }
+
+    // Measure only when what is on the bar changes, not on every tick.
+    const key = [
+      ...resourceChips.map((c) => (c.shown ? 1 : 0)),
+      warn ? warn.missing.length + 1 : 0,
+      cloud ? 1 : 0,
+    ].join('');
+    if (key !== layoutKey) {
+      layoutKey = key;
+      fit();
     }
   }
 

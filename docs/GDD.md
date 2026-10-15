@@ -114,11 +114,23 @@ Decyzje z M10 (piętro 4: dwór, 0.14.0):
 - **Kontyna Peruna** jest usługą dla zagrody, tak jak plac wiecowy dla chaty, w swoim zasięgu 9×9. Znaczek w rogu zagrody świeci na fioletowo, gdy kontyna jest w zasięgu. Ta sama kontyna dalej chroni przed piorunami.
 - **Zagroda zbiera ubrania (3)**, tylko do wzrostu, tak jak chata ser.
 - **Awans zagroda → dwór:** ryby, kasza, ser i ubrania pełne, kontyna w zasięgu, droga; koszt 5 drewna i 4 gliny, przebudowa 6 s. Dwór ma 12 miejsc, najwyższy ciemny dach z okienkiem, na mapie podpis „DWÓR”.
-- **Dwór je** jak zagroda (ryba co 30 s, kasza i ser co 60 s) i zużywa 1 ubranie co 90 s (ubrania zdzierają się wolniej, niż się je). Brak ubrań nie jest głodem. Dwór to na razie najwyższe piętro; dalej jest już tylko kopiec (M11).
+- **Dwór je** jak zagroda (ryba co 30 s, kasza i ser co 60 s) i zużywa 1 ubranie co 90 s (ubrania zdzierają się wolniej, niż się je). Brak ubrań nie jest głodem. Dwór to najwyższe piętro; dalej jest już tylko kopiec (M11, 0.15.0).
 - **Cztery liczniki nad zagrodą i dworem** stoją dwa na dwa (ryby i kasza u góry, ser i ubrania pod spodem), bo w jednym rzędzie nie mieszczą się na kafelku.
 - **Górny pasek:** dochodzą WEŁNA i UBRANIA. Żeby wszystko zmieściło się na iPadzie, kafelek towaru pojawia się na pasku dopiero wtedy, gdy gród go ma (w magazynie, w domu, w rękach) albo stoi budynek, który go robi. DREWNO, GLINA i RYBA są zawsze. Raz pokazany kafelek już nie znika. Do tego ciaśniejsze odstępy: pełny pasek z trzycyfrowymi liczbami i ostrzeżeniem przed zimą zajmuje ok. 990 px.
 - **Dolny pasek budynków** (13 przycisków) jest szerszy niż iPad, więc do czasu przeprojektowania przesuwa się palcem w bok.
 - Kronika zapisuje pierwszy dwór. **Zapis:** `SAVE_VERSION = 8`, kształt stanu bez zmian (podbicie chroni zapis przed starą wersją gry).
+
+Decyzje z M11 (kopiec, 0.15.0, Greg 2026-10-15):
+
+- **Kamień:** na drugim brzegu, na północ od brodu, leży skaliste wzgórze (szare głazy). **Kamieniarz** (3 drewna) chodzi do najbliższego głazu na przełaj, jak drwal do drzewa (zasięg 6 kafelków pieszo), łupie kamień (3 s) i nosi go do magazynu. Na głazach nie da się budować; głazy się nie kończą.
+- **Bagno** na południowym zachodzie (ciemne kałuże, trzciny, rdzawe smugi rudy): po bagnie można chodzić, ale nie da się na nim budować ani prowadzić drogi. **Rudnik** (3 drewna) kopie rudę darniową na bagnie (3 s, zasięg 6 pieszo).
+- **Dymarka** (2 drewna, 4 gliny) działa jak żarna: ruda → żelazo (6 s). **Kuźnia** (3 drewna, 2 gliny, 2 kamienia) — żelazo → łopaty (6 s). Na mapie podpisy KAM, RUDA, DYM, KUŹ (pierwsze litery zderzały się z innymi budynkami).
+- **Kopiec** (3×3): przycisk KOPIEC (złoty) pojawia się na pasku, gdy w grodzie stoi pierwszy dwór. Kopiec jest jeden. Nic nie schodzi z magazynu przy stawianiu: potrzeba 30 drewna, 40 kamienia i 10 łopat, a do 4 wolnych ludzików nosi je po jednej sztuce, gdy magazyn je ma. To najniższy priorytet pracy (po gaszeniu, budowach, przebudowach, budynkach i tragarzach), a gdy w magazynie brakuje materiału, ludzie wracają do puli wolnych, zamiast czekać. Nad kopcem kółka w kolorze brakującego materiału i liczniki 12/30 itd.
+- **Kopiec rośnie w 5 warstwach** z gołej ziemi; ostatnia warstwa to gotowy, zielony kopiec z palem i proporcem. ZBURZ działa tylko na niedokończonym kopcu i oddaje wszystko; gotowego nie da się zburzyć.
+- **Ekran zwycięstwa** (wybór Grega): gdy ostatni materiał trafi na kopiec, gra staje i pokazuje ⛰️ KOPIEC!, nazwę grodu i rok, pole do nadania kopcowi nazwy (wymyśla Artur, nazwa trafia na mapę i do kroniki), całą kronikę oraz GRAJ DALEJ i NOWA (dwa stuknięcia, stary gród idzie do archiwum). Ekran pokazuje się raz; potem otwiera go przycisk ⛰️ KOPIEC w panelu po stuknięciu w kopiec.
+- Kronika zapisuje rozpoczęcie kopca, jego usypanie i każdą nazwę.
+- **Górny pasek:** dochodzą KAMIEŃ, RUDA, ŻELAZO i ŁOPATY (w całej grze jest teraz 13 towarów, jak zakładał GDD). Gdy pasek się nie mieści, sam zmniejsza czcionkę i odstępy (dwa stopnie), zamiast łamać się na dwie linijki.
+- **Zapis:** `SAVE_VERSION = 9` (w stanie `mound`). Stare grody dostają `mound: null`. Bagno i głazy dorysowano na mapie; jeśli w starym grodzie coś już tam stoi, zostaje na miejscu.
 
 ## Wizja i filary
 
@@ -152,7 +164,7 @@ Dom rośnie o piętro, gdy mieszkańcy dostają swój towar i mają w pobliżu p
 | 2 · bezpieczeństwo | Chata | kasza | studnia | pole prosa → magazyn → żarna → magazyn | tak |
 | 3 · wspólnota | Zagroda | ser | plac wiecowy | obora (krowy, mleko) → serowarnia | nie |
 | 4 · uznanie | Dwór | ubrania | kontyna Peruna | owczarnia (wełna) → magazyn → tkalnia | od 0.14.0 |
-| 5 · cel gry | Kopiec (nie jest domem) | wspólna budowa: drewno, kamień, łopaty | — | ruda darniowa (bagno) → dymarka → kuźnia (łopaty) | nie |
+| 5 · cel gry | Kopiec (nie jest domem) | wspólna budowa: drewno, kamień, łopaty | — | ruda darniowa (bagno) → dymarka → kuźnia (łopaty); kamieniarz przy skałach | od 0.15.0 |
 
 Łańcuch rośnie od jednego kroku przy ziemiance do trzech przy kopcu. Żelazne łopaty z kuźni są potrzebne dopiero do usypania kopca.
 

@@ -24,6 +24,12 @@ export type ChronicleKind =
   | 'piorun-kontyna'
   /** Burned ruins were rebuilt (params.tier). */
   | 'odbudowa'
+  /** The kopiec was marked out. */
+  | 'kopiec-zaczety'
+  /** The last material reached the kopiec: the goal of the game. */
+  | 'kopiec-usypany'
+  /** Artur named the kopiec (params.name). */
+  | 'kopiec-nazwa'
   /** A save that could not be carried over: the old gród lives on as history. */
   | 'dawny-grod';
 

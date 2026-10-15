@@ -26,7 +26,9 @@ export type VillagerJob =
   /** Runs buckets of water from the studnia to a burning house. */
   | { kind: 'douse'; houseId: string; stage: 'toWell' | 'toHouse' }
   /** Rebuilds burned ruins (after ODBUDUJ), like a construction site. */
-  | { kind: 'rebuild'; houseId: string; stage: BuildStage };
+  | { kind: 'rebuild'; houseId: string; stage: BuildStage }
+  /** Carries one material at a time from the warehouse to the kopiec. */
+  | { kind: 'mound'; stage: 'toWarehouse' | 'toMound' };
 
 export type BuildStage = 'toWarehouse' | 'toSite' | 'hammering';
 
@@ -131,6 +133,19 @@ export interface LightningStrike {
   /** Where it came down: the burning house, or the kontyna that took it. */
   tile: Vec2;
 }
+/** The kopiec (GDD "Cel gry"): one per gród, heaped up from MOUND.cost. */
+export interface Mound {
+  /** Top-left tile of its 3×3 footprint. */
+  tile: Vec2;
+  delivered: ResourceAmounts;
+  /** Every material is on the mound. */
+  done: boolean;
+  /** Given by Artur on the victory screen; empty until named. */
+  name: string;
+  /** The victory screen was shown, so it doesn't pop up again after a reload. */
+  celebrated: boolean;
+}
+
 export interface GameState {
   tick: number;
   rng: RngState;
@@ -150,6 +165,8 @@ export interface GameState {
   /** This summer's storms still to come or hanging over a house, soonest first. */
   storms: Storm[];
   lastStrike: LightningStrike | null;
+  /** The kopiec, once Artur has marked out its place; null before. */
+  mound: Mound | null;
 }
 
 export function warehouseAmount(state: GameState, resource: ResourceType): number {
@@ -220,6 +237,7 @@ export function createInitialState(seed = 1): GameState {
     seasonLog: emptySeasonLog(),
     storms: [],
     lastStrike: null,
+    mound: null,
   };
   addChronicleEntry(state, 'zalozenie');
   for (let i = 0; i < STARTING_WORKER_POOL; i++) {

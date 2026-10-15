@@ -25,7 +25,7 @@ export function footprintTouchesRoad(type: BuildingType, anchor: Vec2, roads: Re
   return footprintTiles(type, anchor).some((t) => isAdjacentToRoad(t, roads));
 }
 
-/** Keys of every tile taken by the warehouse, a site, a building or a house. */
+/** Keys of every tile taken by the warehouse, a site, a building, a house or the kopiec. */
 export function occupiedTileKeys(state: GameState): Set<string> {
   const keys = new Set<string>([tileKey(WAREHOUSE_TILE)]);
   for (const site of state.sites) {
@@ -35,5 +35,8 @@ export function occupiedTileKeys(state: GameState): Set<string> {
     for (const t of footprintTiles(building.type, building.tile)) keys.add(tileKey(t));
   }
   for (const house of state.houses) keys.add(tileKey(house.tile));
+  if (state.mound) {
+    for (const t of footprintTiles('kopiec', state.mound.tile)) keys.add(tileKey(t));
+  }
   return keys;
 }

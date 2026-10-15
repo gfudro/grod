@@ -2,6 +2,7 @@ import { BUILDINGS } from '../data/buildings';
 import { RESOURCE_COLOR, type ResourceType } from '../data/resources';
 import { RUINS_REBUILD } from '../data/storms';
 import type { InspectInfo } from '../sim/inspect';
+import { MOUND_ID } from '../sim/demolish';
 import { STRINGS } from './strings';
 
 const PANEL_STYLE = `
@@ -126,6 +127,14 @@ function describe(info: InspectInfo): string {
       const need = info.shortages.length > 0 ? ` — brak: ${info.shortages.join(', ')}` : '';
       return `${info.name} — ${info.connected ? 'droga OK' : 'brak drogi'} — mieszkańcy ${info.residents}/${info.capacity} — ${goods}${need}${growth}${storm}`;
     }
+    case 'mound': {
+      const title = info.name ? `${STRINGS.kopiec} „${info.name}”` : STRINGS.kopiec;
+      if (info.done) return `${title} — usypany!`;
+      const goods = info.goods.map((g) => `${g.resource} ${g.have}/${g.target}`).join(', ');
+      const road = info.connected ? `sypią: ${info.builders}` : 'brak drogi';
+      const missing = info.missing.length > 0 ? ` — brak: ${info.missing.join(', ')}` : '';
+      return `${title} — ${goods} — ${road}${missing}`;
+    }
     case 'villager':
       return `LUDZIK — ${info.description}`;
   }
@@ -143,6 +152,7 @@ export function mountInspectPanel(
   onTogglePause: TogglePauseCallback,
   onDemolish: DemolishCallback,
   onRebuild: RebuildCallback,
+  onOpenMound: () => void,
 ): (info: InspectInfo | null) => void {
   injectStyle();
   const panel = document.createElement('div');
@@ -169,6 +179,12 @@ export function mountInspectPanel(
   }
   rebuildButton.append(rebuildLabel, rebuildCost);
   panel.appendChild(rebuildButton);
+
+  // On the finished kopiec: opens its screen again (name, chronicle).
+  const moundButton = document.createElement('button');
+  moundButton.textContent = `⛰️ ${STRINGS.kopiec}`;
+  moundButton.addEventListener('click', () => onOpenMound());
+  panel.appendChild(moundButton);
 
   // Two taps, like NOWA in the chronicle: the first asks, the second pulls it down.
   const demolishButton = document.createElement('button');
@@ -220,7 +236,14 @@ export function mountInspectPanel(
       rebuildButton.onclick = null;
     }
 
-    const id = info.kind === 'site' || info.kind === 'building' || info.kind === 'house' ? info.id : null;
+    moundButton.style.display = info.kind === 'mound' && info.done ? '' : 'none';
+
+    const id =
+      info.kind === 'site' || info.kind === 'building' || info.kind === 'house'
+        ? info.id
+        : info.kind === 'mound' && !info.done
+          ? MOUND_ID
+          : null;
     if (id !== demolishId) {
       // A different thing was tapped: start the two-tap question over.
       demolishId = id;

@@ -135,6 +135,21 @@ describe('migration v5 → v6 (the map grew)', () => {
   });
 });
 
+describe('migration v8 → v9 (the kopiec)', () => {
+  it('an older gród has no kopiec yet, and its dwór may start one', () => {
+    const result = loadSaveFile(readFixture('v8-rok1-wiosna-dwor.json'));
+    if (!result.ok) throw new Error(result.reason);
+    expect(result.state.mound).toBeNull();
+  });
+
+  it('a kopiec in progress keeps what was carried onto it', () => {
+    const result = loadSaveFile(readFixture('v9-rok1-wiosna-kopiec.json'));
+    if (!result.ok) throw new Error(result.reason);
+    expect(result.state.mound?.delivered.drewno).toBeGreaterThan(0);
+    expect(result.state.mound?.done).toBe(false);
+  });
+});
+
 describe('saves that cannot be loaded', () => {
   it('refuses a save from a newer version of the game, and rescues its chronicle', () => {
     const future = { ...(readFixture('v2-rok2-wiosna.json') as object), saveVersion: SAVE_VERSION + 1 };

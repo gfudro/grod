@@ -3,6 +3,8 @@ import { RESOURCE_COLOR } from '../data/resources';
 import type { BuildPlacementController } from '../input/build-place';
 import type { RoadDrawController } from '../input/road-draw';
 import { canAfford } from '../sim/placement';
+import { MOUND } from '../data/mound';
+import { moundUnlocked } from '../sim/mound';
 import { SPEEDS, type GameState, type SpeedMultiplier } from '../sim/state';
 import { STRINGS } from './strings';
 
@@ -85,6 +87,10 @@ const HUD_STYLE = `
   color: #fff;
   min-width: 80px;
 }
+#palette button.goal {
+  background: #f0d27a;
+  border-color: #8a6a1a;
+}
 #hud button:disabled, #palette button:disabled {
   opacity: 0.4;
 }
@@ -153,13 +159,16 @@ export function mountHud({ roadDraw, buildPlace, state, getSpeed, onSpeedChange 
     name.textContent = def.name;
     const cost = document.createElement('div');
     cost.className = 'cost';
-    for (const [resource, amount] of Object.entries(def.cost)) {
+    // The kopiec shows what heaping it up takes; it is paid bit by bit.
+    const shownCost = def.kind === 'kopiec' ? MOUND.cost : def.cost;
+    for (const [resource, amount] of Object.entries(shownCost)) {
       const span = document.createElement('span');
       span.textContent = `${amount}`;
       span.style.background = hexColor(RESOURCE_COLOR[resource as keyof typeof RESOURCE_COLOR]);
       cost.appendChild(span);
     }
     button.append(name, cost);
+    if (def.kind === 'kopiec') button.classList.add('goal');
     button.addEventListener('click', () => {
       buildPlace.setArmed(buildPlace.armedType() === type ? null : type);
       roadDraw.setRoadMode(false);
@@ -182,6 +191,8 @@ export function mountHud({ roadDraw, buildPlace, state, getSpeed, onSpeedChange 
     for (const [type, button] of buildingButtons) {
       button.classList.toggle('active', armed === type);
       button.disabled = !canAfford(state, type);
+      // The goal of the game joins the bar once the gród has a dwór.
+      if (BUILDINGS[type].kind === 'kopiec') button.style.display = moundUnlocked(state) || state.mound ? '' : 'none';
     }
   }
 
