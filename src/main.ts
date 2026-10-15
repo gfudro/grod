@@ -20,7 +20,7 @@ import { mountInspectPanel } from './ui/inspect-panel';
 import { createRoadDrawController, type RoadDrawController } from './input/road-draw';
 import { createBuildPlacementController, type BuildPlacementController } from './input/build-place';
 import { createInspectController } from './input/inspect';
-import type { SpeedMultiplier } from './sim/state';
+import { PLAYER_SPEEDS, SPEEDS, type SpeedMultiplier } from './sim/state';
 import { inspectTile } from './sim/inspect';
 import { setBuildingPaused } from './sim/building-control';
 import { demolish } from './sim/demolish';
@@ -157,10 +157,17 @@ async function start(): Promise<void> {
   roadDraw = createRoadDrawController(viewport, state, refreshWorldLayers);
   buildPlace = createBuildPlacementController(viewport, state, refreshWorldLayers, buildGhost.update);
 
+  // x10 and x60 are for dad's tests only: open the game with ?test in the address.
+  const speeds: readonly SpeedMultiplier[] = new URLSearchParams(location.search).has('test') ? SPEEDS : PLAYER_SPEEDS;
+  // A save from a game run at a speed that has no button here (x2, x3, x20 of
+  // older versions, or x60 from a test) carries on at x1, so it's never stuck too fast.
+  if (state.speed !== 0 && !speeds.includes(state.speed)) state.speed = 1;
+
   const hud = mountHud({
     roadDraw,
     buildPlace,
     state,
+    speeds,
     getSpeed: () => state.speed,
     onSpeedChange: (speed: SpeedMultiplier) => {
       state.speed = speed;

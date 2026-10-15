@@ -5,13 +5,15 @@ import type { RoadDrawController } from '../input/road-draw';
 import { canAfford } from '../sim/placement';
 import { MOUND } from '../data/mound';
 import { moundUnlocked } from '../sim/mound';
-import { SPEEDS, type GameState, type SpeedMultiplier } from '../sim/state';
+import type { GameState, SpeedMultiplier } from '../sim/state';
 import { STRINGS } from './strings';
 
 export interface HudCallbacks {
   roadDraw: RoadDrawController;
   buildPlace: BuildPlacementController;
   state: GameState;
+  /** Speed buttons shown: Artur's two, or all of them in test mode. */
+  speeds: readonly SpeedMultiplier[];
   getSpeed: () => SpeedMultiplier;
   onSpeedChange: (speed: SpeedMultiplier) => void;
 }
@@ -134,7 +136,7 @@ export interface Hud {
   extraSlot: HTMLElement;
 }
 
-export function mountHud({ roadDraw, buildPlace, state, getSpeed, onSpeedChange }: HudCallbacks): Hud {
+export function mountHud({ roadDraw, buildPlace, state, speeds, getSpeed, onSpeedChange }: HudCallbacks): Hud {
   injectStyle();
 
   const hud = document.createElement('div');
@@ -155,7 +157,7 @@ export function mountHud({ roadDraw, buildPlace, state, getSpeed, onSpeedChange 
   centerGroup.className = 'hud-group';
   const pauseButton = document.createElement('button');
   pauseButton.textContent = STRINGS.pauza;
-  const speedButtons = SPEEDS.map((speed) => {
+  const speedButtons = speeds.map((speed) => {
     const button = document.createElement('button');
     button.textContent = `x${speed}`;
     button.addEventListener('click', () => {

@@ -165,6 +165,10 @@ Kolejność od 0.9.0 (Greg, 2026-10-14): najpierw mechanika, grafiki i dźwięki
 
 - [x] Do 3 ludzików nosi materiał na jeden plac budowy, przebudowę i odbudowę; najpierw każdy plac dostaje jednego (Greg, 2026-10-15)
 
+## Prędkości (0.16.1)
+
+- [x] Dla Artura tylko x1 i x5; x10 i x60 po dopisaniu `?test` do adresu (Greg, 2026-10-15)
+
 ## Grafiki i dźwięki (gdy Greg wrzuci pliki)
 
 - [ ] Skrypt przetwarzania grafik: usunięcie tła magenta, przycięcie, skalowanie
@@ -184,4 +188,4 @@ Kolejność od 0.9.0 (Greg, 2026-10-14): najpierw mechanika, grafiki i dźwięki
 
 Zadania z notatek w `docs/playtests/` trafiają tutaj, z datą testu.
 
-- [ ] Przeprojektować dolny pasek (Greg, 2026-10-15). Przy 11 budynkach i 7 prędkościach robi się ciasno, kolejne piętra dołożą przyciski. Od 0.14.0 (13 budynków) pasek budynków przesuwa się palcem w bok, to tymczasowe. Od 0.15.0 jest 17 budynków + KOPIEC, a górny pasek przy 13 towarach zmniejsza czcionkę. Do ustalenia z Gregiem, jak ma wyglądać.
+- [ ] Przeprojektować dolny pasek (Greg, 2026-10-15). Przy 11 budynkach i 7 prędkościach robi się ciasno (od 0.16.1 dla Artura tylko 2 prędkości), kolejne piętra dołożą przyciski. Od 0.14.0 (13 budynków) pasek budynków przesuwa się palcem w bok, to tymczasowe. Od 0.15.0 jest 17 budynków + KOPIEC, a górny pasek przy 13 towarach zmniejsza czcionkę. Do ustalenia z Gregiem, jak ma wyglądać.

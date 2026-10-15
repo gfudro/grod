@@ -243,7 +243,7 @@ Wszystkie towary płyną po drogach przez magazyn, a odległość ma znaczenie. 
 - **Bez korków.** Ludziki przechodzą przez siebie.
 - **Bezczynność widać.** Ludzik bez surowca stoi przed budynkiem z ikonką tego, czego mu brakuje.
 - **Drogi rosną razem z grodem:** najpierw ścieżka, potem szybsza droga z dyli (drewnianych bali), później most.
-- **Prędkość gry** x1, x2 i x3 oraz pauza. Do testów dochodzą x5, x10, x20 i x60 (prośba Grega, 2026-10-14), żeby szybko przewinąć do zimy.
+- **Prędkość gry** dla Artura: pauza, x1 i x5 (Greg, 2026-10-15). Do testów taty dochodzą x10 i x60, widoczne tylko po dopisaniu `?test` do adresu gry. Zapis grany na prędkości, której nie ma na pasku (x2, x3, x20 ze starszych wersji albo x60 z testu), rusza dalej na x1.
 
 ## Pory roku i zagrożenia
 

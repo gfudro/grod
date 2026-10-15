@@ -6,8 +6,11 @@ import { WAREHOUSE_TILE } from '../data/waypoints';
 import { createRng, type RngState } from './rng';
 import { addChronicleEntry, emptySeasonLog, type ChronicleEntry, type SeasonLog } from './chronicle';
 
-/** Game speeds on the HUD; x5 and above are mainly for playtesting long stretches. */
-export const SPEEDS = [1, 2, 3, 5, 10, 20, 60] as const;
+/** Every game speed there is (Greg, 2026-10-15: Artur gets x1 and x5). */
+export const SPEEDS = [1, 5, 10, 60] as const;
+
+/** Artur's speeds; the rest only with ?test in the address (see main.ts). */
+export const PLAYER_SPEEDS: readonly SpeedMultiplier[] = [1, 5];
 
 /** 0 = paused. */
 export type SpeedMultiplier = 0 | (typeof SPEEDS)[number];
