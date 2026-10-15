@@ -176,6 +176,20 @@ Decyzje z 0.16.0 (kilku budowniczych, Greg 2026-10-15):
 - **Kopiec** już wcześniej miał do 4 noszących. Gdy wygląda, jakby nosił jeden, to brakuje materiału w magazynie: każda nowa sztuka kamienia od razu idzie na kopiec. Nad kopcem widać wtedy kółko w kolorze brakującego materiału.
 - **Zapis:** `SAVE_VERSION = 10`. Plac budowy, przebudowa i odbudowa nie zapisują już jednego przypisanego budowniczego (budowniczowie to ludziki, których zadanie wskazuje na budowę).
 
+Decyzje z 0.17.0 (śnieżyca i głód, Greg 2026-10-15):
+
+- **Śnieżyca** (wybór Grega: mróz z zapasem opału i zasypane drogi z łopatami naraz). Od roku 2 przychodzi 1–2 razy na zimę. Pięć dni wcześniej nad północną krawędzią mapy rośnie biała ściana śniegu, a na pasku czerwony, pulsujący znaczek 🌨️ odlicza dni. Przez 5 dni wieje: mapa blednie, płatków jest trzy razy więcej, wiatr niesie je w bok, ludziki brną 2 razy wolniej (oprócz zwykłego zimowego spowolnienia), a domy palą opał 2 razy szybciej. Znaczek robi się wtedy szary i liczy dni do końca.
+- **Zaspy:** w czasie śnieżycy na drogach rosną białe zaspy, aż przykryją połowę kafelków drogi. Wejście na zaspę trwa 3 razy dłużej.
+- **Odśnieżanie łopatami:** po śnieżycy do 3 wolnych ludzików bierze z magazynu po łopacie (widać ją w rękach), odkopuje najbliższe zaspy po kolei (3 s każda) i odnosi łopatę. Łopaty się nie zużywają. Bez łopat zaspy leżą do wiosny i wtedy topnieją. W czasie śnieżycy nikt nie odśnieża.
+- Ostrzeżenie przed zimą od roku 2 liczy też zapas opału na jedną śnieżycę. Kronika zapisuje każdą śnieżycę.
+- **Głód w trzech stopniach** (pomysł Grega). Głodny jest dom bez ryb, a z nim jego mieszkańcy:
+  1. Od razu: mieszkańcy chodzą i pracują 1,5 raza wolniej, a nad głową mają rybkę.
+  2. Po 5 dniach (30 s przy x1): robią się czerwoni i mają smutną buźkę.
+  3. Po 10 dniach: kończą to, co niosą, rzucają pracę i idą do domu. Nad domem jest wtedy czerwona smutna buźka z liczbą osób w środku. Wracają do pracy, gdy tylko do domu trafi ryba. Kronika zapisuje, że głodni zamknęli się w domu.
+- **Zabezpieczenie przed całkowitą blokadą:** startowa załoga (3 ludziki) nie ma domu i nigdy nie głoduje. Rybak i tragarze niosący ryby pracują dalej nawet w najgorszym głodzie. Głodne domy dostają ryby przed każdą inną pracą (zaraz po gaszeniu pożaru). Nikt się nie wyprowadza, dom nie spada piętro niżej (zasada 3).
+- **Każdy ludzik zna swój dom:** osadnik dostaje go, gdy dojdzie. Po zburzeniu domu jego mieszkańcy zostają bez domu, tak jak startowa załoga.
+- **Zapis:** `SAVE_VERSION = 11` (śnieżyce, zaspy, dom ludzika, licznik głodu w domu). W starych zapisach osadnicy dostają domy według liczby mieszkańców, po kolei.
+
 ## Wizja i filary
 
 Gród to spokojna gra budowlana na iPada dla 6-letniego Artura: łańcuchy produkcji jak w Anno, przejrzystość jak w Warcraft 2, bez walki. Artur gra przy tacie, ale ma sobie radzić choć trochę samodzielnie.
@@ -254,7 +268,7 @@ Rok ma cztery pory roku, każda trwa 3–4 minuty przy prędkości x1. Wszystko,
 | Wiosna | Siew prosa | Roztopy zalewają budynki stojące tuż przy rzece |
 | Lato | Pola rosną | Burza: piorun podpala dom; chroni kontyna Peruna, gasi studnia (od 0.13.0) |
 | Jesień | Żniwa, szczyt produkcji | — |
-| Zima | Pola nie rodzą, domy zużywają opał (drewno), rybak łowi wolniej, ludziki chodzą wolniej po śniegu | Śnieżyca spowalnia ludzików na drogach |
+| Zima | Pola nie rodzą, domy zużywają opał (drewno), rybak łowi wolniej, ludziki chodzą wolniej po śniegu | Śnieżyca: wolniej, więcej opału, zaspy na drogach; odśnieżają ludzie z łopatami (od 0.17.0) |
 
 Zasady dla każdego zagrożenia:
 

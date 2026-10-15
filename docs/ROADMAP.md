@@ -169,6 +169,12 @@ Kolejność od 0.9.0 (Greg, 2026-10-14): najpierw mechanika, grafiki i dźwięki
 
 - [x] Dla Artura tylko x1 i x5; x10 i x60 po dopisaniu `?test` do adresu (Greg, 2026-10-15)
 
+## Śnieżyca i głód (0.17.0)
+
+- [x] Śnieżyca od roku 2: zapowiedź 5 dni wcześniej, wolniejszy chód, 2× więcej opału, zaspy na drogach (Greg, 2026-10-15)
+- [x] Odśnieżanie: wolni ludzie z łopatami z kuźni; bez łopat zaspy topnieją wiosną
+- [x] Głód w trzech stopniach: wolniej z rybką → czerwoni ze smutną buźką → siedzą w domu; załoga startowa, rybak i tragarze ryb pracują zawsze
+
 ## Grafiki i dźwięki (gdy Greg wrzuci pliki)
 
 - [ ] Skrypt przetwarzania grafik: usunięcie tła magenta, przycięcie, skalowanie
@@ -181,8 +187,8 @@ Kolejność od 0.9.0 (Greg, 2026-10-14): najpierw mechanika, grafiki i dźwięki
 ## Później
 
 - [ ] Drugi magazyn, droga z dyli, mosty
-- [ ] Legendy, powodzie, śnieżyce, myszy, wilki, święto Marzanny
-- [ ] Dawne grody jako kurhany na nowych mapach
+- [ ] Legendy, powodzie, myszy, wilki, święto Marzanny
+- [ ] Mapa świata (Greg, 2026-10-15: „chyba zrobimy mapę świata, ale to później”); dawne grody jako kurhany na niej, z nazwą i kroniką
 
 ## Z testów
 

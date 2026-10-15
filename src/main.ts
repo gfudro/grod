@@ -24,7 +24,10 @@ import { PLAYER_SPEEDS, SPEEDS, type SpeedMultiplier } from './sim/state';
 import { inspectTile } from './sim/inspect';
 import { setBuildingPaused } from './sim/building-control';
 import { demolish } from './sim/demolish';
-import { tick, ticksPerTile } from './sim/tick';
+import { stepTicks, tick } from './sim/tick';
+import { hungerStage } from './sim/hunger';
+import { activeBlizzard } from './sim/blizzard';
+import { createBlizzardLayer } from './render/blizzard';
 import { currentSeason } from './sim/seasons';
 import { createSnowfall } from './render/snowfall';
 import { createStormLayer } from './render/storm';
@@ -98,6 +101,9 @@ async function start(): Promise<void> {
 
   const snowfall = createSnowfall();
   viewport.addChild(snowfall.container);
+
+  const blizzardLayer = createBlizzardLayer();
+  viewport.addChild(blizzardLayer.container);
 
   function refreshWorldLayers(): void {
     terrain.setSeason(currentSeason(state));
@@ -250,14 +256,14 @@ async function start(): Promise<void> {
       }
       if (ticked) syncVillagerSprites();
       const alpha = accumulatorMs / tickMs;
-      const stepTicks = ticksPerTile(state);
       for (let i = 0; i < state.villagers.length; i++) {
-        villagerSprites[i].update(state.villagers[i], alpha, stepTicks);
+        const v = state.villagers[i];
+        villagerSprites[i].update(v, alpha, stepTicks(state, v), hungerStage(state, v));
       }
     } else {
-      const stepTicks = ticksPerTile(state);
       for (let i = 0; i < state.villagers.length; i++) {
-        villagerSprites[i].update(state.villagers[i], 0, stepTicks);
+        const v = state.villagers[i];
+        villagerSprites[i].update(v, 0, stepTicks(state, v), hungerStage(state, v));
       }
     }
     if (ticked) {
@@ -271,7 +277,12 @@ async function start(): Promise<void> {
     }
     // Flakes speed up a little with the game, but never into a blur.
     stormLayer.update(state, performance.now());
-    snowfall.update(state.speed > 0 ? ticker.deltaMS * Math.min(state.speed, 3) : 0, currentSeason(state) === 'zima');
+    snowfall.update(
+      state.speed > 0 ? ticker.deltaMS * Math.min(state.speed, 3) : 0,
+      currentSeason(state) === 'zima',
+      activeBlizzard(state) !== null,
+    );
+    blizzardLayer.update(state, performance.now());
   });
 
   mountVersionLabel();

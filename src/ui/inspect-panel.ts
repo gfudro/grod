@@ -124,7 +124,9 @@ function describe(info: InspectInfo): string {
         ].filter(Boolean);
         growth = ` — ${info.nextName}: ${missing.length > 0 ? `brak ${missing.join(', ')}` : 'zaraz'}`;
       }
-      const need = info.shortages.length > 0 ? ` — brak: ${info.shortages.join(', ')}` : '';
+      const need =
+        (info.shortages.length > 0 ? ` — brak: ${info.shortages.join(', ')}` : '') +
+        (info.strikers > 0 ? ` — głodni w domu: ${info.strikers}` : '');
       return `${info.name} — ${info.connected ? 'droga OK' : 'brak drogi'} — mieszkańcy ${info.residents}/${info.capacity} — ${goods}${need}${growth}${storm}`;
     }
     case 'mound': {

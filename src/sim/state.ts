@@ -31,7 +31,11 @@ export type VillagerJob =
   /** Rebuilds burned ruins (after ODBUDUJ), like a construction site. */
   | { kind: 'rebuild'; houseId: string; stage: BuildStage }
   /** Carries one material at a time from the warehouse to the kopiec. */
-  | { kind: 'mound'; stage: 'toWarehouse' | 'toMound' };
+  | { kind: 'mound'; stage: 'toWarehouse' | 'toMound' }
+  /** Digs snow drifts off the roads with a łopata borrowed from the warehouse. */
+  | { kind: 'dig'; stage: 'toWarehouse' | 'toDrift' | 'digging' | 'returning'; tile: Vec2 | null }
+  /** Hungry for too long: sits at home doing nothing until fish arrives. */
+  | { kind: 'strike'; houseId: string };
 
 export type BuildStage = 'toWarehouse' | 'toSite' | 'hammering';
 
@@ -49,6 +53,11 @@ export interface VillagerState {
   workTicksRemaining: number;
   /** While waiting: the resource whose absence holds this villager up (null = no road). */
   waitingFor: ResourceType | null;
+  /**
+   * The house this villager lives in (set when a settler arrives). The
+   * starting crew has none. Absent in saves before 0.17.0 was migrated.
+   */
+  homeId?: string | null;
 }
 
 /** Builders on it are the villagers whose job points at it (see sim/construction.ts). */
@@ -109,6 +118,8 @@ export interface House {
   ruined?: boolean;
   /** Ruins being rebuilt after ODBUDUJ — paid for, works like a construction site. */
   rebuild?: HouseUpgrade | null;
+  /** Ticks this occupied house has gone without fish (see data/hunger.ts); 0 or absent = fed. */
+  hungerTicks?: number;
 }
 
 export interface HouseFire {
@@ -148,6 +159,13 @@ export interface Mound {
   celebrated: boolean;
 }
 
+/** A winter blizzard: announced at `appearTick`, blows from `startTick` to `endTick`. */
+export interface Blizzard {
+  appearTick: number;
+  startTick: number;
+  endTick: number;
+}
+
 export interface GameState {
   tick: number;
   rng: RngState;
@@ -169,6 +187,10 @@ export interface GameState {
   lastStrike: LightningStrike | null;
   /** The kopiec, once Artur has marked out its place; null before. */
   mound: Mound | null;
+  /** This winter's blizzards still to come or blowing, soonest first. */
+  blizzards: Blizzard[];
+  /** Road tiles (tileKey) under a snow drift. */
+  drifts: string[];
 }
 
 export function warehouseAmount(state: GameState, resource: ResourceType): number {
@@ -240,6 +262,8 @@ export function createInitialState(seed = 1): GameState {
     storms: [],
     lastStrike: null,
     mound: null,
+    blizzards: [],
+    drifts: [],
   };
   addChronicleEntry(state, 'zalozenie');
   for (let i = 0; i < STARTING_WORKER_POOL; i++) {

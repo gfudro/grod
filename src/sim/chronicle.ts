@@ -30,6 +30,10 @@ export type ChronicleKind =
   | 'kopiec-usypany'
   /** Artur named the kopiec (params.name). */
   | 'kopiec-nazwa'
+  /** A blizzard hit the gród. */
+  | 'sniezyca'
+  /** A house went hungry so long that its people stopped working (params.tier). */
+  | 'strajk-glodowy'
   /** A save that could not be carried over: the old gród lives on as history. */
   | 'dawny-grod';
 

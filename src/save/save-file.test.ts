@@ -162,6 +162,31 @@ describe('migration v9 → v10 (several builders)', () => {
   });
 });
 
+describe('migration v10 → v11 (blizzards, hunger at home)', () => {
+  it('settlers get their house by its resident count; the starting crew has none', () => {
+    const v6 = readFixture('v6-rok1-zima-zabrodzie.json');
+    const result = loadSaveFile(v6);
+    if (!result.ok) throw new Error(result.reason);
+    const { state } = result;
+    expect(state.blizzards).toEqual([]);
+    expect(state.drifts).toEqual([]);
+    for (const v of state.villagers) {
+      if (v.id.startsWith('ludzik')) expect(v.homeId).toBeNull();
+    }
+    for (const house of state.houses) {
+      const living = state.villagers.filter((v) => v.homeId === house.id).length;
+      expect(living).toBeLessThanOrEqual(house.residents);
+    }
+  });
+
+  it('a blizzard under way and its drifts carry on after loading', () => {
+    const result = loadSaveFile(readFixture('v11-rok2-zima-sniezyca.json'));
+    if (!result.ok) throw new Error(result.reason);
+    expect(result.state.drifts.length).toBeGreaterThan(0);
+    expect(result.state.blizzards.length).toBeGreaterThan(0);
+  });
+});
+
 describe('saves that cannot be loaded', () => {
   it('refuses a save from a newer version of the game, and rescues its chronicle', () => {
     const future = { ...(readFixture('v2-rok2-wiosna.json') as object), saveVersion: SAVE_VERSION + 1 };

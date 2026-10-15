@@ -5,6 +5,7 @@ import { BUILDINGS } from '../data/buildings';
 import { SEASON_ORDER, type Season } from '../data/seasons';
 import { currentSeason, currentYear, winterWarning, yearProgress } from '../sim/seasons';
 import { activeStorm, protectingKontyna, stormDaysLeft } from '../sim/storms';
+import { activeBlizzard, blizzardDays, comingBlizzard } from '../sim/blizzard';
 import { STRINGS } from './strings';
 
 const TOPBAR_STYLE = `
@@ -59,6 +60,11 @@ const TOPBAR_STYLE = `
 /* A storm over a house the kontyna guards: shown, but calm. */
 #topbar .warning.guarded {
   background: #4a5160;
+  animation: none;
+}
+/* The blizzard is blowing: shown, white, counting down to its end. */
+#topbar .warning.blowing {
+  background: #7d8fa0;
   animation: none;
 }
 @keyframes winter-pulse {
@@ -280,6 +286,15 @@ export function mountTopBar(): TopBar {
   stormIcon.textContent = '⚡';
   storm.el.insertBefore(stormIcon, storm.value);
 
+  // A blizzard: red and pulsing with days until it hits, then calm grey
+  // with days until it's over.
+  const blizzard = chip(null);
+  blizzard.el.classList.add('warning', 'hidden');
+  const blizzardIcon = document.createElement('span');
+  blizzardIcon.className = 'icon';
+  blizzardIcon.textContent = '🌨️';
+  blizzard.el.insertBefore(blizzardIcon, blizzard.value);
+
   // Swatch, the amount, and the resource's name in small print under it.
   const resourceChips = RESOURCE_ORDER.map((resource) => {
     const { el, value } = chip(RESOURCE_COLOR[resource]);
@@ -333,6 +348,12 @@ export function mountTopBar(): TopBar {
       storm.el.classList.toggle('guarded', protectingKontyna(state, cloudHouse) !== null);
     }
 
+    const blowing = activeBlizzard(state);
+    const shownBlizzard = blowing ?? comingBlizzard(state);
+    blizzard.el.classList.toggle('hidden', !shownBlizzard);
+    blizzard.el.classList.toggle('blowing', blowing !== null);
+    if (shownBlizzard) blizzard.value.textContent = String(blizzardDays(state, shownBlizzard));
+
     const warn = winterWarning(state);
     warning.el.classList.toggle('hidden', warn === null);
     if (warn) {
@@ -356,6 +377,7 @@ export function mountTopBar(): TopBar {
       ...resourceChips.map((c) => (c.shown ? 1 : 0)),
       warn ? warn.missing.length + 1 : 0,
       cloud ? 1 : 0,
+      shownBlizzard ? 1 : 0,
     ].join('');
     if (key !== layoutKey) {
       layoutKey = key;

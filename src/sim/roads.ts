@@ -16,6 +16,7 @@ export function eraseRoads(state: GameState, keys: Iterable<string>): string[] {
   }
   if (erased.length === 0) return erased;
   const gone = new Set(erased);
+  state.drifts = state.drifts.filter((k) => !gone.has(k)); // no road, no drift on it
   for (const v of state.villagers) {
     if (v.motion === 'walking' && v.path.some((t) => gone.has(tileKey(t)))) v.path = [v.to];
   }

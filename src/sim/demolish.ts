@@ -123,8 +123,10 @@ export function demolish(state: GameState, id: string): boolean {
     // Fish, kasza and firewood already stocked at the house go back too.
     refund(state, house.goods);
     releaseWorkers(state, (j) => (j.kind === 'deliver' || j.kind === 'douse') && j.houseId === id, [house.tile]);
-    // Its residents stay in the gród as free workers; settlers on their
-    // way in find the house gone and join the pool too (runArriving).
+    // Its residents stay in the gród as free workers, now without a house
+    // to go hungry in; settlers on their way in find the house gone and
+    // join the pool too (runArriving).
+    for (const v of state.villagers) if (v.homeId === id) v.homeId = null;
     state.houses = state.houses.filter((h) => h !== house);
     return true;
   }

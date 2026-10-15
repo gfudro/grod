@@ -109,4 +109,31 @@ export const MIGRATIONS: Record<number, (save: RawSave) => RawSave> = {
       : save.state.houses;
     return { ...save, saveVersion: 10, state: { ...save.state, sites, houses } };
   },
+  /**
+   * v11 (0.17.0): blizzards and snow drifts, and hunger that hits a
+   * house's own people — so every villager now knows their home. Settlers
+   * (osadnik-…) are housed by each house's resident count, in order; the
+   * starting crew (and anyone left over) has no house.
+   */
+  10: (save) => {
+    const houses = Array.isArray(save.state.houses) ? (save.state.houses as { id: string; residents?: number }[]) : [];
+    const villagers = Array.isArray(save.state.villagers) ? (save.state.villagers as Record<string, unknown>[]) : [];
+    const free = villagers.filter(
+      (v) => typeof v.id === 'string' && v.id.startsWith('osadnik') && (v.job as { kind?: string } | undefined)?.kind !== 'arriving',
+    );
+    const homeOf = new Map<unknown, string>();
+    for (const house of houses) {
+      for (let i = 0; i < (house.residents ?? 0) && free.length > 0; i++) homeOf.set(free.shift()!.id, house.id);
+    }
+    return {
+      ...save,
+      saveVersion: 11,
+      state: {
+        ...save.state,
+        villagers: villagers.map((v) => ({ ...v, homeId: homeOf.get(v.id) ?? null })),
+        blizzards: [],
+        drifts: [],
+      },
+    };
+  },
 };

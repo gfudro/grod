@@ -20,6 +20,10 @@ import { addChronicleFirst, closeSeasonLog } from './chronicle';
 import { RUINS_REBUILD, STORM } from '../data/storms';
 import { advanceStorms, completeRebuild, houseOutOfUse, planStorms, pourWater, servingWell } from './storms';
 import { pathBackToRoad } from './roads';
+import { BLIZZARD } from '../data/blizzard';
+import { HUNGER } from '../data/hunger';
+import { activeBlizzard, advanceBlizzards, clearDrift, diggers, isDrift, planBlizzards, unclaimedDrifts } from './blizzard';
+import { advanceHunger, hungerStage, keepsWorkingWhenHungry, worksThisTick } from './hunger';
 import { buildersOn, nextToCarry, wantsBuilder, type ConstructionRef } from './construction';
 import { deliverToMound, moundTileKeys, moundWantsBuilder, nextMoundResource } from './mound';
 import {
@@ -41,9 +45,18 @@ import {
 /** Ticks to cross one tile: 1 tile per simulated second at the base 10 ticks/second rate. */
 export const TICKS_PER_TILE = 10;
 
-/** Ticks to cross one tile right now — slower in winter, through the snow. */
+/** Ticks to cross one tile right now — slower in winter, through the snow, and slower still in a blizzard. */
 export function ticksPerTile(state: GameState): number {
-  return Math.round(TICKS_PER_TILE * SEASONS[currentSeason(state)].walkMultiplier);
+  const blizzard = activeBlizzard(state) ? BLIZZARD.walkMultiplier : 1;
+  return Math.round(TICKS_PER_TILE * SEASONS[currentSeason(state)].walkMultiplier * blizzard);
+}
+
+/** Ticks this villager needs for the step under way: wading into a drift, or weak from hunger, takes longer. */
+export function stepTicks(state: GameState, villager: VillagerState): number {
+  let ticks = ticksPerTile(state);
+  if (isDrift(state, villager.to)) ticks *= BLIZZARD.driftWalkMultiplier;
+  if (hungerStage(state, villager) > 0) ticks *= HUNGER.slowMultiplier;
+  return Math.round(ticks);
 }
 
 /** How often (in ticks) the village checks whether a settler should walk in. */
@@ -55,8 +68,11 @@ export function tick(state: GameState): void {
     closeSeasonLog(state);
     startSeason(state, currentSeason(state));
     if (currentSeason(state) === 'lato') planStorms(state);
+    if (currentSeason(state) === 'zima') planBlizzards(state);
   }
   advanceStorms(state);
+  advanceBlizzards(state);
+  advanceHunger(state);
   consumeHouseGoods(state);
   noteShortages(state);
   startReadyUpgrades(state);
@@ -71,12 +87,13 @@ export function tick(state: GameState): void {
 function advanceVillager(state: GameState, villager: VillagerState): void {
   if (villager.motion !== 'walking') {
     villager.waitingFor = null; // runJob sets it again if still held up
+    maybeGoHomeHungry(state, villager);
     runJob(state, villager);
   }
   if (villager.motion !== 'walking') return;
 
   villager.segmentTicks += 1;
-  if (villager.segmentTicks < ticksPerTile(state)) return;
+  if (villager.segmentTicks < stepTicks(state, villager)) return;
 
   villager.segmentTicks = 0;
   villager.from = villager.to;
@@ -126,7 +143,115 @@ function runJob(state: GameState, villager: VillagerState): void {
     case 'mound':
       runMound(state, villager);
       return;
+    case 'dig':
+      runDig(state, villager);
+      return;
+    case 'strike':
+      runStrike(state, villager);
+      return;
   }
+}
+
+/**
+ * Hungry too long (data/hunger.ts): put down the work — once hands are
+ * empty, so nothing carried goes astray — and go home.
+ */
+function maybeGoHomeHungry(state: GameState, villager: VillagerState): void {
+  if (villager.job.kind === 'strike' || villager.job.kind === 'arriving') return;
+  if (villager.carrying || hungerStage(state, villager) < 3) return;
+  if (keepsWorkingWhenHungry(state, villager)) return;
+  for (const building of state.buildings) {
+    if (building.workerId === villager.id) building.workerId = null;
+  }
+  villager.job = { kind: 'strike', houseId: villager.homeId! };
+}
+
+/** At home, doing nothing, until the house has fish again. */
+function runStrike(state: GameState, villager: VillagerState): void {
+  const job = villager.job as Extract<VillagerJob, { kind: 'strike' }>;
+  const house = state.houses.find((h) => h.id === job.houseId);
+  if (!house || hungerStage(state, villager) < 3) {
+    villager.job = { kind: 'idle' };
+    villager.motion = 'idle';
+    return;
+  }
+  if (!atTile(villager.from, house.tile)) {
+    beginWalk(state, villager, house.tile);
+    return;
+  }
+  villager.motion = 'idle';
+}
+
+/**
+ * Digger: borrows a łopata from the warehouse, digs out the nearest
+ * drift nobody else is on, then the next, and brings the łopata back
+ * when there are none left (or a blizzard starts again).
+ */
+function runDig(state: GameState, villager: VillagerState): void {
+  const job = villager.job as Extract<VillagerJob, { kind: 'dig' }>;
+
+  if (job.stage === 'toWarehouse') {
+    if (!atTile(villager.from, WAREHOUSE_TILE)) {
+      beginWalk(state, villager, WAREHOUSE_TILE);
+      return;
+    }
+    if (unclaimedDrifts(state, villager).length === 0 || !takeFromWarehouse(state, 'lopaty', 1)) {
+      villager.job = { kind: 'idle' };
+      villager.motion = 'idle';
+      return;
+    }
+    villager.carrying = 'lopaty';
+    job.stage = 'toDrift';
+    job.tile = null;
+  }
+
+  if (job.stage === 'toDrift') {
+    if (activeBlizzard(state)) {
+      job.stage = 'returning'; // no use digging while it still blows
+    } else {
+      if (!job.tile || !isDrift(state, job.tile)) job.tile = nearestDrift(state, villager);
+      if (!job.tile) {
+        job.stage = 'returning';
+      } else if (!atTile(villager.from, job.tile)) {
+        beginWalk(state, villager, job.tile);
+        return;
+      } else {
+        job.stage = 'digging';
+        villager.workTicksRemaining = BLIZZARD.clearTicks;
+        villager.motion = 'idle';
+        return;
+      }
+    }
+  }
+
+  if (job.stage === 'digging') {
+    villager.motion = 'idle';
+    if (worksThisTick(state, villager)) villager.workTicksRemaining -= 1;
+    if (villager.workTicksRemaining > 0) return;
+    if (job.tile) clearDrift(state, job.tile);
+    job.tile = null;
+    job.stage = 'toDrift';
+    return;
+  }
+
+  // job.stage === 'returning': the łopata goes back to the warehouse.
+  carryToWarehouse(state, villager, () => {
+    villager.job = { kind: 'idle' };
+  });
+}
+
+function nearestDrift(state: GameState, villager: VillagerState): Vec2 | null {
+  let best: Vec2 | null = null;
+  let bestDistance = Infinity;
+  for (const key of unclaimedDrifts(state, villager)) {
+    const [x, y] = key.split(',').map(Number);
+    const d = manhattan(villager.from, { x, y });
+    if (d < bestDistance) {
+      best = { x, y };
+      bestDistance = d;
+    }
+  }
+  return best;
 }
 
 function runIdle(state: GameState, villager: VillagerState): void {
@@ -154,6 +279,17 @@ function tryAssignWork(state: GameState, villager: VillagerState): boolean {
     const dousers = state.villagers.filter((v) => v.job.kind === 'douse' && v.job.houseId === house.id).length;
     if (dousers < STORM.maxDousers) {
       villager.job = { kind: 'douse', houseId: house.id, stage: 'toWell' };
+      return true;
+    }
+  }
+
+  // Hungry houses get fish before anything else is built or carried.
+  const season0 = currentSeason(state);
+  for (const house of state.houses) {
+    if ((house.hungerTicks ?? 0) === 0 || !isAdjacentToRoad(house.tile, state.roads)) continue;
+    if (warehouseAmount(state, 'ryba') === 0) break;
+    if (houseGood(house, 'ryba') + committedDeliveries(state, house, 'ryba', villager) < houseGoodTarget(house, 'ryba', season0)) {
+      villager.job = { kind: 'deliver', houseId: house.id, resource: 'ryba', stage: 'toWarehouse' };
       return true;
     }
   }
@@ -195,6 +331,17 @@ function tryAssignWork(state: GameState, villager: VillagerState): boolean {
         return true;
       }
     }
+  }
+
+  // After a blizzard, free hands with a łopata dig the drifts off the roads.
+  if (
+    !activeBlizzard(state) &&
+    warehouseAmount(state, 'lopaty') > 0 &&
+    diggers(state).length < BLIZZARD.maxDiggers &&
+    unclaimedDrifts(state).length > diggers(state).filter((v) => v.job.kind === 'dig' && !v.job.tile).length
+  ) {
+    villager.job = { kind: 'dig', stage: 'toWarehouse', tile: null };
+    return true;
   }
 
   // Last of all, free hands help heap up the kopiec.
@@ -456,7 +603,7 @@ function runConstruction(
 
   // job.stage === 'hammering'
   villager.motion = 'idle';
-  villager.workTicksRemaining -= 1;
+  if (worksThisTick(state, villager)) villager.workTicksRemaining -= 1;
   if (villager.workTicksRemaining <= 0) {
     target.complete();
     villager.job = { kind: 'idle' };
@@ -500,7 +647,7 @@ function runProduce(state: GameState, villager: VillagerState): void {
 
   if (job.stage === 'gathering') {
     villager.motion = 'idle';
-    villager.workTicksRemaining -= 1;
+    if (worksThisTick(state, villager)) villager.workTicksRemaining -= 1;
     if (villager.workTicksRemaining <= 0) {
       villager.carrying = def.produces!;
       job.stage = 'toWarehouse';
@@ -571,7 +718,7 @@ function runFarm(state: GameState, villager: VillagerState): void {
 
   if (job.stage === 'sowing' || job.stage === 'harvesting') {
     villager.motion = 'idle';
-    villager.workTicksRemaining -= 1;
+    if (worksThisTick(state, villager)) villager.workTicksRemaining -= 1;
     if (villager.workTicksRemaining > 0) return;
     const plot = building.plots[job.plot];
     if (job.stage === 'sowing') {
@@ -643,7 +790,7 @@ function runProcess(state: GameState, villager: VillagerState): void {
 
   if (job.stage === 'working') {
     villager.motion = 'idle';
-    villager.workTicksRemaining -= 1;
+    if (worksThisTick(state, villager)) villager.workTicksRemaining -= 1;
     if (villager.workTicksRemaining <= 0) {
       villager.carrying = def.produces!;
       job.stage = 'toWarehouse';
@@ -741,6 +888,7 @@ function runArriving(state: GameState, villager: VillagerState): void {
   }
   if (atTile(villager.from, house.tile)) {
     house.residents += 1;
+    villager.homeId = house.id;
     state.seasonLog.settlers += 1;
     villager.job = { kind: 'idle' };
     villager.motion = 'idle';

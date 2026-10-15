@@ -21,6 +21,7 @@ import { houseGood, type GameState, type PlotStage, type VillagerState } from '.
 import { MOUND } from '../data/mound';
 import { moundBuilders, moundMissing, moundTiles } from './mound';
 import { buildersOn } from './construction';
+import { hungerStage } from './hunger';
 
 export interface GoodCounter {
   resource: ResourceType;
@@ -75,6 +76,8 @@ export type InspectInfo =
       hasWell: boolean;
       /** Days until the bolt, while a storm cloud hangs over this house. */
       stormDays: number | null;
+      /** Residents sitting at home, too hungry to work. */
+      strikers: number;
     }
   | {
       kind: 'mound';
@@ -104,6 +107,8 @@ const JOB_DESCRIPTIONS: Record<string, string> = {
   douse: 'gasi ogień',
   rebuild: 'odbudowuje',
   mound: 'sypie kopiec',
+  dig: 'odśnieża',
+  strike: 'głodny, siedzi w domu',
 };
 
 function describeVillager(villager: VillagerState): string {
@@ -157,6 +162,12 @@ function villagerTargetTile(state: GameState, villager: VillagerState): Vec2 | n
       if (!house) return null;
       return job.stage === 'toWarehouse' ? WAREHOUSE_TILE : house.tile;
     }
+    case 'dig':
+      return job.stage === 'toDrift' || job.stage === 'digging' ? job.tile : WAREHOUSE_TILE;
+    case 'strike': {
+      const house = state.houses.find((h) => h.id === job.houseId);
+      return house ? house.tile : null;
+    }
     case 'mound':
       if (!state.mound) return null;
       return job.stage === 'toWarehouse' ? WAREHOUSE_TILE : state.mound.tile;
@@ -179,9 +190,10 @@ export function inspectTile(state: GameState, tile: Vec2): InspectInfo | null {
 function inspectVillager(state: GameState, tile: Vec2): InspectInfo | null {
   const villager = state.villagers.find((v) => atTile(v.from, tile) && v.motion !== 'walking');
   if (!villager) return null;
+  const hunger = hungerStage(state, villager);
   return {
     kind: 'villager',
-    description: describeVillager(villager),
+    description: describeVillager(villager) + (hunger > 0 && villager.job.kind !== 'strike' ? ' (głodny)' : ''),
     targetTile: villagerTargetTile(state, villager),
   };
 }
@@ -241,6 +253,7 @@ function inspectStructure(state: GameState, tile: Vec2): InspectInfo | null {
       shielded: protectingKontyna(state, house) !== null,
       hasWell: servingWell(state, house) !== null,
       stormDays: storm ? stormDaysLeft(state, storm) : null,
+      strikers: state.villagers.filter((v) => v.job.kind === 'strike' && v.job.houseId === house.id).length,
     };
   }
 

@@ -88,6 +88,9 @@ const FLAME_INNER = 0xffd23f;
 const FIRE_TIMER_COLOR = 0xffe14d;
 const WATER_COLOR = 0x4f9fd8;
 const COUNTER_BG_COLOR = 0x2b2016;
+const DRIFT_COLOR = 0xffffff;
+const DRIFT_SHADE = 0xa9c0d0;
+const STRIKE_COLOR = 0xd2321e;
 const MOUND_EARTH = 0x8a6a42;
 const MOUND_RIM = 0x4a3218;
 /** Raw earth layers while it's being heaped up, alternating so each is visible. */
@@ -130,6 +133,19 @@ export function createBuildingsLayer(): BuildingsLayer {
 
     const inset = TILE_SIZE * 0.1;
     const winter = currentSeason(state) === 'zima';
+
+    // Snow drifts on the roads after a blizzard: white heaps, slow to wade through.
+    for (const key of state.drifts) {
+      const [x, y] = key.split(',').map(Number);
+      const { px, py } = tileTopLeft(x, y);
+      graphics
+        .ellipse(px + TILE_SIZE * 0.5, py + TILE_SIZE * 0.58, TILE_SIZE * 0.46, TILE_SIZE * 0.3)
+        .fill(DRIFT_COLOR)
+        .ellipse(px + TILE_SIZE * 0.36, py + TILE_SIZE * 0.42, TILE_SIZE * 0.24, TILE_SIZE * 0.18)
+        .fill(DRIFT_COLOR)
+        .ellipse(px + TILE_SIZE * 0.5, py + TILE_SIZE * 0.58, TILE_SIZE * 0.46, TILE_SIZE * 0.3)
+        .stroke({ color: DRIFT_SHADE, width: 2 });
+    }
 
     for (const site of state.sites) {
       const { px, py } = tileTopLeft(site.tile.x, site.tile.y);
@@ -399,6 +415,24 @@ export function createBuildingsLayer(): BuildingsLayer {
       drawNoRoadIcon(graphics, px, py, inset);
     }
     if (house.fire) drawFire(graphics, px, py, house.fire.ticksLeft, house.fire.water, state.tick);
+
+    // Too hungry to work: a red sad face with how many sit inside.
+    const strikers = state.villagers.filter(
+      (v) => v.job.kind === 'strike' && v.job.houseId === house.id && v.motion !== 'walking',
+    ).length;
+    if (strikers > 0) {
+      const cx = px + TILE_SIZE - inset - 4;
+      const cy = py + TILE_SIZE / 2;
+      graphics.circle(cx, cy, 13).fill(STRIKE_COLOR).circle(cx, cy, 13).stroke({ color: 0xffffff, width: 2.5 });
+      graphics
+        .circle(cx - 4, cy - 3, 1.8)
+        .fill(0x2b0f08)
+        .circle(cx + 4, cy - 3, 1.8)
+        .fill(0x2b0f08)
+        .arc(cx, cy + 7, 5, Math.PI * 1.15, Math.PI * 1.85)
+        .stroke({ color: 0x2b0f08, width: 2 });
+      addLabel(String(strikers), cx + 12, cy + 10, 0xffffff, 14);
+    }
   }
 
   /** Zgliszcza: charred beams on ash, a wisp of smoke, the old tier's name in grey. */

@@ -3,6 +3,12 @@ import { FIREWOOD, HOUSE_TIERS } from '../data/houses';
 import type { ResourceType } from '../data/resources';
 import { SEASONS, SEASON_ORDER, SEASON_TICKS, TICKS_PER_DAY, type Season } from '../data/seasons';
 import { houseGood, warehouseAmount, type GameState, type House } from './state';
+import { BLIZZARD } from '../data/blizzard';
+
+/** Kept here rather than imported from sim/blizzard.ts, which itself imports this module. */
+function blizzardBlowing(state: GameState): boolean {
+  return state.blizzards.some((b) => state.tick >= b.startTick && state.tick < b.endTick);
+}
 
 export function seasonAt(tick: number): Season {
   return SEASON_ORDER[Math.floor(tick / SEASON_TICKS) % SEASON_ORDER.length];
@@ -54,13 +60,15 @@ export function startSeason(state: GameState, season: Season): void {
 /** Occupied houses eat their goods, and burn firewood in winter, on a fixed beat. */
 export function consumeHouseGoods(state: GameState): void {
   const burns = SEASONS[currentSeason(state)].burnsFirewood;
+  // A blizzard makes every hearth burn faster.
+  const burnEvery = blizzardBlowing(state) ? FIREWOOD.burnEvery / BLIZZARD.firewoodMultiplier : FIREWOOD.burnEvery;
   for (const house of state.houses) {
     if (house.residents === 0 || house.ruined) continue;
     const eatsEvery = HOUSE_TIERS[house.tier].eatsEvery;
     for (const [resource, every] of Object.entries(eatsEvery) as [ResourceType, number][]) {
       if (state.tick % every === 0) eatOne(house, resource);
     }
-    if (burns && state.tick % FIREWOOD.burnEvery === 0) eatOne(house, 'drewno');
+    if (burns && state.tick % burnEvery === 0) eatOne(house, 'drewno');
   }
 }
 
@@ -94,6 +102,10 @@ export function winterShortfall(state: GameState): ResourceType[] {
     const fishEvery = HOUSE_TIERS[house.tier].eatsEvery.ryba;
     if (fishEvery) need.ryba = (need.ryba ?? 0) + Math.ceil(SEASON_TICKS / fishEvery);
     need.drewno = (need.drewno ?? 0) + Math.ceil(SEASON_TICKS / FIREWOOD.burnEvery);
+    // From the blizzard years on, enough for one blizzard's extra burning too.
+    if (currentYear(state) >= BLIZZARD.firstYear) {
+      need.drewno += Math.ceil((BLIZZARD.durationTicks * (BLIZZARD.firewoodMultiplier - 1)) / FIREWOOD.burnEvery);
+    }
   }
   return (Object.entries(need) as [ResourceType, number][])
     .filter(([resource, amount]) => {

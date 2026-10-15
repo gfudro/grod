@@ -29,6 +29,7 @@ export const STRINGS = {
   odbuduj: 'ODBUDUJ',
   zgliszcza: 'ZGLISZCZA',
   burza: 'BURZA',
+  sniezyca: 'ŚNIEŻYCA',
   zamknij: 'ZAMKNIJ',
   blad: 'BŁĄD',
   kopiec: 'KOPIEC',
@@ -96,6 +97,13 @@ function tierAccusative(tier: unknown): string {
   return TIER_ACCUSATIVE[Number(tier)] ?? 'dom';
 }
 
+/** "mieszkańcy chaty". */
+const TIER_GENITIVE = ['ziemianki', 'chaty', 'zagrody', 'dworu'];
+
+function tierGenitive(tier: unknown): string {
+  return TIER_GENITIVE[Number(tier)] ?? 'domu';
+}
+
 function entryBody(entry: ChronicleEntry): string {
   const p = entry.params;
   switch (entry.kind) {
@@ -125,6 +133,10 @@ function entryBody(entry: ChronicleEntry): string {
       return 'piorun uderzył w kontynę Peruna i nikomu nic się nie stało';
     case 'odbudowa':
       return `odbudowano spaloną ${tierAccusative(p.tier)}`;
+    case 'sniezyca':
+      return 'przyszła śnieżyca i zasypała drogi';
+    case 'strajk-glodowy':
+      return `głodni mieszkańcy ${tierGenitive(p.tier)} przestali pracować i zamknęli się w domu`;
     case 'kopiec-zaczety':
       return 'plemię zaczęło sypać kopiec';
     case 'kopiec-usypany':
