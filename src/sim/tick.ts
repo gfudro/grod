@@ -14,7 +14,7 @@ import {
   startReadyUpgrades,
 } from './houses';
 import { findPath, isAdjacentToRoad } from './pathfinding';
-import { findResourceTile, manhattan } from './resource-tiles';
+import { findResourceTile, LAND_KEYS, manhattan } from './resource-tiles';
 import { consumeHouseGoods, currentSeason, houseShortages, startSeason } from './seasons';
 import { addChronicleFirst, closeSeasonLog } from './chronicle';
 import {
@@ -321,11 +321,16 @@ function runProduce(state: GameState, villager: VillagerState): void {
       villager.motion = 'idle';
       return;
     }
+    if (atTile(villager.from, building.tile) || isOffRoad(state, villager)) {
+      // From the building on, across open ground to the tree or the water.
+      beginWalk(state, villager, building.resourceTile, LAND_KEYS);
+      return;
+    }
     if (!isAdjacentToRoad(building.tile, state.roads)) {
       villager.motion = 'waiting'; // building lost its road connection
       return;
     }
-    beginWalk(state, villager, building.resourceTile);
+    beginWalk(state, villager, building.tile); // along the roads to the building first
     return;
   }
 
@@ -339,10 +344,20 @@ function runProduce(state: GameState, villager: VillagerState): void {
     return;
   }
 
-  // job.stage === 'toWarehouse'
+  // job.stage === 'toWarehouse': back over open ground to the building,
+  // then along the roads like everyone else.
+  if (isOffRoad(state, villager) && !atTile(villager.from, building.tile)) {
+    beginWalk(state, villager, building.tile, LAND_KEYS);
+    return;
+  }
   carryToWarehouse(state, villager, () => {
     job.stage = 'toResource';
   });
+}
+
+/** Standing on open ground rather than on a road (e.g. at a tree, on the bank). */
+function isOffRoad(state: GameState, villager: VillagerState): boolean {
+  return !state.roads.has(tileKey(villager.from)) && !atTile(villager.from, WAREHOUSE_TILE);
 }
 
 /**
@@ -684,10 +699,15 @@ function atTile(a: Vec2, b: Vec2): boolean {
 
 /**
  * Walk along roads to `target`. `extraWalkable` lets a villager also step
- * on non-road tiles that belong to their target, e.g. the plots of a
+ * on non-road tiles: open land on a drwal's way to his tree, or the plots of a
  * field or the footprint of a 2×2 site.
  */
-function beginWalk(state: GameState, villager: VillagerState, target: Vec2, extraWalkable: string[] = []): void {
+function beginWalk(
+  state: GameState,
+  villager: VillagerState,
+  target: Vec2,
+  extraWalkable: Iterable<string> = [],
+): void {
   if (atTile(villager.from, target)) {
     villager.motion = 'idle';
     return;

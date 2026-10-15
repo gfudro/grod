@@ -18,7 +18,7 @@ Decyzje z M3 (domy i osadnicy):
 - **Głód:** gród ma głód, gdy jakikolwiek zamieszkały dom ma zero ryb. Blokuje to nowych osadników, ale nie zawraca tych już w drodze.
 - **Limit zarezerwowanych zasobów:** przy przydzielaniu tragarza i osadnika liczę też tych już w drodze (nie tylko już dostarczone/zamieszkałe), żeby dom nigdy nie dostał więcej ryb niż potrzebuje ani więcej mieszkańców niż ma miejsc. Bez tego nadmiarowa ryba po prostu znikała z magazynu bez śladu — złapane w testach przed wydaniem.
 - **Pierścień celu po stuknięciu.** Drwal/rybak liczy najbliższe drzewo/wodę osobno dla każdego budynku — dwa drwale blisko siebie często celują w RÓŻNE drzewa. Jeśli droga nie sięga do tego konkretnego drzewa, robotnik czeka w nieskończoność, a gracz nie miał jak się dowiedzieć, dokąd. Stuknięcie w budynek albo w zablokowanego robotnika pokazuje teraz żółty pierścień dokładnie na kafelku, do którego próbuje dojść.
-- **Zasięg surowca przy stawianiu budynku:** drwal i rybak da się postawić tylko w promieniu 6 kafelków (w linii kratki, nie po drodze) od najbliższego drzewa/wody. Bez tego dało się postawić drwala daleko od lasu i tak samo nosił drewno — ograniczenie robi z lokalizacji budynku prawdziwą decyzję.
+- **Zasięg surowca przy stawianiu budynku:** drwal i rybak da się postawić tylko w promieniu 6 kafelków od najbliższego drzewa/wody (od 0.12.0 liczonych pieszo po ziemi). Bez tego dało się postawić drwala daleko od lasu i tak samo nosił drewno — ograniczenie robi z lokalizacji budynku prawdziwą decyzję.
 - **Wstrzymanie budynku.** Stuknięcie w budynek produkcyjny pokazuje przycisk WSTRZYMAJ/WZNÓW. Wstrzymanie natychmiast zwalnia przypisanego pracownika (budynek stoi, ale nic nie ginie — zgodnie z zasadą lekkiej kary) i blokuje mu przydzielanie nowych zadań, dopóki gracz nie wznowi. Potrzebne, gdy kolejność budowy sprawia, że zabrakło rąk do pracy na nowy plac budowy — gracz może ręcznie zwolnić kogoś z istniejącego budynku.
 
 Decyzje z M4 (chata i drugi łańcuch):
@@ -81,6 +81,12 @@ Decyzje z 0.11.0 (większa mapa i zima, prośba Grega i Artura 2026-10-15):
 - **Zimą ludziki chodzą 1,5 raza wolniej** (brną przez śnieg). Zauważył to Artur. Widać przyczynę: śnieg na mapie.
 - **Zapis:** `SAVE_VERSION = 6`. Dawna dolna krawędź mapy jest teraz w środku. Jeśli osadnicy mogli wejść do grodu tylko drogą do tej krawędzi, migracja przedłuża tę drogę prosto na południe do nowej krawędzi, przez wolną łąkę.
 - Z dłuższą drogą od krawędzi kilku osadników bywa w drodze naraz. Głód nie zawraca tych, którzy już idą (bez zmian).
+
+Decyzje z 0.12.0 (prośba Grega 2026-10-15):
+
+- **Drwal i rybak chodzą na przełaj** między swoim budynkiem a drzewem lub wodą. Droga musi dochodzić tylko do budynku, nie do lasu ani do wody. Z towarem wracają najpierw do budynku, a dalej do magazynu już po drodze (jak wszyscy), więc drogi dalej mają znaczenie.
+- **Zasięg 6 kafelków liczy się pieszo po ziemi**, a nie w linii prostej. Drwal na drugim brzegu nie celuje w las za rzeką, tylko w najbliższe drzewo, do którego da się dojść.
+- Na przełaj można przejść przez każdy kawałek lądu (także przez pola i budynki), ale nie przez rzekę. Bród liczy się jako ląd.
 
 ## Wizja i filary
 

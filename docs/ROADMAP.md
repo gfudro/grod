@@ -115,6 +115,10 @@ Kolejność od 0.9.0 (Greg, 2026-10-14): najpierw mechanika, grafiki i dźwięki
 - [x] Mapa 36×26 wokół starej, rzeka skręca na wschód, bród na drugi brzeg, dwa nowe lasy
 - [x] Zimą ludziki chodzą wolniej po śniegu (uwaga Artura)
 
+## Drwal i rybak na przełaj (0.12.0)
+
+- [x] Droga tylko do budynku drwala/rybaka; do drzewa i wody idą na przełaj, zasięg liczony pieszo
+
 ## M9 · Burza i pożar
 
 - [ ] Pierwsze zagrożenie: latem piorun podpala chatę, widać je zawczasu

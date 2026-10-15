@@ -3,7 +3,7 @@ import { FOREST, MAP_HEIGHT, MAP_WIDTH, TERRAIN } from '../data/map';
 import type { ResourceType } from '../data/resources';
 import { tileKey, type Vec2 } from '../data/types';
 import { footprintTiles, occupiedTileKeys } from './footprint';
-import { findResourceTile, manhattan } from './resource-tiles';
+import { findResource } from './resource-tiles';
 import { nextEntityId, takeFromWarehouse, warehouseAmount, type GameState } from './state';
 
 export function canAfford(state: GameState, type: BuildingType): boolean {
@@ -25,8 +25,9 @@ export function canPlaceBuildingAt(state: GameState, type: BuildingType, tile: V
 
   const def = BUILDINGS[type];
   if (def.resourceSearch) {
-    const resourceTile = findResourceTile(tile, def.resourceSearch);
-    if (!resourceTile || (def.maxResourceRange !== undefined && manhattan(tile, resourceTile) > def.maxResourceRange)) {
+    // The range is counted on foot over land, the way the worker will walk it.
+    const found = findResource(tile, def.resourceSearch);
+    if (!found || (def.maxResourceRange !== undefined && found.distance > def.maxResourceRange)) {
       return false;
     }
   }
