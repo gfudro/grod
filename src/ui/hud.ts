@@ -43,7 +43,7 @@ const HUD_STYLE = `
 }
 #hud .hud-group {
   display: flex;
-  gap: 8px;
+  gap: 6px;
 }
 #hud button, #palette button {
   min-width: 64px;
@@ -81,6 +81,28 @@ const HUD_STYLE = `
   background: #6fa83f;
   color: #fff;
   border-color: #2f5d1a;
+}
+/* Icon over the word, like KRONIKA, so the bottom row still fits an iPad. */
+#hud button.erase {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  font-size: 13px;
+  padding: 4px 8px;
+}
+#hud button.erase .icon {
+  font-size: 22px;
+  line-height: 1;
+  color: #cc4433;
+}
+#hud button.erase.active .icon {
+  color: #fff;
+}
+#hud button.erase.active {
+  background: #cc4433;
+  border-color: #5a1a12;
 }
 #hud button.undo {
   background: #b5513f;
@@ -122,7 +144,11 @@ export function mountHud({ roadDraw, buildPlace, state, getSpeed, onSpeedChange 
   leftGroup.className = 'hud-group';
   const roadButton = document.createElement('button');
   roadButton.textContent = STRINGS.droga;
-  leftGroup.appendChild(roadButton);
+  // GUMKA: drag over a road to take it away (COFNIJ puts it back).
+  const eraseButton = document.createElement('button');
+  eraseButton.className = 'erase';
+  eraseButton.innerHTML = `<span class="icon">✖</span><span>${STRINGS.gumka}</span>`;
+  leftGroup.append(roadButton, eraseButton);
   const extraSlot = leftGroup;
 
   const centerGroup = document.createElement('div');
@@ -172,6 +198,7 @@ export function mountHud({ roadDraw, buildPlace, state, getSpeed, onSpeedChange 
     button.addEventListener('click', () => {
       buildPlace.setArmed(buildPlace.armedType() === type ? null : type);
       roadDraw.setRoadMode(false);
+      roadDraw.setEraseMode(false);
       refresh();
     });
     palette.appendChild(button);
@@ -182,6 +209,7 @@ export function mountHud({ roadDraw, buildPlace, state, getSpeed, onSpeedChange 
 
   function refresh(): void {
     roadButton.classList.toggle('active', roadDraw.isRoadMode());
+    eraseButton.classList.toggle('active', roadDraw.isEraseMode());
     const speed = getSpeed();
     pauseButton.classList.toggle('active', speed === 0);
     for (const b of speedButtons) b.button.classList.toggle('active', speed === b.speed);
@@ -196,6 +224,11 @@ export function mountHud({ roadDraw, buildPlace, state, getSpeed, onSpeedChange 
     }
   }
 
+  eraseButton.addEventListener('click', () => {
+    roadDraw.setEraseMode(!roadDraw.isEraseMode());
+    buildPlace.setArmed(null);
+    refresh();
+  });
   roadButton.addEventListener('click', () => {
     roadDraw.setRoadMode(!roadDraw.isRoadMode());
     buildPlace.setArmed(null);

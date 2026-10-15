@@ -153,6 +153,10 @@ Kolejność od 0.9.0 (Greg, 2026-10-14): najpierw mechanika, grafiki i dźwięki
 
 **Gotowe, gdy:** Artur usypuje kopiec i nadaje mu nazwę.
 
+## Burzenie dróg (0.15.1)
+
+- [x] Przycisk GUMKA obok DROGA: przeciągnięcie palcem po drodze ją usuwa, COFNIJ przywraca (Greg, 2026-10-15)
+
 ## Grafiki i dźwięki (gdy Greg wrzuci pliki)
 
 - [ ] Skrypt przetwarzania grafik: usunięcie tła magenta, przycięcie, skalowanie

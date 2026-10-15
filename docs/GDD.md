@@ -61,7 +61,7 @@ Decyzje z 0.9.0 (burzenie, prośba Grega 2026-10-14):
 - **Pełny zwrot, zgodnie z lekką karą:** koszt budynku wraca do magazynu w całości. Przy domu wraca koszt ziemianki, koszt każdej przebudowy i towary leżące w domu (ryby, kasza, opał). Plac budowy oddaje wszystko, także materiał już przyniesiony na miejsce.
 - **Nic nie znika z rąk:** ludzik, który coś niesie, staje się wolny i odnosi to pieszo do magazynu. Ludzik stojący na zburzonym polu najpierw z niego schodzi.
 - **Nikt się nie wyprowadza:** mieszkańcy zburzonego domu zostają w grodzie jako wolni ludzie, a osadnicy w drodze do niego dołączają do puli.
-- Na razie bez zgliszczy i bez wpisu w kronice. Drogi nadal usuwa się tylko przez COFNIJ (ostatnia narysowana).
+- Na razie bez zgliszczy i bez wpisu w kronice. Drogi usuwa GUMKA (od 0.15.1).
 
 Decyzje z M8 (piętro 3: zagroda, 0.10.0):
 
@@ -131,6 +131,13 @@ Decyzje z M11 (kopiec, 0.15.0, Greg 2026-10-15):
 - Kronika zapisuje rozpoczęcie kopca, jego usypanie i każdą nazwę.
 - **Górny pasek:** dochodzą KAMIEŃ, RUDA, ŻELAZO i ŁOPATY (w całej grze jest teraz 13 towarów, jak zakładał GDD). Gdy pasek się nie mieści, sam zmniejsza czcionkę i odstępy (dwa stopnie), zamiast łamać się na dwie linijki.
 - **Zapis:** `SAVE_VERSION = 9` (w stanie `mound`). Stare grody dostają `mound: null`. Bagno i głazy dorysowano na mapie; jeśli w starym grodzie coś już tam stoi, zostaje na miejscu.
+
+Decyzje z 0.15.1 (burzenie dróg, prośba Grega 2026-10-15):
+
+- **GUMKA** to przycisk obok DROGA (czerwony krzyżyk nad słowem). Gdy jest włączona, przeciągnięcie palcem po mapie usuwa drogę pod palcem, tak jak DROGA ją rysuje. Mapa się wtedy nie przesuwa, a stuknięcie nie otwiera paneli. DROGA, GUMKA i stawianie budynku wyłączają się nawzajem.
+- **COFNIJ** cofa ostatnie pociągnięcie palcem, czy to rysowanie, czy gumkę. Usunięta droga wraca, chyba że w międzyczasie coś na jej miejscu postawiono.
+- Bez potwierdzenia i bez kosztu: drogi nic nie kosztują, a pomyłkę naprawia COFNIJ.
+- **Nikt nie utyka:** ludzik idący po usuniętym kafelku kończy krok i szuka nowej drogi. Ten, który stoi na trawie po usuniętej drodze, idzie przez trawę do najbliższej drogi. Budynek odcięty od drogi pokazuje znak „brak drogi”, tak jak dotąd.
 
 ## Wizja i filary
 

@@ -19,6 +19,7 @@ import { consumeHouseGoods, currentSeason, houseShortages, startSeason } from '.
 import { addChronicleFirst, closeSeasonLog } from './chronicle';
 import { RUINS_REBUILD, STORM } from '../data/storms';
 import { advanceStorms, completeRebuild, houseOutOfUse, planStorms, pourWater, servingWell } from './storms';
+import { pathBackToRoad } from './roads';
 import { deliverToMound, moundTileKeys, moundWantsBuilder, nextMoundResource } from './mound';
 import {
   addToWarehouse,
@@ -854,7 +855,7 @@ function beginWalk(
   const leaving = footprintKeysAt(state, villager.from);
   const extra = [...extraWalkable, ...leaving];
   const walkable = extra.length > 0 ? new Set([...state.roads, ...extra]) : state.roads;
-  const path = findPath(walkable, villager.from, target);
+  const path = findPath(walkable, villager.from, target) ?? pathBackToRoad(state, villager.from);
   if (!path || path.length === 0) {
     villager.motion = 'waiting';
     return;

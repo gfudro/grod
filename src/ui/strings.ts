@@ -4,6 +4,7 @@ import type { Season } from '../data/seasons';
 /** Every Polish word shown in the interface lives here, per CLAUDE.md. */
 export const STRINGS = {
   droga: 'DROGA',
+  gumka: 'GUMKA',
   cofnij: 'COFNIJ',
   pauza: 'PAUZA',
   wolni: 'WOLNI',

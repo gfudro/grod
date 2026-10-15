@@ -150,7 +150,7 @@ async function start(): Promise<void> {
   createInspectController(
     viewport,
     state,
-    () => roadDraw.isRoadMode() || buildPlace.armedType() !== null,
+    () => roadDraw.isRoadMode() || roadDraw.isEraseMode() || buildPlace.armedType() !== null,
     handleInspectResult,
   );
 

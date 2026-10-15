@@ -4,12 +4,16 @@ import { MAP_HEIGHT, MAP_WIDTH, TERRAIN } from '../data/map';
 import { TILE_SIZE } from '../data/tiles';
 import { tileKey, type Vec2 } from '../data/types';
 import { occupiedTileKeys } from '../sim/footprint';
+import { eraseRoads, restoreRoads } from '../sim/roads';
 import { setMapDragLock } from './drag-lock';
 import type { GameState } from '../sim/state';
 
 export interface RoadDrawController {
   setRoadMode(enabled: boolean): void;
   isRoadMode(): boolean;
+  /** GUMKA: dragging a finger takes roads away instead of drawing them. */
+  setEraseMode(enabled: boolean): void;
+  isEraseMode(): boolean;
   undo(): void;
   canUndo(): boolean;
 }
@@ -65,16 +69,24 @@ export function createRoadDrawController(
   onRoadsChanged: () => void,
 ): RoadDrawController {
   let roadMode = false;
+  let eraseMode = false;
   let drawing = false;
   let lastTile: Vec2 | null = null;
   let currentStroke: string[] = [];
-  const undoStack: string[][] = [];
+  /** Each stroke remembers whether it drew or erased, so COFNIJ can reverse either. */
+  const undoStack: { erased: boolean; keys: string[] }[] = [];
+
+  const active = (): boolean => roadMode || eraseMode;
 
   function worldToTile(point: { x: number; y: number }): Vec2 {
     return { x: Math.floor(point.x / TILE_SIZE), y: Math.floor(point.y / TILE_SIZE) };
   }
 
   function paintTile(tile: Vec2): void {
+    if (eraseMode) {
+      currentStroke.push(...eraseRoads(state, [tileKey(tile)]));
+      return;
+    }
     if (!canBuildRoadOn(tile)) return;
     const key = tileKey(tile);
     if (state.roads.has(key)) return;
@@ -84,7 +96,7 @@ export function createRoadDrawController(
   }
 
   function handlePointerDown(event: FederatedPointerEvent): void {
-    if (!roadMode) return;
+    if (!active()) return;
     drawing = true;
     currentStroke = [];
     const tile = worldToTile(viewport.toLocal(event.global));
@@ -94,7 +106,7 @@ export function createRoadDrawController(
   }
 
   function handlePointerMove(event: FederatedPointerEvent): void {
-    if (!roadMode || !drawing) return;
+    if (!active() || !drawing) return;
     const tile = worldToTile(viewport.toLocal(event.global));
     if (lastTile && tile.x === lastTile.x && tile.y === lastTile.y) return;
     const segment = lastTile ? tilesBetween(lastTile, tile) : [tile];
@@ -108,7 +120,7 @@ export function createRoadDrawController(
     drawing = false;
     lastTile = null;
     if (currentStroke.length > 0) {
-      undoStack.push(currentStroke);
+      undoStack.push({ erased: eraseMode, keys: currentStroke });
       onRoadsChanged();
     }
     currentStroke = [];
@@ -119,20 +131,28 @@ export function createRoadDrawController(
   viewport.on('pointerup', handlePointerUp);
   viewport.on('pointerupoutside', handlePointerUp);
 
+  function setMode(road: boolean, erase: boolean): void {
+    roadMode = road;
+    eraseMode = erase;
+    setMapDragLock(viewport, 'road', active());
+    drawing = false;
+    lastTile = null;
+  }
+
   return {
     setRoadMode(enabled: boolean) {
-      roadMode = enabled;
-      setMapDragLock(viewport, 'road', enabled);
-      if (!enabled) {
-        drawing = false;
-        lastTile = null;
-      }
+      setMode(enabled, enabled ? false : eraseMode);
     },
     isRoadMode: () => roadMode,
+    setEraseMode(enabled: boolean) {
+      setMode(enabled ? false : roadMode, enabled);
+    },
+    isEraseMode: () => eraseMode,
     undo() {
       const stroke = undoStack.pop();
       if (!stroke) return;
-      for (const key of stroke) state.roads.delete(key);
+      if (stroke.erased) restoreRoads(state, stroke.keys);
+      else eraseRoads(state, stroke.keys);
       onRoadsChanged();
     },
     canUndo: () => undoStack.length > 0,
