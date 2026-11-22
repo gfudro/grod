@@ -523,43 +523,107 @@ const STUBBLE = 0x9a8350;
 
 /**
  * One field plot (a single tile of the pole): furrows, sprouts, stalks,
- * ripe millet (`ripeRows` rows still standing) or stubble with sheaves.
+ * ripe millet (`ripeRows` of 4 rows still standing) or stubble with
+ * sheaves. In winter it lies under snow, with furrows and whatever
+ * still stands poking through.
  */
-export function paintPlot(stage: PlotStage, ripeRows: number): PixelCanvas {
+export function paintPlot(stage: PlotStage, ripeRows: number, winter = false): PixelCanvas {
   const c = new PixelCanvas(ART_TILE, ART_TILE);
   const soil = stage === 'dojrzale' || stage === 'sciete' ? 0x8a6a3a : 0x7a5530;
-  c.rect(1, 1, 30, 30, soil);
-  for (let y = 3; y < 30; y += 4) {
-    c.hline(2, 29, y, stage === 'zaorane' || stage === 'kielki' ? 0x5e3f22 : mixSoil(soil));
-    c.hline(2, 29, y + 1, 0x9a7044);
+  if (winter) {
+    c.rect(1, 1, 30, 30, SNOW);
+    for (let y = 3; y < 30; y += 4) {
+      // Furrows show as soft blue shadows with a little earth peeking out.
+      c.hline(2, 29, y, SNOW_SHADE);
+      for (let x = 2; x <= 29; x++) if (hash(x, y, 80) < 0.12) c.px(x, y, soil);
+    }
+  } else {
+    c.rect(1, 1, 30, 30, soil);
+    for (let y = 3; y < 30; y += 4) {
+      c.hline(2, 29, y, stage === 'zaorane' || stage === 'kielki' ? 0x5e3f22 : mixSoil(soil));
+      c.hline(2, 29, y + 1, 0x9a7044);
+    }
   }
   for (let row = 0; row < 4; row++) {
     const y = 5 + row * 7;
     for (let col = 0; col < 5; col++) {
       const x = 4 + col * 6 + (row % 2) * 2;
       if (stage === 'kielki') {
-        c.px(x, y, 0x7fc04a).px(x - 1, y - 1, 0x9fe06a).px(x + 1, y - 1, 0x7fc04a);
+        // Sprouts are buried in winter.
+        if (!winter) c.px(x, y, 0x7fc04a).px(x - 1, y - 1, 0x9fe06a).px(x + 1, y - 1, 0x7fc04a);
       } else if (stage === 'lodygi') {
-        c.vline(x, y - 4, y, 0x4f8f2a).px(x - 1, y - 3, 0x6faf3a).px(x + 1, y - 2, 0x6faf3a);
+        if (winter) c.vline(x, y - 2, y, 0x6a7a4a).px(x, y - 3, SNOW);
+        else c.vline(x, y - 4, y, 0x4f8f2a).px(x - 1, y - 3, 0x6faf3a).px(x + 1, y - 2, 0x6faf3a);
       } else if (stage === 'dojrzale') {
         if (row >= 4 - ripeRows) {
           c.vline(x, y - 3, y, 0x8a8a2a).rect(x - 1, y - 6, 3, 3, 0xe0b84a).px(x - 1, y - 6, 0xf5d87a).px(x + 1, y - 4, 0xb8892a);
-        } else {
+          if (winter) c.hline(x - 1, x + 1, y - 7, SNOW);
+        } else if (!winter) {
           c.px(x, y, STUBBLE).px(x + 1, y, STUBBLE);
         }
       } else if (stage === 'sciete') {
-        c.px(x, y, STUBBLE).px(x + 1, y, STUBBLE);
+        if (winter) {
+          if (hash(x, y, 81) < 0.4) c.px(x, y, STUBBLE);
+        } else {
+          c.px(x, y, STUBBLE).px(x + 1, y, STUBBLE);
+        }
       }
     }
   }
   if (stage === 'sciete') {
-    // Two sheaves left standing.
+    // Two sheaves left standing (with snow caps in winter).
     for (const [x, y] of [[9, 14], [21, 22]]) {
       c.poly([x - 3, y + 5, x, y - 3, x + 3, y + 5], 0xe0b84a).hline(x - 2, x + 2, y + 1, 0x8a6a2a).px(x, y - 3, 0xf5d87a);
+      if (winter) c.hline(x - 1, x + 1, y - 2, SNOW).px(x, y - 3, SNOW);
     }
   }
   // A low wattle edge around each plot.
   c.hline(0, 31, 0, LOG.mid).hline(0, 31, 31, LOG.dark).vline(0, 0, 31, LOG.mid).vline(31, 0, 31, LOG.dark);
+  if (winter) c.hline(0, 31, 0, SNOW).px(0, 1, SNOW).px(31, 1, SNOW);
+  return c;
+}
+
+/** A snow drift on a road tile: a lumpy white heap with blue shade and a sparkle. */
+export function paintDrift(variant: number): PixelCanvas {
+  const c = new PixelCanvas(ART_TILE, ART_TILE);
+  const flip = variant % 2 === 0 ? 1 : -1;
+  const lumps: [number, number, number, number][] = [
+    [16, 20, 14, 8],
+    [16 - 6 * flip, 15, 8, 6],
+    [16 + 7 * flip, 17, 6, 5],
+  ];
+  for (const [x, y, rx, ry] of lumps) c.ellipse(x, y + 1, rx, ry, SNOW_SHADE);
+  for (const [x, y, rx, ry] of lumps) c.ellipse(x - 1, y - 1, rx - 1, ry - 1, SNOW);
+  c.ellipse(16 - 6 * flip - 2, 12, 3, 1.5, 0xffffff);
+  c.px(16 + 7 * flip, 14, 0xffffff).px(22, 21, 0xdbe6ee);
+  c.outline(0x8fa6b8);
+  c.shadow(17, 26, 13, 3, 50);
+  return c;
+}
+
+/**
+ * Pixel flames over a burning house: three tongues, smaller with every
+ * bucket poured (`strength` 1–3), flickering between two frames.
+ */
+export function paintFlames(strength: number, frame: number): PixelCanvas {
+  const c = new PixelCanvas(ART_TILE, ART_TILE + ROOF_ROOM).origin(0, ROOF_ROOM);
+  const scale = 0.45 + strength * 0.2;
+  const tongues: [number, number][] = [
+    [8, 0.75],
+    [16, 1.1],
+    [24, 0.85],
+  ];
+  tongues.forEach(([x, h], i) => {
+    const height = 30 * h * scale * ((i + frame) % 2 === 0 ? 1 : 0.85);
+    const base = 26;
+    const sway = (i + frame) % 2 === 0 ? 1 : -1;
+    c.poly([x - 6, base, x + sway, base - height, x + 6, base], 0xd2321e);
+    c.poly([x - 4, base, x + sway, base - height * 0.8, x + 4, base], 0xf07a1a);
+    c.poly([x - 2, base, x, base - height * 0.45, x + 2, base], 0xffd23f);
+  });
+  c.outline(0x5a1a12);
+  // Sparks.
+  for (let i = 0; i < 4; i++) c.px(4 + hash(i, frame, 82) * 24, 2 - hash(i, frame, 83) * 12, i % 2 ? 0xffd23f : 0xf07a1a);
   return c;
 }
 

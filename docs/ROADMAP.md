@@ -181,7 +181,8 @@ Kolejność od 0.9.0 (Greg, 2026-10-14): najpierw mechanika, grafiki i dźwięki
 - [x] Ludziki w tunikach z narzędziem swojego zajęcia, niesione towary i dymki jako małe obrazki
 - [x] Przełącznik PIKSELE / PROSTE w KRONICE
 - [ ] Ikony towarów z pixelartu także na górnym pasku i przyciskach budowy
-- [ ] Płomienie pożaru w pixelarcie
+- [x] Płomienie pożaru w pixelarcie (0.18.1)
+- [x] Zimą: pola pod śniegiem, zaspy w pixelarcie, ciemniejsze udeptane drogi (0.18.1)
 
 ## Grafiki i dźwięki (gdy Greg wrzuci pliki)
 

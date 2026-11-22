@@ -15,10 +15,11 @@ const HALF = 9; // half the path's width, in art pixels
  */
 export function paintRoad(mask: number, winter: boolean): PixelCanvas {
   const c = new PixelCanvas(ART_TILE, ART_TILE);
-  const base = winter ? 0xdcd6cc : 0xb8925a;
-  const light = winter ? 0xf2f0ec : 0xcfa86c;
-  const dark = winter ? 0xb0a898 : 0x8f6c3e;
-  const rut = winter ? 0xa8a090 : 0x9c7846;
+  // Winter: trodden, slightly muddy snow, so the paths still read on the white map.
+  const base = winter ? 0xc9bba4 : 0xb8925a;
+  const light = winter ? 0xe8e2d6 : 0xcfa86c;
+  const dark = winter ? 0x9a8a70 : 0x8f6c3e;
+  const rut = winter ? 0x9c8a6c : 0x9c7846;
   const mid = ART_TILE / 2;
   const lo = mid - HALF;
   const hi = mid + HALF;

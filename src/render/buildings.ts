@@ -14,7 +14,7 @@ import { moundLayers, moundMissing } from '../sim/mound';
 import { buildersOn } from '../sim/construction';
 import { isPixelStyle } from './style';
 import { ART_SCALE, textureCache, type PixelCanvas } from './pixel/canvas';
-import { paintBuilding, paintHouse, paintMound, paintPlot, paintRuins, paintSite, ROOF_ROOM } from './pixel/buildings';
+import { paintBuilding, paintDrift, paintFlames, paintHouse, paintMound, paintPlot, paintRuins, paintSite, ROOF_ROOM } from './pixel/buildings';
 
 /** Pixel-art sprites, painted once per key. */
 const pixelTexture = textureCache();
@@ -172,6 +172,11 @@ export function createBuildingsLayer(): BuildingsLayer {
     for (const key of state.drifts) {
       const [x, y] = key.split(',').map(Number);
       const { px, py } = tileTopLeft(x, y);
+      if (pixel) {
+        const variant = (x * 7 + y * 3) % 2;
+        placeSprite(`drift:${variant}`, () => paintDrift(variant), x, y, 0);
+        continue;
+      }
       graphics
         .ellipse(px + TILE_SIZE * 0.5, py + TILE_SIZE * 0.58, TILE_SIZE * 0.46, TILE_SIZE * 0.3)
         .fill(DRIFT_COLOR)
@@ -224,13 +229,13 @@ export function createBuildingsLayer(): BuildingsLayer {
           if (pixel) {
             // Four rows of ears; they disappear row by row as the crop is carried away.
             const ripeRows = plot.stage === 'dojrzale' ? Math.min(4, Math.round((plot.yieldLeft / plotYield) * 4)) : 0;
-            placeSprite(`plot:${plot.stage}:${ripeRows}`, () => paintPlot(plot.stage, ripeRows), tiles[i].x, tiles[i].y, 0);
+            placeSprite(`plot:${plot.stage}:${ripeRows}:${winter}`, () => paintPlot(plot.stage, ripeRows, winter), tiles[i].x, tiles[i].y, 0);
           } else {
             drawPlot(graphics, tiles[i].x * TILE_SIZE, tiles[i].y * TILE_SIZE, plot, plotYield);
           }
         });
         const { w, h } = footprintSize(building.type);
-        if (winter) {
+        if (winter && !pixel) {
           graphics.rect(px + 2, py + 2, w * TILE_SIZE - 4, h * TILE_SIZE - 4).fill({ color: SNOW_COLOR, alpha: 0.55 });
         }
         if (!pixel) {
@@ -499,7 +504,16 @@ export function createBuildingsLayer(): BuildingsLayer {
     if (!isAdjacentToRoad(house.tile, state.roads)) {
       drawNoRoadIcon(graphics, px, py, inset);
     }
-    if (house.fire) drawFire(graphics, px, py, house.fire.ticksLeft, house.fire.water, state.tick);
+    if (house.fire) {
+      if (pixel) {
+        // Pixel flames over the house, in front of it in the sort order.
+        const strength = Math.max(1, Math.ceil(3 * Math.max(0.35, 1 - house.fire.water / STORM.bucketsToDouse)));
+        const frame = state.tick % 4 < 2 ? 0 : 1;
+        placeSprite(`flames:${strength}:${frame}`, () => paintFlames(strength, frame), house.tile.x, house.tile.y);
+        spritePool[spritesUsed - 1].zIndex += 500;
+      }
+      drawFire(graphics, px, py, house.fire.ticksLeft, house.fire.water, state.tick, pixel);
+    }
 
     // Too hungry to work: a red sad face with how many sit inside.
     const strikers = state.villagers.filter(
@@ -609,13 +623,14 @@ function drawPlot(graphics: Graphics, px: number, py: number, plot: FieldPlot, p
  * Flames over a burning house, smaller with every bucket poured, and a
  * yellow ring that empties as the time before it burns down runs out.
  */
-function drawFire(graphics: Graphics, px: number, py: number, ticksLeft: number, water: number, tick: number): void {
+function drawFire(graphics: Graphics, px: number, py: number, ticksLeft: number, water: number, tick: number, pixel = false): void {
   // Never quite gone while it still burns, so the last bucket still has a fire to hit.
   const strength = Math.max(0.35, 1 - water / STORM.bucketsToDouse);
   const flicker = tick % 4 < 2 ? 1 : 0.85;
   const cx = px + TILE_SIZE / 2;
   const base = py + TILE_SIZE * 0.75;
-  for (const [dx, h] of [[-14, 0.8], [0, 1.15], [14, 0.9]]) {
+  // The pixel look draws its own flames as a sprite; only the drops and the timer stay.
+  for (const [dx, h] of pixel ? [] : [[-14, 0.8], [0, 1.15], [14, 0.9]]) {
     const height = TILE_SIZE * 1.0 * h * strength * (dx === 0 ? flicker : 2 - flicker);
     const x = cx + dx;
     graphics.poly([x - 12, base, x, base - height, x + 12, base]).fill({ color: FLAME_OUTER, alpha: 0.92 });
