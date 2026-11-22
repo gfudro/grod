@@ -1,6 +1,7 @@
 import type { GameState } from '../sim/state';
 import { currentYear } from '../sim/seasons';
 import { chronicleSentence, STRINGS } from './strings';
+import { graphicsStyle, setGraphicsStyle } from '../render/style';
 
 export interface ChronicleScreenCallbacks {
   getState: () => GameState;
@@ -152,7 +153,17 @@ export function mountChronicleScreen(cb: ChronicleScreenCallbacks): ChronicleScr
   const closeButton = document.createElement('button');
   closeButton.className = 'close';
   closeButton.textContent = STRINGS.zamknij;
-  buttons.append(exportButton, importButton, newButton, closeButton);
+  // Dad's switch between the pixel-art look and the plain placeholder shapes.
+  const styleButton = document.createElement('button');
+  const showStyle = (): void => {
+    styleButton.textContent = graphicsStyle() === 'pixel' ? `🎨 ${STRINGS.piksele}` : `⬜ ${STRINGS.proste}`;
+  };
+  showStyle();
+  styleButton.addEventListener('click', () => {
+    setGraphicsStyle(graphicsStyle() === 'pixel' ? 'plain' : 'pixel');
+    showStyle();
+  });
+  buttons.append(exportButton, importButton, newButton, styleButton, closeButton);
 
   const fileInput = document.createElement('input');
   fileInput.type = 'file';

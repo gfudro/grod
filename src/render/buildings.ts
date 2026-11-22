@@ -1,4 +1,4 @@
-import { Container, Graphics, Text } from 'pixi.js';
+import { Container, Graphics, Sprite, Text, type Texture } from 'pixi.js';
 import { BUILDINGS, type BuildingType } from '../data/buildings';
 import { HOUSE_TIERS } from '../data/houses';
 import { RESOURCE_COLOR } from '../data/resources';
@@ -12,6 +12,14 @@ import { houseGood, type FieldPlot, type GameState, type House, type Mound, type
 import { MOUND } from '../data/mound';
 import { moundLayers, moundMissing } from '../sim/mound';
 import { buildersOn } from '../sim/construction';
+import { isPixelStyle } from './style';
+import { ART_SCALE, textureCache, type PixelCanvas } from './pixel/canvas';
+import { paintBuilding, paintHouse, paintMound, paintPlot, paintRuins, paintSite, ROOF_ROOM } from './pixel/buildings';
+
+/** Pixel-art sprites, painted once per key. */
+const pixelTexture = textureCache();
+/** How many art pixels the kopiec sprite rises above its 3×3 footprint. */
+const MOUND_ROOM = 24;
 
 const SITE_COLOR = 0x9b7a4a;
 const SITE_PROGRESS_COLOR = 0xd9b96a;
@@ -115,8 +123,32 @@ function footprintSize(type: BuildingType): { w: number; h: number } {
 
 export function createBuildingsLayer(): BuildingsLayer {
   const container = new Container();
+  // Pixel-art sprites go under the overlays (counters, bubbles, fire),
+  // sorted so a lower building's roof overlaps the one behind it.
+  const sprites = new Container();
+  sprites.sortableChildren = true;
+  container.addChild(sprites);
+  const spritePool: Sprite[] = [];
+  let spritesUsed = 0;
   const graphics = new Graphics();
   container.addChild(graphics);
+
+  /** Shows a pixel sprite with its top-left at (x, y); `room` = art pixels it rises above its tile. */
+  function placeSprite(key: string, paint: () => PixelCanvas, tileX: number, tileY: number, room = ROOF_ROOM): void {
+    const texture: Texture = pixelTexture(key, paint);
+    let sprite = spritePool[spritesUsed];
+    if (!sprite) {
+      sprite = new Sprite();
+      sprite.scale.set(ART_SCALE);
+      spritePool.push(sprite);
+      sprites.addChild(sprite);
+    }
+    spritesUsed++;
+    sprite.visible = true;
+    sprite.texture = texture;
+    sprite.position.set(tileX * TILE_SIZE, tileY * TILE_SIZE - room * ART_SCALE);
+    sprite.zIndex = tileY * 1000 + tileX;
+  }
   const labels = new Container();
   container.addChild(labels);
 
@@ -130,6 +162,8 @@ export function createBuildingsLayer(): BuildingsLayer {
   function redraw(state: GameState): void {
     graphics.clear();
     for (const child of labels.removeChildren()) child.destroy();
+    spritesUsed = 0;
+    const pixel = isPixelStyle();
 
     const inset = TILE_SIZE * 0.1;
     const winter = currentSeason(state) === 'zima';
@@ -152,11 +186,13 @@ export function createBuildingsLayer(): BuildingsLayer {
       const { w, h } = footprintSize(site.type);
       const width = w * TILE_SIZE - inset * 2;
       const height = h * TILE_SIZE - inset * 2;
-      graphics
-        .rect(px + inset, py + inset, width, height)
-        .fill(SITE_COLOR)
-        .rect(px + inset, py + inset, width, height)
-        .stroke({ color: 0x3a2b16, width: 2 });
+      if (!pixel) {
+        graphics
+          .rect(px + inset, py + inset, width, height)
+          .fill(SITE_COLOR)
+          .rect(px + inset, py + inset, width, height)
+          .stroke({ color: 0x3a2b16, width: 2 });
+      }
 
       const worker = buildersOn(state, { kind: 'build', siteId: site.id }).find((v) => 'stage' in v.job && v.job.stage === 'hammering');
       const def = BUILDINGS[site.type];
@@ -164,7 +200,14 @@ export function createBuildingsLayer(): BuildingsLayer {
       if (worker && worker.job.kind === 'build' && worker.job.stage === 'hammering') {
         progress = 1 - worker.workTicksRemaining / def.buildTicks;
       }
-      if (progress > 0) {
+      if (pixel) {
+        // The walls rise with the hammering; a bar underneath shows how far along it is.
+        const step = Math.round(progress * 8);
+        for (let dy = 0; dy < h; dy++) {
+          for (let dx = 0; dx < w; dx++) placeSprite(`site:${step}`, () => paintSite(step), site.tile.x + dx, site.tile.y + dy);
+        }
+        if (progress > 0) drawProgressBar(graphics, px + inset, py + h * TILE_SIZE - 9, width, progress);
+      } else if (progress > 0) {
         const filled = height * progress;
         graphics.rect(px + inset, py + inset + (height - filled), width, filled).fill(SITE_PROGRESS_COLOR);
       }
@@ -177,16 +220,26 @@ export function createBuildingsLayer(): BuildingsLayer {
       if (building.plots) {
         const tiles = footprintTiles(building.type, building.tile);
         const plotYield = def.plotYield ?? 1;
-        building.plots.forEach((plot, i) =>
-          drawPlot(graphics, tiles[i].x * TILE_SIZE, tiles[i].y * TILE_SIZE, plot, plotYield),
-        );
+        building.plots.forEach((plot, i) => {
+          if (pixel) {
+            // Four rows of ears; they disappear row by row as the crop is carried away.
+            const ripeRows = plot.stage === 'dojrzale' ? Math.min(4, Math.round((plot.yieldLeft / plotYield) * 4)) : 0;
+            placeSprite(`plot:${plot.stage}:${ripeRows}`, () => paintPlot(plot.stage, ripeRows), tiles[i].x, tiles[i].y, 0);
+          } else {
+            drawPlot(graphics, tiles[i].x * TILE_SIZE, tiles[i].y * TILE_SIZE, plot, plotYield);
+          }
+        });
         const { w, h } = footprintSize(building.type);
         if (winter) {
           graphics.rect(px + 2, py + 2, w * TILE_SIZE - 4, h * TILE_SIZE - 4).fill({ color: SNOW_COLOR, alpha: 0.55 });
         }
-        graphics
-          .rect(px + 2, py + 2, w * TILE_SIZE - 4, h * TILE_SIZE - 4)
-          .stroke({ color: 0x4a3218, width: 3 });
+        if (!pixel) {
+          graphics
+            .rect(px + 2, py + 2, w * TILE_SIZE - 4, h * TILE_SIZE - 4)
+            .stroke({ color: 0x4a3218, width: 3 });
+        }
+      } else if (pixel && paintBuilding(building.type, false) !== null) {
+        placeSprite(`building:${building.type}:${winter}`, () => paintBuilding(building.type, winter)!, building.tile.x, building.tile.y);
       } else {
         const size = TILE_SIZE - inset * 2;
         graphics
@@ -210,10 +263,30 @@ export function createBuildingsLayer(): BuildingsLayer {
     }
 
     for (const house of state.houses) {
-      drawHouse(state, house, winter);
+      drawHouse(state, house, winter, pixel);
     }
 
-    if (state.mound) drawMound(state, state.mound, winter);
+    if (state.mound) drawMound(state, state.mound, winter, pixel);
+
+    // Sprites left over from a busier frame stay in the pool, hidden.
+    for (let i = spritesUsed; i < spritePool.length; i++) spritePool[i].visible = false;
+  }
+
+  /** The placeholder kopiec: a ring of dug earth with corner stakes, and earth layers heaped up. */
+  function drawPlainMound(cx: number, cy: number, px: number, py: number, size: number, layers: number, done: boolean, winter: boolean): void {
+    graphics.ellipse(cx, cy, size * 0.46, size * 0.4).fill({ color: MOUND_EARTH, alpha: 0.55 });
+    graphics.ellipse(cx, cy, size * 0.46, size * 0.4).stroke({ color: MOUND_RIM, width: 3 });
+    for (const [sx, sy] of [[0.08, 0.08], [0.92, 0.08], [0.08, 0.92], [0.92, 0.92]]) {
+      graphics.rect(px + size * sx - 3, py + size * sy - 8, 6, 14).fill(FENCE_COLOR);
+    }
+    for (let layer = 0; layer < layers; layer++) {
+      const t = layer / MOUND.layers;
+      const rx = size * 0.44 * (1 - t * 0.75);
+      const ry = size * 0.38 * (1 - t * 0.75);
+      const lift = layer * 10;
+      const fill = done ? (winter ? SNOW_COLOR : MOUND_GRASS[layer % 2]) : MOUND_LAYER[layer % 2];
+      graphics.ellipse(cx, cy - lift, rx, ry).fill(fill).stroke({ color: MOUND_RIM, width: 2 });
+    }
   }
 
   /**
@@ -221,34 +294,32 @@ export function createBuildingsLayer(): BuildingsLayer {
    * materials arrive, each one smaller and higher, until a green mound
    * with a post on top stands there. Counters under it say what's left.
    */
-  function drawMound(state: GameState, mound: Mound, winter: boolean): void {
+  function drawMound(state: GameState, mound: Mound, winter: boolean, pixel: boolean): void {
     const { px, py } = tileTopLeft(mound.tile.x, mound.tile.y);
     const size = 3 * TILE_SIZE;
     const cx = px + size / 2;
     const cy = py + size / 2 + 6;
     const layers = moundLayers(mound);
 
-    // The marked-out ground: stakes at the corners, a ring of dug earth.
-    graphics.ellipse(cx, cy, size * 0.46, size * 0.4).fill({ color: MOUND_EARTH, alpha: 0.55 });
-    graphics.ellipse(cx, cy, size * 0.46, size * 0.4).stroke({ color: MOUND_RIM, width: 3 });
-    for (const [sx, sy] of [[0.08, 0.08], [0.92, 0.08], [0.08, 0.92], [0.92, 0.92]]) {
-      graphics.rect(px + size * sx - 3, py + size * sy - 8, 6, 14).fill(FENCE_COLOR);
-    }
-
-    for (let layer = 0; layer < layers; layer++) {
-      const t = layer / MOUND.layers;
-      const rx = size * 0.44 * (1 - t * 0.75);
-      const ry = size * 0.38 * (1 - t * 0.75);
-      const lift = layer * 10;
-      const fill = mound.done ? (winter ? SNOW_COLOR : MOUND_GRASS[layer % 2]) : MOUND_LAYER[layer % 2];
-      graphics.ellipse(cx, cy - lift, rx, ry).fill(fill).stroke({ color: MOUND_RIM, width: 2 });
+    if (pixel) {
+      placeSprite(
+        `mound:${layers}:${mound.done}:${winter}`,
+        () => paintMound(layers, MOUND.layers, mound.done, winter),
+        mound.tile.x,
+        mound.tile.y,
+        MOUND_ROOM,
+      );
+    } else {
+      drawPlainMound(cx, cy, px, py, size, layers, mound.done, winter);
     }
 
     if (mound.done) {
-      // A tall post with a pennant on the top.
-      const top = cy - (MOUND.layers - 1) * 10;
-      graphics.rect(cx - 3, top - 54, 6, 54).fill(FENCE_COLOR);
-      graphics.poly([cx + 3, top - 54, cx + 34, top - 46, cx + 3, top - 36]).fill(0xd2321e).stroke({ color: 0x5a1a12, width: 2 });
+      if (!pixel) {
+        // A tall post with a pennant on the top.
+        const top = cy - (MOUND.layers - 1) * 10;
+        graphics.rect(cx - 3, top - 54, 6, 54).fill(FENCE_COLOR);
+        graphics.poly([cx + 3, top - 54, cx + 34, top - 46, cx + 3, top - 36]).fill(0xd2321e).stroke({ color: 0x5a1a12, width: 2 });
+      }
       addLabel(mound.name || 'KOPIEC', cx, py + size - 14, 0xf4e9d8, 18);
       return;
     }
@@ -276,14 +347,8 @@ export function createBuildingsLayer(): BuildingsLayer {
     if (!footprintTouchesRoad('kopiec', mound.tile, state.roads)) drawNoRoadIcon(graphics, px + TILE_SIZE, py, TILE_SIZE * 0.1);
   }
 
-  function drawHouse(state: GameState, house: House, winter: boolean): void {
-    const { px, py } = tileTopLeft(house.tile.x, house.tile.y);
-    const inset = TILE_SIZE * 0.1;
-    const size = TILE_SIZE - inset * 2;
-    if (house.ruined) {
-      drawRuins(state, house, px, py, inset, size);
-      return;
-    }
+  /** The placeholder look: a tier-coloured square with a roof and a label. */
+  function drawPlainHouse(house: House, px: number, py: number, inset: number, size: number, winter: boolean): void {
     graphics
       .rect(px + inset, py + inset, size, size)
       .fill(HOUSE_TIER_COLOR[house.tier] ?? HOUSE_TIER_COLOR[0])
@@ -312,16 +377,36 @@ export function createBuildingsLayer(): BuildingsLayer {
     }
     const houseLabel = HOUSE_TIER_LABEL[house.tier] ?? houseTier(house).name[0];
     addLabel(houseLabel, px + TILE_SIZE / 2, py + TILE_SIZE / 2 + 2, 0xf4e9d8, houseLabel.length > 3 ? 14 : houseLabel.length > 1 ? 16 : 24);
+  }
+
+  function drawHouse(state: GameState, house: House, winter: boolean, pixel: boolean): void {
+    const { px, py } = tileTopLeft(house.tile.x, house.tile.y);
+    const inset = TILE_SIZE * 0.1;
+    const size = TILE_SIZE - inset * 2;
+    if (house.ruined) {
+      drawRuins(state, house, px, py, inset, size, pixel);
+      return;
+    }
+    if (pixel) {
+      placeSprite(`house:${house.tier}:${winter}`, () => paintHouse(house.tier, winter), house.tile.x, house.tile.y);
+    } else {
+      drawPlainHouse(house, px, py, inset, size, winter);
+    }
 
     if (house.upgrade) {
       // Rebuild in progress: the same rising fill as a construction site.
       const worker = buildersOn(state, { kind: 'upgrade', houseId: house.id }).find((v) => 'stage' in v.job && v.job.stage === 'hammering');
       const buildTicks = houseTier(house).upgrade?.buildTicks ?? 1;
       if (worker && worker.job.kind === 'upgrade' && worker.job.stage === 'hammering') {
-        const filled = size * (1 - worker.workTicksRemaining / buildTicks);
-        graphics
-          .rect(px + inset, py + inset + (size - filled), size, filled)
-          .fill({ color: SITE_PROGRESS_COLOR, alpha: 0.7 });
+        const done = 1 - worker.workTicksRemaining / buildTicks;
+        if (pixel) {
+          drawProgressBar(graphics, px + inset, py + 2, size, done);
+        } else {
+          const filled = size * done;
+          graphics
+            .rect(px + inset, py + inset + (size - filled), size, filled)
+            .fill({ color: SITE_PROGRESS_COLOR, alpha: 0.7 });
+        }
       }
       graphics.rect(px + inset, py + inset, size, size).stroke({ color: SITE_PROGRESS_COLOR, width: 3 });
     }
@@ -435,8 +520,8 @@ export function createBuildingsLayer(): BuildingsLayer {
     }
   }
 
-  /** Zgliszcza: charred beams on ash, a wisp of smoke, the old tier's name in grey. */
-  function drawRuins(state: GameState, house: House, px: number, py: number, inset: number, size: number): void {
+  /** The placeholder ruins: ash square, crossed charred beams, embers and the old tier's name. */
+  function drawPlainRuins(house: House, px: number, py: number, inset: number, size: number): void {
     graphics.rect(px + inset, py + inset, size, size).fill(ASH_COLOR);
     graphics
       .moveTo(px + inset + 6, py + inset + 10)
@@ -450,18 +535,32 @@ export function createBuildingsLayer(): BuildingsLayer {
     for (const [dx, dy] of [[0.3, 0.7], [0.65, 0.35], [0.5, 0.55]]) {
       graphics.circle(px + TILE_SIZE * dx, py + TILE_SIZE * dy, 2.5).fill(EMBER_COLOR);
     }
+    addLabel(houseTier(house).name.slice(0, 3), px + TILE_SIZE / 2, py + TILE_SIZE / 2, 0x9a928a, 14);
+  }
+
+  /** Zgliszcza: charred beams on ash, a wisp of smoke, the old tier's name in grey. */
+  function drawRuins(state: GameState, house: House, px: number, py: number, inset: number, size: number, pixel: boolean): void {
+    if (pixel) {
+      placeSprite('ruins', paintRuins, house.tile.x, house.tile.y);
+    } else {
+      drawPlainRuins(house, px, py, inset, size);
+    }
     const rise = (state.tick % 20) / 20;
     graphics.circle(px + TILE_SIZE * 0.55, py + inset - 2 - rise * 8, 6 + rise * 3).fill({ color: SMOKE_COLOR, alpha: 0.6 - rise * 0.4 });
-    addLabel(houseTier(house).name.slice(0, 3), px + TILE_SIZE / 2, py + TILE_SIZE / 2, 0x9a928a, 14);
 
     if (house.rebuild) {
       const worker = buildersOn(state, { kind: 'rebuild', houseId: house.id }).find((v) => 'stage' in v.job && v.job.stage === 'hammering');
       if (worker && worker.job.kind === 'rebuild' && worker.job.stage === 'hammering') {
-        const filled = size * (1 - worker.workTicksRemaining / RUINS_REBUILD.buildTicks);
-        graphics.rect(px + inset, py + inset + (size - filled), size, filled).fill({ color: SITE_PROGRESS_COLOR, alpha: 0.7 });
+        const done = 1 - worker.workTicksRemaining / RUINS_REBUILD.buildTicks;
+        if (pixel) {
+          drawProgressBar(graphics, px + inset, py + 2, size, done);
+        } else {
+          const filled = size * done;
+          graphics.rect(px + inset, py + inset + (size - filled), size, filled).fill({ color: SITE_PROGRESS_COLOR, alpha: 0.7 });
+        }
       }
       graphics.rect(px + inset, py + inset, size, size).stroke({ color: SITE_PROGRESS_COLOR, width: 3 });
-    } else {
+    } else if (!pixel) {
       graphics.rect(px + inset, py + inset, size, size).stroke({ color: CHAR_COLOR, width: 3 });
     }
   }
@@ -564,6 +663,12 @@ function drawSheep(graphics: Graphics, x: number, y: number): void {
     .stroke({ color: 0x241a0d, width: 1.5 })
     .circle(x + 11, y - 3, 3.5)
     .fill(0x2b2016);
+}
+
+/** A small yellow progress bar on a dark strip (pixel look: the work shows as a bar, not a fill). */
+function drawProgressBar(graphics: Graphics, x: number, y: number, width: number, progress: number): void {
+  graphics.roundRect(x, y, width, 8, 3).fill({ color: COUNTER_BG_COLOR, alpha: 0.9 });
+  graphics.roundRect(x + 1.5, y + 1.5, Math.max(0, (width - 3) * Math.min(1, progress)), 5, 2).fill(SITE_PROGRESS_COLOR);
 }
 
 /** A strip of snow along the top edge of a building in winter. */

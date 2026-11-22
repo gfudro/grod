@@ -340,6 +340,7 @@ Pierwszy prototyp powstaje na prostych kształtach rysowanych kodem, żeby nie c
 
 - Lista grafik, nazwy plików i opisy do Nano Banana: `docs/ASSETS.md`.
 - Lista nagrań głosowych i nazwy plików: `docs/AUDIO.md`.
+- **Pixelart rysowany kodem (od 0.18.0):** teren, drzewa, drogi, budynki, domy (4 piętra), pola, kopiec, ludziki z narzędziami i ikony towarów rysowane piksel po pikselu w `src/render/pixel/` (32 piksele na kafelek, powiększone 2× bez wygładzania). Zima to śnieg na dachach, zamarznięta rzeka i gołe drzewa. Przełącznik 🎨 PIKSELE / ⬜ PROSTE w KRONICE; wybór zapamiętuje urządzenie, nie zapis gry. Liczniki, dymki, pożar i pauza zostają rysowane jak dotąd, na wierzchu.
 
 ## Proces pracy
 

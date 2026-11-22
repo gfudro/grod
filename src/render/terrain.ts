@@ -1,13 +1,16 @@
-import { Container, Graphics } from 'pixi.js';
+import { Container, Graphics, Sprite, type Texture } from 'pixi.js';
 import { FOREST, MAP_HEIGHT, MAP_WIDTH, ROCKS, TERRAIN } from '../data/map';
 import type { Season } from '../data/seasons';
 import { ROCK_COLOR, SEASON_TERRAIN_COLOR, SEASON_TREE_COLOR, TILE_SIZE } from '../data/tiles';
+import { ART_SCALE } from './pixel/canvas';
+import { paintTerrain } from './pixel/terrain';
+import { graphicsStyle } from './style';
 
 const SNOW_COLOR = 0xf4f7fb;
 
 export interface TerrainLayer {
   container: Container;
-  /** Repaints grass, water and trees in the colours of the season. */
+  /** Repaints grass, water and trees in the colours of the season (and the current graphics style). */
   setSeason(season: Season): void;
 }
 
@@ -17,11 +20,32 @@ export function createTerrainLayer(initialSeason: Season): TerrainLayer {
   const trees = new Graphics();
   container.addChild(tiles);
   container.addChild(trees);
-  let shown: Season | null = null;
+  // The pixel-art map: one big crisp sprite per season, painted on first use.
+  const pixelMap = new Sprite();
+  pixelMap.scale.set(ART_SCALE);
+  container.addChild(pixelMap);
+  const pixelTextures = new Map<Season, Texture>();
+  let shown: string | null = null;
 
   function setSeason(season: Season): void {
-    if (season === shown) return;
-    shown = season;
+    const style = graphicsStyle();
+    const key = `${style}:${season}`;
+    if (key === shown) return;
+    shown = key;
+
+    const pixel = style === 'pixel';
+    pixelMap.visible = pixel;
+    tiles.visible = !pixel;
+    trees.visible = !pixel;
+    if (pixel) {
+      let texture = pixelTextures.get(season);
+      if (!texture) {
+        texture = paintTerrain(season).toTexture();
+        pixelTextures.set(season, texture);
+      }
+      pixelMap.texture = texture;
+      return;
+    }
 
     tiles.clear();
     const terrainColor = SEASON_TERRAIN_COLOR[season];

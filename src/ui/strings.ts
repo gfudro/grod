@@ -24,6 +24,9 @@ export const STRINGS = {
   zapisz: 'ZAPISZ',
   wczytaj: 'WCZYTAJ',
   nowa: 'NOWA',
+  /** Graphics switch in the chronicle: the pixel-art look or the plain shapes. */
+  piksele: 'PIKSELE',
+  proste: 'PROSTE',
   naPewno: 'NA PEWNO?',
   zburz: 'ZBURZ',
   odbuduj: 'ODBUDUJ',

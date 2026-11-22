@@ -175,6 +175,14 @@ Kolejność od 0.9.0 (Greg, 2026-10-14): najpierw mechanika, grafiki i dźwięki
 - [x] Odśnieżanie: wolni ludzie z łopatami z kuźni; bez łopat zaspy topnieją wiosną
 - [x] Głód w trzech stopniach: wolniej z rybką → czerwoni ze smutną buźką → siedzą w domu; załoga startowa, rybak i tragarze ryb pracują zawsze
 
+## Pixelart (0.18.0)
+
+- [x] Cała mapa w pixelarcie rysowanym kodem: teren z miękkimi brzegami, drzewa i pory roku, drogi łączące się w zakręty i skrzyżowania, wszystkie budynki i 4 piętra domów, pola, plac budowy rosnący z pracą, zgliszcza, kopiec warstwami (Greg, 2026-11-22)
+- [x] Ludziki w tunikach z narzędziem swojego zajęcia, niesione towary i dymki jako małe obrazki
+- [x] Przełącznik PIKSELE / PROSTE w KRONICE
+- [ ] Ikony towarów z pixelartu także na górnym pasku i przyciskach budowy
+- [ ] Płomienie pożaru w pixelarcie
+
 ## Grafiki i dźwięki (gdy Greg wrzuci pliki)
 
 - [ ] Skrypt przetwarzania grafik: usunięcie tła magenta, przycięcie, skalowanie

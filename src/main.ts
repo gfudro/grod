@@ -34,6 +34,9 @@ import { createStormLayer } from './render/storm';
 import { startRebuild } from './sim/storms';
 import { WAREHOUSE_TILE } from './data/waypoints';
 import { TILE_SIZE } from './data/tiles';
+import { onGraphicsStyleChange } from './render/style';
+import type { BuildingType } from './data/buildings';
+import type { VillagerState } from './sim/state';
 
 const BASE_TICK_MS = 1000 / 10; // 10 ticks/second at x1
 
@@ -106,10 +109,11 @@ async function start(): Promise<void> {
   viewport.addChild(blizzardLayer.container);
 
   function refreshWorldLayers(): void {
+    const winter = currentSeason(state) === 'zima';
     terrain.setSeason(currentSeason(state));
-    roadsLayer.redraw(state.roads);
+    roadsLayer.redraw(state.roads, winter);
     buildingsLayer.redraw(state);
-    warehouseMarker.update(state.roads);
+    warehouseMarker.update(state.roads, winter);
     hud.refresh();
     topBar.refresh(state);
   }
@@ -243,9 +247,26 @@ async function start(): Promise<void> {
   refreshWorldLayers();
   celebrateMound(); // finished in a save from before the screen was seen
 
+  // PIKSELE / PROSTE in the chronicle: redraw the map in the other look at once.
+  onGraphicsStyleChange(() => {
+    refreshWorldLayers();
+    for (let i = 0; i < state.villagers.length; i++) {
+      const v = state.villagers[i];
+      villagerSprites[i].update(v, 0, stepTicks(state, v), hungerStage(state, v), workplaceOf(v));
+    }
+  });
+
+  /** The building a villager works for (for the tool in their hands). */
+  let workplaceTypes = new Map<string, BuildingType>();
+  function workplaceOf(villager: VillagerState): BuildingType | null {
+    const job = villager.job;
+    return 'buildingId' in job ? (workplaceTypes.get(job.buildingId) ?? null) : null;
+  }
+
   let accumulatorMs = 0;
   app.ticker.add((ticker) => {
     let ticked = false;
+    workplaceTypes = new Map(state.buildings.map((b) => [b.id, b.type]));
     if (state.speed > 0) {
       const tickMs = BASE_TICK_MS / state.speed;
       accumulatorMs += ticker.deltaMS;
@@ -258,12 +279,12 @@ async function start(): Promise<void> {
       const alpha = accumulatorMs / tickMs;
       for (let i = 0; i < state.villagers.length; i++) {
         const v = state.villagers[i];
-        villagerSprites[i].update(v, alpha, stepTicks(state, v), hungerStage(state, v));
+        villagerSprites[i].update(v, alpha, stepTicks(state, v), hungerStage(state, v), workplaceOf(v));
       }
     } else {
       for (let i = 0; i < state.villagers.length; i++) {
         const v = state.villagers[i];
-        villagerSprites[i].update(v, 0, stepTicks(state, v), hungerStage(state, v));
+        villagerSprites[i].update(v, 0, stepTicks(state, v), hungerStage(state, v), workplaceOf(v));
       }
     }
     if (ticked) {

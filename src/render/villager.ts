@@ -1,6 +1,10 @@
-import { Container, Graphics } from 'pixi.js';
+import { Container, Graphics, Sprite } from 'pixi.js';
 import { TILE_SIZE } from '../data/tiles';
-import { RESOURCE_COLOR } from '../data/resources';
+import { RESOURCE_COLOR, type ResourceType } from '../data/resources';
+import type { BuildingType } from '../data/buildings';
+import { isPixelStyle } from './style';
+import { ART_SCALE, hash, textureCache } from './pixel/canvas';
+import { paintBubble, paintResource, paintVillager, VILLAGER_H, VILLAGER_W, type VillagerTool } from './pixel/villagers';
 import type { Vec2 } from '../data/types';
 import type { VillagerState } from '../sim/state';
 
@@ -11,10 +15,58 @@ const WAITING_ICON_COLOR = 0xcc4433;
 const BOUNCE_HEIGHT = 5;
 const BUCKET_COLOR = 0x4f9fd8;
 
+const pixelTexture = textureCache();
+
+/** The tool in a worker's hands, by the building they work for. */
+const WORKPLACE_TOOL: Partial<Record<BuildingType, VillagerTool>> = {
+  drwal: 'axe',
+  rybak: 'net',
+  glinianka: 'spade',
+  rudnik: 'spade',
+  kamieniarz: 'pick',
+  pole: 'sickle',
+  obora: 'pail',
+  kuznia: 'hammer',
+  dymarka: 'hammer',
+};
+
+/** A stable look (tunic, hair, headscarf) per villager, from their id. */
+function idVariant(id: string): number {
+  let h = 0;
+  for (let i = 0; i < id.length; i++) h = (h * 31 + id.charCodeAt(i)) | 0;
+  return Math.floor(hash(h, 0, 7) * 64);
+}
+
+function villagerTool(villager: VillagerState, workplace: BuildingType | null): VillagerTool {
+  const job = villager.job;
+  switch (job.kind) {
+    case 'build':
+    case 'upgrade':
+    case 'rebuild':
+      return 'mallet';
+    case 'dig':
+      return 'spade';
+    case 'douse':
+      return job.stage === 'toHouse' ? 'bucket' : 'none';
+    case 'arriving':
+      return 'bundle';
+    case 'produce':
+    case 'farm':
+    case 'process':
+      // Hands full on the way back: the good is carried instead.
+      return villager.carrying ? 'none' : ((workplace && WORKPLACE_TOOL[workplace]) ?? 'none');
+    default:
+      return 'none';
+  }
+}
+
 export interface VillagerSprite {
   container: Container;
-  /** `hunger`: 0 fed, 1 hungry (fish over the head), 2+ sad and red (data/hunger.ts). */
-  update(villager: VillagerState, tickAlpha: number, ticksPerTile: number, hunger?: number): void;
+  /**
+   * `hunger`: 0 fed, 1 hungry (fish over the head), 2+ sad and red (data/hunger.ts).
+   * `workplace`: the type of building they work for, to pick the tool in their hands.
+   */
+  update(villager: VillagerState, tickAlpha: number, ticksPerTile: number, hunger?: number, workplace?: BuildingType | null): void;
 }
 
 function tileTopLeftPixels(tile: Vec2): { x: number; y: number } {
@@ -87,10 +139,42 @@ export function createVillagerSprite(): VillagerSprite {
   bundle.visible = false;
   body.addChild(bundle);
 
+  // The pixel-art look: a little person with their tool, and small
+  // pictures of goods instead of coloured squares and circles.
+  const pixelBody = new Sprite();
+  pixelBody.scale.set(ART_SCALE);
+  // Feet on the tile centre line (a little below it), centred horizontally.
+  pixelBody.position.set((-VILLAGER_W / 2) * ART_SCALE, (4 - VILLAGER_H) * ART_SCALE + 6);
+  body.addChild(pixelBody);
+
+  const pixelCarry = new Sprite();
+  pixelCarry.scale.set(ART_SCALE);
+  pixelCarry.position.set(-12, -TILE_SIZE * 0.5 - 6);
+  container.addChild(pixelCarry);
+
+  const pixelBubble = new Container();
+  const bubbleBack = new Sprite();
+  bubbleBack.scale.set(ART_SCALE);
+  const bubbleIcon = new Sprite();
+  bubbleIcon.scale.set(ART_SCALE * 0.85);
+  bubbleIcon.position.set(8, 5);
+  pixelBubble.addChild(bubbleBack, bubbleIcon);
+  pixelBubble.position.set(-18 + 6, -TILE_SIZE * 0.5 - 30);
+  container.addChild(pixelBubble);
+
+  /** Shows the bubble with a picture of `what` (null = the red "no road" sign alone). */
+  function showBubble(what: ResourceType | null, rim: number): void {
+    pixelBubble.visible = true;
+    bubbleBack.texture = pixelTexture(`bubble:${rim}`, () => paintBubble(rim));
+    bubbleIcon.visible = what !== null;
+    if (what) bubbleIcon.texture = pixelTexture(`res:${what}`, () => paintResource(what));
+  }
+
   /** `ticksPerTile`: how long one step takes right now (longer in winter snow). */
-  function update(villager: VillagerState, tickAlpha: number, ticksPerTile: number, hunger = 0): void {
+  function update(villager: VillagerState, tickAlpha: number, ticksPerTile: number, hunger = 0, workplace: BuildingType | null = null): void {
     // Sitting at home on strike: they are inside (the house shows how many).
     container.visible = !(villager.job.kind === 'strike' && villager.motion !== 'walking');
+    bodyShape.visible = true;
     bodyShape.tint = hunger >= 2 ? SAD_BODY_COLOR : BODY_COLOR;
     sadFace.visible = hunger >= 2;
     const fromPx = tileTopLeftPixels(villager.from);
@@ -127,6 +211,37 @@ export function createVillagerSprite(): VillagerSprite {
     bundle.visible = villager.job.kind === 'arriving';
     // The fish shows what they need, unless their hands or a waiting sign are taken already.
     fishIcon.visible = hunger >= 1 && !carryingIcon.visible && !waitingIcon.visible;
+
+    const pixel = isPixelStyle();
+    pixelBody.visible = pixel;
+    pixelCarry.visible = false;
+    pixelBubble.visible = false;
+    if (!pixel) return;
+
+    bodyShape.visible = false;
+    sadFace.visible = false;
+    bundle.visible = false;
+    const sad = hunger >= 2;
+    const variant = idVariant(villager.id);
+    const tool = villagerTool(villager, workplace);
+    pixelBody.texture = pixelTexture(`v:${variant}:${tool}:${sad}`, () => paintVillager(variant, tool, sad));
+    pixelBody.tint = sad ? 0xffb0a0 : 0xffffff;
+
+    if (carryingIcon.visible) {
+      carryingIcon.visible = false;
+      const good: ResourceType | 'woda' = villager.job.kind === 'douse' ? 'woda' : (villager.carrying ?? 'woda');
+      if (good !== 'woda' || tool !== 'bucket') {
+        pixelCarry.visible = true;
+        pixelCarry.texture = pixelTexture(`res:${good}`, () => paintResource(good));
+      }
+    }
+    if (waitingIcon.visible) {
+      waitingIcon.visible = false;
+      showBubble(villager.waitingFor, villager.waitingFor ? 0x33281a : WAITING_ICON_COLOR);
+    } else if (fishIcon.visible) {
+      fishIcon.visible = false;
+      showBubble('ryba', WAITING_ICON_COLOR);
+    }
   }
 
   return { container, update };
